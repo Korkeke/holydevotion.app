@@ -1,4 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./portal/AuthContext";
+import PortalRoute from "./portal/PortalRoute";
+
+const LoginPage = lazy(() => import("./portal/pages/LoginPage"));
+const SignupPage = lazy(() => import("./portal/pages/SignupPage"));
+const PortalLayout = lazy(() => import("./portal/PortalLayout"));
+const DashboardPage = lazy(() => import("./portal/pages/DashboardPage"));
+const EventsPage = lazy(() => import("./portal/pages/EventsPage"));
+const AnnouncementsPage = lazy(() => import("./portal/pages/AnnouncementsPage"));
+const DevotionalsPage = lazy(() => import("./portal/pages/DevotionalsPage"));
+const PrayerWallPage = lazy(() => import("./portal/pages/PrayerWallPage"));
+const MembersPage = lazy(() => import("./portal/pages/MembersPage"));
+const SettingsPage = lazy(() => import("./portal/pages/SettingsPage"));
 
 // ─── Constants ──────────────────────────────────────────────────────
 const COLORS = {
@@ -1505,8 +1519,8 @@ function Footer({ setPage }) {
   );
 }
 
-// ─── MAIN APP ───────────────────────────────────────────────────────
-export default function DevotionSite() {
+// ─── MARKETING SITE ─────────────────────────────────────────────────
+function MarketingSite() {
   const [page, setPage] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, "").toLowerCase();
     const match = PAGES.find((p) => p.toLowerCase() === path);
@@ -1525,6 +1539,63 @@ export default function DevotionSite() {
       {page === "Contact" && <ContactPage />}
       <Footer setPage={setPage} />
     </div>
+  );
+}
+
+// ─── PORTAL LOADING FALLBACK ────────────────────────────────────────
+function PortalLoading() {
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: COLORS.bg,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}>
+      <div style={{
+        width: 32, height: 32,
+        border: `2px solid ${COLORS.gold}`,
+        borderTopColor: "transparent",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────────────
+export default function DevotionSite() {
+  // If path starts with /portal, render the router-based portal
+  // Otherwise render the existing marketing site unchanged
+  const isPortal = window.location.pathname.startsWith("/portal");
+
+  if (!isPortal) {
+    return <MarketingSite />;
+  }
+
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Suspense fallback={<PortalLoading />}>
+          <Routes>
+            <Route path="/portal/login" element={<LoginPage />} />
+            <Route path="/portal/signup" element={<SignupPage />} />
+            <Route path="/portal" element={<PortalRoute><PortalLayout /></PortalRoute>}>
+              <Route index element={<DashboardPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="announcements" element={<AnnouncementsPage />} />
+              <Route path="devotionals" element={<DevotionalsPage />} />
+              <Route path="prayers" element={<PrayerWallPage />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/portal" replace />} />
+            </Route>
+            <Route path="*" element={<MarketingSite />} />
+          </Routes>
+        </Suspense>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
