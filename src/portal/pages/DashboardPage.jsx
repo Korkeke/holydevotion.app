@@ -12,12 +12,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!church?.id) return;
+    if (churchLoading) return;
+    if (!church?.id) { setLoading(false); return; }
     get(`/api/churches/${church.id}/analytics`)
       .then(setStats)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [church?.id]);
+  }, [church?.id, churchLoading]);
 
   if (churchLoading || loading) {
     return (

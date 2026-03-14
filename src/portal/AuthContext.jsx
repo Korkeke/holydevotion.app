@@ -63,10 +63,10 @@ export function AuthProvider({ children }) {
 
     // Step 2: Create church via API
     try {
-      const newChurch = await post("/api/churches", churchData);
-      setChurch(newChurch);
+      const resp = await post("/api/churches", churchData);
+      setChurch(resp?.church || resp);
       setRole("owner");
-      return newChurch;
+      return resp;
     } catch (err) {
       // Church creation failed — clean up orphaned Firebase account
       try {
