@@ -1507,7 +1507,11 @@ function Footer({ setPage }) {
 
 // ─── MAIN APP ───────────────────────────────────────────────────────
 export default function DevotionSite() {
-  const [page, setPage] = useState("Home");
+  const [page, setPage] = useState(() => {
+    const path = window.location.pathname.replace(/^\/|\/$/g, "").toLowerCase();
+    const match = PAGES.find((p) => p.toLowerCase() === path);
+    return match || "Home";
+  });
   const mouse = useMouseGlow();
 
   return (
