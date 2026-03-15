@@ -1,19 +1,76 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { COLORS } from "../../colors";
+
+const THEMES = {
+  gold_navy:    { label: "Gold & Navy",    accent: "#c9a84c", bg: "#0a0e1a" },
+  royal_purple: { label: "Royal Purple",   accent: "#9b59b6", bg: "#1a0e2e" },
+  forest_green: { label: "Forest Green",   accent: "#27ae60", bg: "#0e1a14" },
+  crimson:      { label: "Crimson",         accent: "#c0392b", bg: "#1a0e0e" },
+  ocean_blue:   { label: "Ocean Blue",      accent: "#2980b9", bg: "#0e141a" },
+  rose:         { label: "Rose",            accent: "#e84393", bg: "#1a0e16" },
+  copper:       { label: "Copper",          accent: "#d4a373", bg: "#1a140e" },
+  silver:       { label: "Silver",          accent: "#bdc3c7", bg: "#12141a" },
+};
+
+const API_BASE = "https://devotion-backend-production.up.railway.app";
 
 export default function SignupPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
+  const [regCode, setRegCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [churchName, setChurchName] = useState("");
   const [denomination, setDenomination] = useState("");
   const [city, setCity] = useState("");
+  const [theme, setTheme] = useState("gold_navy");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // If redirected from Stripe with session_id, fetch the registration code
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    if (sessionId) {
+      fetch(`${API_BASE}/api/stripe/success?session_id=${sessionId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.code) {
+            setRegCode(data.code);
+            setStep(1);
+          }
+        })
+        .catch(() => {});
+    }
+    if (searchParams.get("cancelled")) {
+      setError("Payment was cancelled. You can try again.");
+    }
+  }, []);
+
+  async function handleStripeCheckout() {
+    setCheckoutLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/api/stripe/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("Could not start checkout. Please try again.");
+      }
+    } catch {
+      setError("Could not connect to payment service.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -21,8 +78,9 @@ export default function SignupPage() {
     setLoading(true);
 
     if (step === 1) {
-      if (password.length < 6) {
-        setError("Password must be at least 6 characters.");
+      // Validate registration code is not empty
+      if (!regCode.trim()) {
+        setError("Please enter your registration code.");
         setLoading(false);
         return;
       }
@@ -31,18 +89,34 @@ export default function SignupPage() {
       return;
     }
 
-    // Step 2: Create account + church
+    if (step === 2) {
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters.");
+        setLoading(false);
+        return;
+      }
+      setStep(3);
+      setLoading(false);
+      return;
+    }
+
+    // Step 3: Create account + church
     try {
       await signUp(email, password, {
         name: churchName,
         denomination: denomination || undefined,
         city: city || undefined,
+        theme,
+        registration_code: regCode.trim(),
       });
       navigate("/portal");
     } catch (err) {
-      const code = err?.code || err?.message || "";
-      if (code.includes("email-already-in-use")) {
+      const msg = err?.code || err?.message || "";
+      if (msg.includes("email-already-in-use")) {
         setError("An account with this email already exists.");
+        setStep(2);
+      } else if (msg.includes("Invalid registration code") || msg.includes("already used")) {
+        setError(msg);
         setStep(1);
       } else {
         setError(err.message || "Something went wrong. Please try again.");
@@ -52,31 +126,69 @@ export default function SignupPage() {
     }
   }
 
+  const stepTitles = [
+    "Registration Code",
+    "Create Your Account",
+    "Set Up Your Church",
+  ];
+  const stepSubtitles = [
+    "Enter the code you received after subscribing",
+    "Set up your admin credentials",
+    "Tell us about your church",
+  ];
+
   return (
     <div style={s.page}>
       <div style={s.card}>
         <div style={s.cross}>✝</div>
-        <h1 style={s.title}>
-          {step === 1 ? "Create Your Account" : "Set Up Your Church"}
-        </h1>
-        <p style={s.subtitle}>
-          {step === 1
-            ? "Start your 7-day free trial"
-            : "Tell us about your church"}
-        </p>
+        <h1 style={s.title}>{stepTitles[step - 1]}</h1>
+        <p style={s.subtitle}>{stepSubtitles[step - 1]}</p>
 
         {/* Step indicator */}
         <div style={s.steps}>
-          <div style={{ ...s.stepDot, background: COLORS.gold }} />
-          <div style={s.stepLine} />
-          <div style={{
-            ...s.stepDot,
-            background: step === 2 ? COLORS.gold : "rgba(201,168,76,0.2)",
-          }} />
+          {[1, 2, 3].map((n, i) => (
+            <div key={n} style={{ display: "flex", alignItems: "center" }}>
+              {i > 0 && <div style={s.stepLine} />}
+              <div style={{
+                ...s.stepDot,
+                background: step >= n ? COLORS.gold : "rgba(201,168,76,0.2)",
+              }} />
+            </div>
+          ))}
         </div>
 
         <form onSubmit={handleSubmit} style={s.form}>
-          {step === 1 ? (
+          {step === 1 && (
+            <>
+              <label style={s.label}>Registration Code</label>
+              <input
+                type="text"
+                value={regCode}
+                onChange={(e) => setRegCode(e.target.value.toUpperCase())}
+                style={{ ...s.input, fontFamily: "'Courier New', monospace", fontSize: 16, letterSpacing: "0.08em", textAlign: "center" }}
+                placeholder="HOLY-XXXX-XXXX"
+                autoFocus
+              />
+              <div style={s.divider}>
+                <span style={s.dividerLine} />
+                <span style={s.dividerText}>or</span>
+                <span style={s.dividerLine} />
+              </div>
+              <button
+                type="button"
+                onClick={handleStripeCheckout}
+                disabled={checkoutLoading}
+                style={s.checkoutBtn}
+              >
+                {checkoutLoading ? "Redirecting..." : "Subscribe — $99/month"}
+              </button>
+              <p style={s.checkoutHint}>
+                You'll receive a registration code after payment.
+              </p>
+            </>
+          )}
+
+          {step === 2 && (
             <>
               <label style={s.label}>Email</label>
               <input
@@ -86,6 +198,7 @@ export default function SignupPage() {
                 required
                 style={s.input}
                 placeholder="pastor@church.org"
+                autoFocus
               />
 
               <label style={{ ...s.label, marginTop: 16 }}>Password</label>
@@ -98,7 +211,9 @@ export default function SignupPage() {
                 placeholder="At least 6 characters"
               />
             </>
-          ) : (
+          )}
+
+          {step === 3 && (
             <>
               <label style={s.label}>Church Name *</label>
               <input
@@ -108,6 +223,7 @@ export default function SignupPage() {
                 required
                 style={s.input}
                 placeholder="Grace Community Church"
+                autoFocus
               />
 
               <label style={{ ...s.label, marginTop: 16 }}>
@@ -131,25 +247,61 @@ export default function SignupPage() {
                 style={s.input}
                 placeholder="e.g. Dallas, TX"
               />
+
+              <label style={{ ...s.label, marginTop: 20 }}>Theme</label>
+              <div style={s.themeGrid}>
+                {Object.entries(THEMES).map(([key, t]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTheme(key)}
+                    style={{
+                      ...s.themeCard,
+                      borderColor: theme === key ? t.accent : COLORS.border,
+                      boxShadow: theme === key ? `0 0 12px ${t.accent}33` : "none",
+                    }}
+                  >
+                    <div style={{
+                      width: "100%", height: 28, borderRadius: 6,
+                      background: `linear-gradient(135deg, ${t.bg}, ${t.bg})`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <div style={{
+                        width: 14, height: 14, borderRadius: "50%",
+                        background: t.accent,
+                      }} />
+                    </div>
+                    <span style={{
+                      fontFamily: "'Nunito Sans', sans-serif", fontSize: 10,
+                      color: theme === key ? t.accent : COLORS.textMuted,
+                      fontWeight: theme === key ? 700 : 400,
+                      marginTop: 4,
+                    }}>{t.label}</span>
+                  </button>
+                ))}
+              </div>
             </>
           )}
 
           {error && <p style={s.error}>{error}</p>}
 
-          <button type="submit" disabled={loading} style={s.button}>
+          <button type="submit" disabled={loading} style={{
+            ...s.button,
+            ...(step === 1 && !regCode.trim() ? { opacity: 0.5 } : {}),
+          }}>
             {loading
-              ? step === 1
-                ? "Next..."
-                : "Creating..."
+              ? "..."
               : step === 1
                 ? "Next"
-                : "Create Church"}
+                : step === 2
+                  ? "Next"
+                  : "Create Church"}
           </button>
 
-          {step === 2 && (
+          {step > 1 && (
             <button
               type="button"
-              onClick={() => { setStep(1); setError(""); }}
+              onClick={() => { setStep(step - 1); setError(""); }}
               style={s.backBtn}
             >
               ← Back
@@ -177,7 +329,7 @@ const s = {
   },
   card: {
     width: "100%",
-    maxWidth: 420,
+    maxWidth: 440,
     padding: "48px 36px",
     borderRadius: 20,
     background: COLORS.bgCard,
@@ -206,7 +358,6 @@ const s = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 0,
     marginBottom: 28,
   },
   stepDot: {
@@ -216,7 +367,7 @@ const s = {
     transition: "background 0.3s",
   },
   stepLine: {
-    width: 40,
+    width: 30,
     height: 2,
     background: "rgba(201,168,76,0.2)",
   },
@@ -245,6 +396,60 @@ const s = {
     outline: "none",
     boxSizing: "border-box",
     transition: "border-color 0.2s",
+  },
+  divider: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    margin: "20px 0",
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    background: COLORS.border,
+  },
+  dividerText: {
+    fontFamily: "'Nunito Sans', sans-serif",
+    fontSize: 12,
+    color: COLORS.textDim,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+  },
+  checkoutBtn: {
+    width: "100%",
+    padding: "14px 0",
+    borderRadius: 12,
+    border: `1px solid ${COLORS.borderHover}`,
+    background: "transparent",
+    color: COLORS.gold,
+    fontFamily: "'Nunito Sans', sans-serif",
+    fontSize: 15,
+    fontWeight: 700,
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
+  checkoutHint: {
+    fontFamily: "'Nunito Sans', sans-serif",
+    fontSize: 12,
+    color: COLORS.textDim,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  themeGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 8,
+  },
+  themeCard: {
+    padding: "8px 4px 6px",
+    borderRadius: 10,
+    border: `2px solid ${COLORS.border}`,
+    background: "rgba(255,255,255,0.03)",
+    cursor: "pointer",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    transition: "all 0.2s",
   },
   error: {
     fontFamily: "'Nunito Sans', sans-serif",

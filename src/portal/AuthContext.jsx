@@ -74,7 +74,9 @@ export function AuthProvider({ children }) {
       } catch {
         // Best effort cleanup
       }
-      throw new Error("Failed to create church. Please try again.");
+      // Surface the actual error (e.g. "Invalid registration code")
+      const msg = err?.message || "Failed to create church. Please try again.";
+      throw new Error(msg);
     }
   }
 

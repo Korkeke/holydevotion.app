@@ -4,6 +4,17 @@ import { useAuth } from "../AuthContext";
 import { get, put, del } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 
+const THEMES = {
+  gold_navy:    { label: "Gold & Navy",    accent: "#c9a84c", bg: "#0a0e1a" },
+  royal_purple: { label: "Royal Purple",   accent: "#9b59b6", bg: "#1a0e2e" },
+  forest_green: { label: "Forest Green",   accent: "#27ae60", bg: "#0e1a14" },
+  crimson:      { label: "Crimson",         accent: "#c0392b", bg: "#1a0e0e" },
+  ocean_blue:   { label: "Ocean Blue",      accent: "#2980b9", bg: "#0e141a" },
+  rose:         { label: "Rose",            accent: "#e84393", bg: "#1a0e16" },
+  copper:       { label: "Copper",          accent: "#d4a373", bg: "#1a140e" },
+  silver:       { label: "Silver",          accent: "#bdc3c7", bg: "#12141a" },
+};
+
 const FIELDS = [
   { key: "name", label: "Church Name", required: true },
   { key: "denomination", label: "Denomination" },
@@ -12,12 +23,12 @@ const FIELDS = [
   { key: "welcome_message", label: "Welcome Message", textarea: true },
   { key: "logo_url", label: "Logo URL" },
   { key: "banner_url", label: "Banner URL" },
-  { key: "accent_color", label: "Accent Color", placeholder: "#c9a84c" },
 ];
 
 export default function SettingsPage() {
   const { church, role, signOutUser } = useAuth();
   const [form, setForm] = useState({});
+  const [selectedTheme, setSelectedTheme] = useState("gold_navy");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -35,6 +46,7 @@ export default function SettingsPage() {
         const vals = {};
         FIELDS.forEach((f) => { vals[f.key] = c[f.key] || ""; });
         setForm(vals);
+        setSelectedTheme(c.theme || "gold_navy");
       } catch {} finally { setLoading(false); }
     })();
   }, [church?.id]);
@@ -44,7 +56,12 @@ export default function SettingsPage() {
     setSaving(true);
     setSaved(false);
     try {
-      await put(`/api/churches/${church.id}`, form);
+      const t = THEMES[selectedTheme];
+      await put(`/api/churches/${church.id}`, {
+        ...form,
+        theme: selectedTheme,
+        accent_color: t ? t.accent : form.accent_color,
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } finally { setSaving(false); }
@@ -118,6 +135,46 @@ export default function SettingsPage() {
             {saved && <span style={s.savedText}>Saved!</span>}
           </div>
         </form>
+      </div>
+
+      {/* Theme */}
+      <div style={s.section}>
+        <h2 style={s.sectionTitle}>App Theme</h2>
+        <p style={s.sectionDesc}>Choose how your church looks in the Devotion app for your members.</p>
+        <div style={s.themeGrid}>
+          {Object.entries(THEMES).map(([key, t]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={async () => {
+                setSelectedTheme(key);
+                await put(`/api/churches/${church.id}`, { theme: key, accent_color: t.accent });
+              }}
+              style={{
+                ...s.themeCard,
+                borderColor: selectedTheme === key ? t.accent : COLORS.border,
+                boxShadow: selectedTheme === key ? `0 0 16px ${t.accent}33` : "none",
+              }}
+            >
+              <div style={{
+                width: "100%", height: 36, borderRadius: 8,
+                background: t.bg,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <div style={{
+                  width: 16, height: 16, borderRadius: "50%",
+                  background: t.accent,
+                }} />
+              </div>
+              <span style={{
+                fontFamily: "'Nunito Sans', sans-serif", fontSize: 11,
+                color: selectedTheme === key ? t.accent : COLORS.textMuted,
+                fontWeight: selectedTheme === key ? 700 : 400,
+                marginTop: 6,
+              }}>{t.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Danger Zone */}
@@ -200,6 +257,22 @@ const s = {
     color: "#fff", fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer",
   },
   savedText: { fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, color: COLORS.gold },
+  themeGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 10,
+  },
+  themeCard: {
+    padding: "10px 6px 8px",
+    borderRadius: 12,
+    border: `2px solid ${COLORS.border}`,
+    background: "rgba(255,255,255,0.03)",
+    cursor: "pointer",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    transition: "all 0.2s",
+  },
   dangerSection: {
     padding: "24px 28px", borderRadius: 14,
     background: "rgba(192,57,43,0.06)", border: "1px solid rgba(192,57,43,0.2)",
