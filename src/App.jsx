@@ -751,7 +751,10 @@ function HomePage({ mouse, setPage }) {
               Create a branded community space for your church inside the app.<br />
               Custom dashboard, member engagement tools, and shared devotionals.
             </p>
-            <GoldButton large onClick={() => { setPage("Churches"); window.scrollTo(0,0); }}>Learn About Church Plans →</GoldButton>
+            <GoldButton large onClick={() => { setPage("Churches"); window.scrollTo(0,0); }}>Start Your Free Trial →</GoldButton>
+            <p style={{ ...s.heroSub, fontSize: 13, marginTop: 12, opacity: 0.6 }}>
+              7-day free trial. Plans from $49/month.
+            </p>
           </RevealBlock>
         </div>
       </section>
