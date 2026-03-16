@@ -83,15 +83,15 @@ export default function SignupPage() {
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
     if (sessionId) {
-      setStep(1); // Show reg code step
       fetch(`${API_BASE}/api/stripe/success?session_id=${sessionId}`)
         .then((r) => r.json())
         .then((data) => {
           if (data.code) {
             setRegCode(data.code);
+            setStep(2); // Skip to account creation — code is auto-filled
           }
         })
-        .catch(() => {});
+        .catch(() => { setStep(0); });
     }
     if (searchParams.get("cancelled")) {
       setError("Payment was cancelled. You can try again.");
@@ -234,20 +234,6 @@ export default function SignupPage() {
             {checkoutLoading
               ? "Redirecting to payment..."
               : `Subscribe — ${PLANS.find(p => p.id === selectedPlan)?.price}/month`}
-          </button>
-
-          <div style={s.divider}>
-            <span style={s.dividerLine} />
-            <span style={s.dividerText}>or</span>
-            <span style={s.dividerLine} />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            style={s.codeBtn}
-          >
-            I have a registration code
           </button>
 
           <p style={s.footer}>
