@@ -1302,7 +1302,7 @@ function ChurchesPage({ setPage }) {
           <SectionTag>PRICING</SectionTag>
           <SectionTitle>Plans for every size{"\n"}of congregation.</SectionTitle>
           <p style={{ ...s.heroSub, fontSize: 15, maxWidth: 500, margin: "16px auto 0" }}>
-            Setup takes 10 minutes. Your congregation can join today.
+            Try any plan free for 7 days. No charge until your trial ends.
           </p>
         </RevealBlock>
 
@@ -1379,7 +1379,7 @@ function ChurchesPage({ setPage }) {
           <RevealBlock style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
             <SectionTitle>Ready to bring your{"\n"}congregation into Devotion?</SectionTitle>
             <p style={{ ...s.heroSub, marginBottom: 32, fontSize: 16 }}>
-              Setup takes 10 minutes. Your congregation can join today.
+              7-day free trial. Setup takes 10 minutes. Your congregation can join today.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <GoldButton large onClick={() => {
@@ -1389,7 +1389,7 @@ function ChurchesPage({ setPage }) {
                   body: JSON.stringify({ plan: "church_plus" }),
                 }).then(r => r.json()).then(d => { if (d.url) window.location.href = d.url; })
                   .catch(() => { window.location.href = "/portal/signup"; });
-              }}>Get Started</GoldButton>
+              }}>Start Free Trial</GoldButton>
               <GoldButton outline large onClick={() => { setPage("Contact"); window.scrollTo(0,0); }}>Talk to Us First</GoldButton>
             </div>
           </RevealBlock>
@@ -1498,7 +1498,7 @@ function PricingCard({ name, price, period, desc, size, features, highlight, pla
       </div>
 
       <GoldButton large outline={!highlight} onClick={handleCheckout}>
-        {checking ? "Redirecting..." : "Get Started"}
+        {checking ? "Redirecting..." : "Start Free Trial"}
       </GoldButton>
     </div>
   );
