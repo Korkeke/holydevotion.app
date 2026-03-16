@@ -167,7 +167,7 @@ export default function SettingsPage() {
                 }} />
               </div>
               <span style={{
-                fontFamily: "'Nunito Sans', sans-serif", fontSize: 11,
+                fontFamily: "'DM Sans', sans-serif", fontSize: 11,
                 color: selectedTheme === key ? t.accent : COLORS.textMuted,
                 fontWeight: selectedTheme === key ? 700 : 400,
                 marginTop: 6,
@@ -190,7 +190,7 @@ export default function SettingsPage() {
             </button>
           ) : (
             <div style={s.deleteConfirmRow}>
-              <span style={{ color: "#e57373", fontSize: 13, fontFamily: "'Nunito Sans', sans-serif" }}>
+              <span style={{ color: "#e57373", fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
                 Are you sure? Click again to confirm.
               </span>
               <button style={s.deleteConfirmBtn} onClick={() => setDeleteConfirm(true)}>
@@ -221,42 +221,42 @@ export default function SettingsPage() {
 const s = {
   page: { padding: "32px 40px", maxWidth: 720 },
   loading: { padding: 60, display: "flex", justifyContent: "center" },
-  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.gold}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
-  title: { fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: COLORS.text, marginBottom: 24 },
+  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
+  title: { fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: COLORS.text, marginBottom: 24 },
   section: {
     padding: "24px 28px", borderRadius: 14,
-    background: COLORS.bgCard, border: `1px solid ${COLORS.border}`,
+    background: COLORS.card, border: `1px solid ${COLORS.border}`,
     marginBottom: 20,
   },
-  sectionTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 400, color: COLORS.text, marginBottom: 4 },
-  sectionDesc: { fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, color: COLORS.textMuted, marginBottom: 16 },
+  sectionTitle: { fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 4 },
+  sectionDesc: { fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.textMuted, marginBottom: 16 },
   codeRow: { display: "flex", alignItems: "center", gap: 12 },
   code: {
     fontFamily: "'Courier New', monospace", fontSize: 20, fontWeight: 700,
-    color: COLORS.gold, letterSpacing: "0.08em",
+    color: COLORS.accent, letterSpacing: "0.08em",
     padding: "10px 20px", borderRadius: 10,
-    background: COLORS.goldDim, border: `1px solid ${COLORS.borderHover}`,
+    background: COLORS.accentLight, border: `1px solid ${COLORS.border}`,
   },
   copyBtn: {
-    padding: "8px 18px", borderRadius: 8, border: `1px solid ${COLORS.borderHover}`,
-    background: "transparent", color: COLORS.gold,
-    fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer",
+    padding: "8px 18px", borderRadius: 8, border: `1px solid ${COLORS.border}`,
+    background: "transparent", color: COLORS.accent,
+    fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer",
   },
   field: { marginBottom: 16 },
-  label: { display: "block", fontFamily: "'Nunito Sans', sans-serif", fontSize: 12, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" },
+  label: { display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, color: COLORS.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" },
   input: {
     width: "100%", padding: "10px 14px", borderRadius: 8, boxSizing: "border-box",
-    border: `1px solid ${COLORS.border}`, background: "rgba(255,255,255,0.04)",
-    color: COLORS.text, fontFamily: "'Nunito Sans', sans-serif", fontSize: 14,
+    border: `1px solid ${COLORS.border}`, background: COLORS.bg,
+    color: COLORS.text, fontFamily: "'DM Sans', sans-serif", fontSize: 14,
     outline: "none",
   },
   saveRow: { display: "flex", alignItems: "center", gap: 14, marginTop: 8 },
   saveBtn: {
     padding: "10px 28px", borderRadius: 10, border: "none",
-    background: `linear-gradient(135deg, ${COLORS.gold}, #b8973e)`,
-    color: "#fff", fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer",
+    background: COLORS.accent,
+    color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer",
   },
-  savedText: { fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, color: COLORS.gold },
+  savedText: { fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.accent },
   themeGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
@@ -266,7 +266,7 @@ const s = {
     padding: "10px 6px 8px",
     borderRadius: 12,
     border: `2px solid ${COLORS.border}`,
-    background: "rgba(255,255,255,0.03)",
+    background: COLORS.bg,
     cursor: "pointer",
     display: "flex",
     flexDirection: "column",
@@ -281,17 +281,17 @@ const s = {
   deleteBtn: {
     padding: "10px 20px", borderRadius: 8,
     border: "1px solid rgba(192,57,43,0.4)", background: "transparent",
-    color: "#e57373", fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer",
+    color: "#e57373", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer",
   },
   deleteConfirmRow: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" },
   deleteConfirmBtn: {
     padding: "10px 20px", borderRadius: 8, border: "none",
     background: "rgba(192,57,43,0.8)", color: "#fff",
-    fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer",
   },
   cancelBtn: {
     padding: "10px 20px", borderRadius: 8,
     border: `1px solid ${COLORS.border}`, background: "transparent",
-    color: COLORS.textMuted, fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer",
+    color: COLORS.textMuted, fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer",
   },
 };

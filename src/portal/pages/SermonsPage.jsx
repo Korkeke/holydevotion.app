@@ -117,8 +117,8 @@ export default function SermonsPage() {
               onClick={() => loadSermonDetail(sermon.id)}
               style={{
                 ...s.sermonCard,
-                borderColor: selected?.sermon?.id === sermon.id ? COLORS.gold : COLORS.border,
-                background: selected?.sermon?.id === sermon.id ? COLORS.goldGlow : "transparent",
+                borderColor: selected?.sermon?.id === sermon.id ? COLORS.accent : COLORS.border,
+                background: selected?.sermon?.id === sermon.id ? COLORS.accentLight : "transparent",
               }}
             >
               <div style={s.sermonTitle}>{sermon.title}</div>
@@ -130,14 +130,14 @@ export default function SermonsPage() {
                   borderRadius: 4,
                   fontSize: 10,
                   fontWeight: 700,
-                  background: sermon.status === "published" ? "rgba(76, 175, 80, 0.15)" : COLORS.goldDim,
-                  color: sermon.status === "published" ? "#4caf50" : COLORS.gold,
+                  background: sermon.status === "published" ? "rgba(76, 175, 80, 0.15)" : COLORS.accentLight,
+                  color: sermon.status === "published" ? "#4caf50" : COLORS.accent,
                 }}>
                   {sermon.status}
                 </span>
               </div>
               {sermon.scripture_refs && (
-                <div style={{ fontSize: 12, color: COLORS.textDim, marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>
                   {sermon.scripture_refs}
                 </div>
               )}
@@ -219,7 +219,7 @@ export default function SermonsPage() {
               )}
 
               <div style={{ marginTop: 24 }}>
-                <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 20, fontWeight: 400, color: COLORS.text, marginBottom: 16 }}>
+                <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 16 }}>
                   Daily Reflections
                 </h3>
 
@@ -316,50 +316,50 @@ export default function SermonsPage() {
 const s = {
   page: { padding: "32px 40px", maxWidth: 1100 },
   loading: { padding: 60, display: "flex", justifyContent: "center" },
-  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.gold}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
+  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
   header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
-  title: { fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: COLORS.text },
-  createBtn: { padding: "10px 20px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${COLORS.gold}, #b8973e)`, color: "#fff", fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer" },
+  title: { fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: COLORS.text },
+  createBtn: { padding: "10px 20px", borderRadius: 10, border: "none", background: COLORS.accent, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer" },
   empty: { textAlign: "center", padding: "40px 20px" },
 
   sermonCard: {
     padding: "16px 18px", borderRadius: 12, border: `1px solid ${COLORS.border}`,
     marginBottom: 10, cursor: "pointer", transition: "all 0.15s ease",
   },
-  sermonTitle: { fontSize: 15, fontWeight: 600, color: COLORS.text, fontFamily: "'Nunito Sans', sans-serif" },
-  sermonMeta: { fontSize: 12, color: COLORS.textMuted, marginTop: 4, fontFamily: "'Nunito Sans', sans-serif" },
+  sermonTitle: { fontSize: 15, fontWeight: 600, color: COLORS.text, fontFamily: "'DM Sans', sans-serif" },
+  sermonMeta: { fontSize: 12, color: COLORS.textMuted, marginTop: 4, fontFamily: "'DM Sans', sans-serif" },
 
-  smallBtn: { padding: "4px 12px", borderRadius: 6, border: `1px solid ${COLORS.borderHover}`, background: "transparent", color: COLORS.textMuted, fontFamily: "'Nunito Sans', sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer" },
-  smallDeleteBtn: { padding: "4px 12px", borderRadius: 6, border: "1px solid rgba(192,57,43,0.3)", background: "transparent", color: "#e57373", fontFamily: "'Nunito Sans', sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer" },
-  smallSaveBtn: { padding: "4px 12px", borderRadius: 6, border: "none", background: COLORS.goldDim, color: COLORS.gold, fontFamily: "'Nunito Sans', sans-serif", fontSize: 11, fontWeight: 700, cursor: "pointer" },
+  smallBtn: { padding: "4px 12px", borderRadius: 6, border: `1px solid ${COLORS.border}`, background: "transparent", color: COLORS.textMuted, fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer" },
+  smallDeleteBtn: { padding: "4px 12px", borderRadius: 6, border: "1px solid rgba(192,57,43,0.3)", background: "transparent", color: "#e57373", fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer" },
+  smallSaveBtn: { padding: "4px 12px", borderRadius: 6, border: "none", background: COLORS.accentLight, color: COLORS.accent, fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 700, cursor: "pointer" },
 
   formCard: {
     padding: "28px 32px", borderRadius: 16, border: `1px solid ${COLORS.border}`,
-    background: COLORS.bgCard,
+    background: COLORS.card,
   },
-  formTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: 24, fontWeight: 400, color: COLORS.text, marginBottom: 4 },
+  formTitle: { fontFamily: "'Playfair Display', serif", fontSize: 24, fontWeight: 700, color: COLORS.text, marginBottom: 4 },
   formDesc: { color: COLORS.textMuted, fontSize: 13, marginBottom: 20, lineHeight: 1.6 },
 
-  label: { display: "block", fontSize: 11, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, marginTop: 14, fontFamily: "'Nunito Sans', sans-serif" },
+  label: { display: "block", fontSize: 11, fontWeight: 700, color: COLORS.textMuted, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, marginTop: 14, fontFamily: "'DM Sans', sans-serif" },
   input: {
     display: "block", width: "100%", padding: "10px 14px", borderRadius: 8,
-    border: `1px solid rgba(255,255,255,0.18)`, background: "transparent",
-    color: COLORS.text, fontFamily: "'Nunito Sans', sans-serif", fontSize: 14, outline: "none",
+    border: `1px solid ${COLORS.border}`, background: "transparent",
+    color: COLORS.text, fontFamily: "'DM Sans', sans-serif", fontSize: 14, outline: "none",
     resize: "vertical",
   },
 
-  generateBtn: { padding: "12px 24px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${COLORS.gold}, #b8973e)`, color: "#fff", fontFamily: "'Nunito Sans', sans-serif", fontSize: 14, fontWeight: 700, cursor: "pointer" },
-  cancelBtn: { padding: "12px 24px", borderRadius: 10, border: `1px solid ${COLORS.border}`, background: "transparent", color: COLORS.textMuted, fontFamily: "'Nunito Sans', sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" },
+  generateBtn: { padding: "12px 24px", borderRadius: 10, border: "none", background: COLORS.accent, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 700, cursor: "pointer" },
+  cancelBtn: { padding: "12px 24px", borderRadius: 10, border: `1px solid ${COLORS.border}`, background: "transparent", color: COLORS.textMuted, fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer" },
 
   reflectionCard: {
     padding: "18px 20px", borderRadius: 12, border: `1px solid ${COLORS.border}`,
-    marginBottom: 10, background: "rgba(255,255,255,0.02)",
+    marginBottom: 10, background: COLORS.bg,
   },
-  dayLabel: { fontSize: 11, fontWeight: 700, color: COLORS.gold, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'Nunito Sans', sans-serif" },
-  refTitle: { fontSize: 15, fontWeight: 600, color: COLORS.text, marginTop: 4, fontFamily: "'Nunito Sans', sans-serif" },
-  refPrompt: { fontSize: 13, color: COLORS.textMuted, lineHeight: 1.7, marginTop: 8, fontFamily: "'Nunito Sans', sans-serif" },
-  refScripture: { fontSize: 12, color: COLORS.gold, marginTop: 6, fontFamily: "'Nunito Sans', sans-serif" },
-  aiBadge: { padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700, background: "rgba(41, 128, 185, 0.15)", color: "#5dade2", fontFamily: "'Nunito Sans', sans-serif" },
-  completionBadge: { padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "rgba(76,175,80,0.12)", color: "#66bb6a", fontFamily: "'Nunito Sans', sans-serif" },
-  editRefBtn: { marginTop: 8, padding: "4px 14px", borderRadius: 6, border: `1px solid ${COLORS.borderHover}`, background: "transparent", color: COLORS.gold, fontFamily: "'Nunito Sans', sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer" },
+  dayLabel: { fontSize: 11, fontWeight: 700, color: COLORS.accent, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "'DM Sans', sans-serif" },
+  refTitle: { fontSize: 15, fontWeight: 600, color: COLORS.text, marginTop: 4, fontFamily: "'DM Sans', sans-serif" },
+  refPrompt: { fontSize: 13, color: COLORS.textMuted, lineHeight: 1.7, marginTop: 8, fontFamily: "'DM Sans', sans-serif" },
+  refScripture: { fontSize: 12, color: COLORS.accent, marginTop: 6, fontFamily: "'DM Sans', sans-serif" },
+  aiBadge: { padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700, background: "rgba(41, 128, 185, 0.15)", color: "#5dade2", fontFamily: "'DM Sans', sans-serif" },
+  completionBadge: { padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "rgba(76,175,80,0.12)", color: "#66bb6a", fontFamily: "'DM Sans', sans-serif" },
+  editRefBtn: { marginTop: 8, padding: "4px 14px", borderRadius: 6, border: `1px solid ${COLORS.border}`, background: "transparent", color: COLORS.accent, fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600, cursor: "pointer" },
 };

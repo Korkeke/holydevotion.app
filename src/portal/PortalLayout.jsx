@@ -13,10 +13,10 @@ export default function PortalLayout() {
       <style>{portalCSS}</style>
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <div style={s.main}>
+      <div style={s.main} className="portal-main">
         {/* Top bar */}
         <header style={s.topBar}>
-          <button onClick={() => setMenuOpen(!menuOpen)} style={s.hamburger}>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={s.hamburger} className="portal-hamburger">
             <div style={s.hamLine} />
             <div style={s.hamLine} />
             <div style={s.hamLine} />
@@ -36,10 +36,13 @@ export default function PortalLayout() {
 }
 
 const portalCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,500;0,6..12,600;1,6..12,300&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { -webkit-font-smoothing: antialiased; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
 
   @media (min-width: 769px) {
     .portal-hamburger { display: none !important; }
@@ -56,6 +59,7 @@ const s = {
     minHeight: "100vh",
     background: COLORS.bg,
     color: COLORS.text,
+    fontFamily: "'DM Sans', sans-serif",
   },
   main: {
     marginLeft: 240,
@@ -70,8 +74,7 @@ const s = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    background: "rgba(6,9,17,0.8)",
-    backdropFilter: "blur(12px)",
+    background: COLORS.bg,
     position: "sticky",
     top: 0,
     zIndex: 50,
@@ -98,9 +101,9 @@ const s = {
     marginLeft: "auto",
   },
   email: {
-    fontFamily: "'Nunito Sans', sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: COLORS.textSec,
   },
   content: {
     flex: 1,

@@ -81,25 +81,25 @@ export default function PrayerWallPage() {
 const s = {
   page: { padding: "32px 40px", maxWidth: 960 },
   loading: { padding: 60, display: "flex", justifyContent: "center" },
-  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.gold}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
-  title: { fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: COLORS.text, marginBottom: 4 },
-  subtitle: { fontFamily: "'Nunito Sans', sans-serif", fontSize: 14, color: COLORS.textMuted, marginBottom: 24 },
-  empty: { fontFamily: "'Nunito Sans', sans-serif", fontSize: 14, color: COLORS.textDim, textAlign: "center", padding: 48 },
+  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
+  title: { fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: COLORS.text, marginBottom: 4 },
+  subtitle: { fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: COLORS.textMuted, marginBottom: 24 },
+  empty: { fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: COLORS.textMuted, textAlign: "center", padding: 48 },
   list: { display: "flex", flexDirection: "column", gap: 12 },
   card: {
     padding: "16px 20px", borderRadius: 12,
-    background: COLORS.bgCard, border: `1px solid ${COLORS.border}`,
+    background: COLORS.card, border: `1px solid ${COLORS.border}`,
   },
   prayerText: {
-    fontFamily: "'Nunito Sans', sans-serif", fontSize: 14,
+    fontFamily: "'DM Sans', sans-serif", fontSize: 14,
     color: COLORS.text, lineHeight: 1.6, marginBottom: 12,
   },
   cardFooter: { display: "flex", alignItems: "center", justifyContent: "space-between" },
-  meta: { fontFamily: "'Nunito Sans', sans-serif", fontSize: 12, color: COLORS.textDim },
+  meta: { fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: COLORS.textMuted },
   hideBtn: {
     padding: "5px 14px", borderRadius: 6,
     border: "1px solid rgba(192,57,43,0.3)", background: "transparent",
-    color: "#e57373", fontFamily: "'Nunito Sans', sans-serif",
+    color: "#e57373", fontFamily: "'DM Sans', sans-serif",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
   },
 };

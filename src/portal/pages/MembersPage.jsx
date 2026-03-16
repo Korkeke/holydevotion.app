@@ -7,9 +7,9 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import StatusBadge from "../components/StatusBadge";
 
 const ROLE_COLORS = {
-  owner: { bg: COLORS.goldDim, text: COLORS.gold },
+  owner: { bg: COLORS.accentLight, text: COLORS.accent },
   admin: { bg: "rgba(52,152,219,0.12)", text: "#5dade2" },
-  member: { bg: "rgba(255,255,255,0.06)", text: COLORS.textMuted },
+  member: { bg: COLORS.sand, text: COLORS.textMuted },
 };
 
 function RoleBadge({ role }) {
@@ -18,7 +18,7 @@ function RoleBadge({ role }) {
     <span style={{
       display: "inline-block", padding: "4px 10px", borderRadius: 6,
       background: c.bg, color: c.text,
-      fontFamily: "'Nunito Sans', sans-serif", fontSize: 11,
+      fontFamily: "'DM Sans', sans-serif", fontSize: 11,
       fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase",
     }}>{role}</span>
   );
@@ -71,7 +71,7 @@ export default function MembersPage() {
     {
       key: "user_id", label: "Member",
       render: (r) => (
-        <span style={{ fontFamily: "'Nunito Sans', sans-serif", fontSize: 13, color: COLORS.textMuted }}>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.textMuted }}>
           {r.user_id?.slice(0, 12)}...
         </span>
       ),
@@ -125,10 +125,10 @@ export default function MembersPage() {
 const s = {
   page: { padding: "32px 40px", maxWidth: 960 },
   loading: { padding: 60, display: "flex", justifyContent: "center" },
-  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.gold}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
-  title: { fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 400, color: COLORS.text, marginBottom: 4 },
-  subtitle: { fontFamily: "'Nunito Sans', sans-serif", fontSize: 14, color: COLORS.textMuted, marginBottom: 24 },
-  promoteBtn: { padding: "6px 14px", borderRadius: 6, border: "none", background: COLORS.goldDim, color: COLORS.gold, fontFamily: "'Nunito Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
-  demoteBtn: { padding: "6px 14px", borderRadius: 6, border: `1px solid ${COLORS.borderHover}`, background: "transparent", color: COLORS.gold, fontFamily: "'Nunito Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
-  removeBtn: { padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(192,57,43,0.3)", background: "transparent", color: "#e57373", fontFamily: "'Nunito Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
+  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
+  title: { fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: COLORS.text, marginBottom: 4 },
+  subtitle: { fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: COLORS.textMuted, marginBottom: 24 },
+  promoteBtn: { padding: "6px 14px", borderRadius: 6, border: "none", background: COLORS.accentLight, color: COLORS.accent, fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
+  demoteBtn: { padding: "6px 14px", borderRadius: 6, border: `1px solid ${COLORS.border}`, background: "transparent", color: COLORS.accent, fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
+  removeBtn: { padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(192,57,43,0.3)", background: "transparent", color: "#e57373", fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
 };

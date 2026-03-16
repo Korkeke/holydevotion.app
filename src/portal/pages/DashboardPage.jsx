@@ -5,7 +5,7 @@ import { useAuth } from "../AuthContext";
 import { get, post } from "../api";
 
 export default function DashboardPage() {
-  const { church, churchLoading } = useAuth();
+  const { church, churchLoading, user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [pulse, setPulse] = useState(null);
@@ -46,7 +46,6 @@ export default function DashboardPage() {
     return (
       <div style={s.loading}>
         <div style={s.spinner} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -61,279 +60,306 @@ export default function DashboardPage() {
 
   const dailyData = engagement?.daily || [];
   const maxMessages = Math.max(...dailyData.map(d => d.messages), 1);
+  const userName = user?.email?.split("@")[0] || "Pastor";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  // Sermon data from engagement
+  const sermonTitle = engagement?.current_sermon?.title || "Weekly Sermon";
+  const sermonWeek = engagement?.current_sermon?.week || "";
+  const weeklySermonData = engagement?.sermon_daily || [
+    { day: "Mon", reflections: 0, opens: 0 },
+    { day: "Tue", reflections: 0, opens: 0 },
+    { day: "Wed", reflections: 0, opens: 0 },
+    { day: "Thu", reflections: 0, opens: 0 },
+    { day: "Fri", reflections: 0, opens: 0 },
+    { day: "Sat", reflections: 0, opens: 0 },
+    { day: "Sun", reflections: 0, opens: 0 },
+  ];
+  const maxSermon = Math.max(...weeklySermonData.map(d => Math.max(d.reflections || 0, d.opens || 0)), 1);
+
+  // Theme data
+  const themes = pulse?.themes || [];
+  const themeColors = [COLORS.amber, COLORS.accent, COLORS.red, COLORS.accentMid, COLORS.green];
+
+  // Attention items
+  const attentionItems = [];
+  if (attention?.inactive?.length > 0) {
+    const m = attention.inactive[0];
+    attentionItems.push({
+      icon: "💛",
+      name: m.display_name || "Member",
+      detail: `Inactive ${m.days_inactive || "?"} days · Was active regularly`,
+      action: "Reach Out",
+      color: COLORS.amber,
+    });
+  }
+  if (attention?.declining?.length > 0) {
+    const m = attention.declining[0];
+    attentionItems.push({
+      icon: "💛",
+      name: m.display_name || "Member",
+      detail: "Engagement declining",
+      action: "Reach Out",
+      color: COLORS.amber,
+    });
+  }
+  const totalInactive = (attention?.inactive?.length || 0) + (attention?.declining?.length || 0);
+  if (totalInactive > 2) {
+    attentionItems.push({
+      icon: "⚠️",
+      name: `${totalInactive - 2} members`,
+      detail: "Haven't opened the app this week",
+      action: "View List",
+      color: COLORS.red,
+    });
+  }
+
+  // Members for table
+  const members = attention?.all_members || [];
 
   return (
     <div style={s.page}>
       {/* Header */}
       <div style={s.header}>
-        <h1 style={s.title}>{church.name}</h1>
-        <p style={s.subtitle}>
-          {[church.denomination, church.city].filter(Boolean).join(" · ") || "Church Dashboard"}
-        </p>
+        <div>
+          <div style={s.greeting}>{greeting}, {userName}</div>
+          <div style={s.title}>Church Overview</div>
+        </div>
+        <div style={s.headerActions}>
+          <button style={s.outlineBtn}>This Week ▾</button>
+          <button style={s.accentBtn} onClick={() => navigate("/portal/sermons")}>
+            + Update Sermon
+          </button>
+        </div>
       </div>
 
-      {/* Top stat cards */}
+      {/* Stat Cards */}
       <div style={s.statsGrid}>
-        <SparkCard
-          label="Active Members"
-          value={stats?.member_count ?? 0}
-          sparkData={dailyData.map(d => d.active_users)}
-        />
-        <SparkCard
-          label="Weekly Messages"
-          value={pulse?.total_messages_this_week ?? 0}
-          prevValue={pulse?.total_messages_prev_week}
-          sparkData={dailyData.slice(-7).map(d => d.messages)}
-        />
-        <SparkCard
-          label="Sermon Engagement"
-          value={engagement?.sermon_completion_rate != null ? `${engagement.sermon_completion_rate}%` : "—"}
-          sparkData={dailyData.slice(-7).map(d => d.sermon_completions)}
-        />
-        <SparkCard
-          label="Prayer Requests"
-          value={stats?.prayer_count ?? 0}
-        />
-      </div>
-
-      {/* Main grid: Engagement chart + Spiritual Pulse side by side */}
-      <div style={s.twoCol}>
-        {/* Left: Engagement chart */}
-        <div style={s.card}>
-          <h3 style={s.cardTitle}>Daily Activity</h3>
-          <p style={s.cardSubtitle}>Messages over the last 30 days</p>
-          <div style={s.chartArea}>
-            {dailyData.length === 0 ? (
-              <p style={s.noData}>No activity data yet. As your members use Devotion, this chart will populate.</p>
-            ) : (
-              <div style={s.barChart}>
-                {dailyData.map((d, i) => {
-                  const h = Math.max((d.messages / maxMessages) * 100, 2);
-                  const isToday = i === dailyData.length - 1;
-                  return (
-                    <div key={d.date} style={s.barCol} title={`${d.date}: ${d.messages} messages`}>
-                      <div style={{
-                        ...s.bar,
-                        height: `${h}%`,
-                        background: isToday
-                          ? `linear-gradient(to top, ${COLORS.gold}, ${COLORS.goldLight})`
-                          : COLORS.goldDim,
-                      }} />
-                    </div>
-                  );
-                })}
+        {[
+          { label: "Total Members", value: stats?.member_count ?? 0, change: `${stats?.new_members_this_month ?? 0} this month`, dir: "up" },
+          { label: "Active This Week", value: stats?.active_this_week ?? engagement?.active_this_week ?? 0, change: `${stats?.active_pct ?? "—"}% of members`, dir: "up" },
+          { label: "Sermon Engagement", value: engagement?.sermon_completion_rate != null ? `${engagement.sermon_completion_rate}%` : "—", change: engagement?.sermon_change || "", dir: "up" },
+          { label: "Avg. Session Length", value: engagement?.avg_session_length || "—", change: engagement?.session_change || "", dir: "up" },
+        ].map((stat, i) => (
+          <div key={i} style={s.statCard}>
+            <div style={s.statLabel}>{stat.label}</div>
+            <div style={s.statValue}>{stat.value}</div>
+            {stat.change && (
+              <div style={{ fontSize: 12, fontWeight: 600, color: stat.dir === "up" ? COLORS.green : COLORS.red }}>
+                {stat.dir === "up" ? "↑ " : "↓ "}{stat.change}
               </div>
             )}
           </div>
+        ))}
+      </div>
+
+      {/* Two Column: Sermon Chart + Spiritual Pulse */}
+      <div style={s.twoColWide}>
+        {/* Sermon Engagement Chart */}
+        <div style={s.card}>
+          <div style={s.cardHeaderRow}>
+            <div>
+              <div style={s.cardTitle}>Sermon Engagement</div>
+              <div style={s.cardSubtitle}>{sermonTitle}{sermonWeek ? ` · ${sermonWeek}` : ""}</div>
+            </div>
+            <div style={s.legendRow}>
+              <div style={s.legendItem}>
+                <div style={{ ...s.legendDot, background: COLORS.accent }} />
+                Reflections
+              </div>
+              <div style={s.legendItem}>
+                <div style={{ ...s.legendDot, background: COLORS.accentMid }} />
+                App Opens
+              </div>
+            </div>
+          </div>
+
+          {/* Bar chart */}
+          <div style={s.barChart}>
+            {weeklySermonData.map((d, i) => (
+              <div key={i} style={s.barGroup}>
+                <div style={s.barPair}>
+                  <div style={{
+                    flex: 1,
+                    height: (d.opens || 0) > 0 ? `${((d.opens || 0) / maxSermon) * 100}%` : 4,
+                    borderRadius: 5,
+                    background: (d.opens || 0) > 0 ? COLORS.accentMid : COLORS.border,
+                    minHeight: 4,
+                    transition: "height 0.4s ease",
+                  }} />
+                  <div style={{
+                    flex: 1,
+                    height: (d.reflections || 0) > 0 ? `${((d.reflections || 0) / maxSermon) * 100}%` : 4,
+                    borderRadius: 5,
+                    background: (d.reflections || 0) > 0 ? COLORS.accent : COLORS.border,
+                    minHeight: 4,
+                    transition: "height 0.4s ease",
+                  }} />
+                </div>
+                <div style={s.barLabel}>{d.day}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Scripture engagement */}
+          {engagement?.scripture_engagement && engagement.scripture_engagement.length > 0 && (
+            <div style={s.scriptureSection}>
+              <div style={s.scriptureSectionTitle}>Scripture Engagement</div>
+              <div style={s.scriptureRow}>
+                {engagement.scripture_engagement.slice(0, 3).map((sc, i) => (
+                  <div key={i} style={s.scripturePill}>
+                    <div style={s.scriptureCount}>{sc.reads}</div>
+                    <div style={s.scriptureRef}>{sc.ref}</div>
+                    <div style={s.scripturePct}>{sc.pct} of members</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right: Spiritual Pulse */}
+        {/* Spiritual Pulse */}
         <div style={s.card}>
-          <h3 style={s.cardTitle}>Spiritual Pulse</h3>
-          <p style={s.cardSubtitle}>What your congregation is wrestling with this week</p>
-          {(!pulse?.themes || pulse.themes.length === 0) ? (
+          <div style={s.cardTitle}>Spiritual Pulse</div>
+          <div style={{ ...s.cardSubtitle, marginBottom: 20 }}>Themes from congregation conversations</div>
+
+          {themes.length === 0 ? (
             <p style={s.noData}>Not enough conversation data yet. Themes will appear as your members chat with Devotion.</p>
           ) : (
-            <div style={s.themeList}>
-              {pulse.themes.slice(0, 6).map(t => (
-                <div key={t.theme} style={s.themeRow}>
-                  <div style={s.themeLabel}>
-                    <span style={s.themeName}>{t.theme}</span>
-                    <span style={s.themeTrend}>
-                      {t.trend === "up" ? "↑" : t.trend === "down" ? "↓" : t.trend === "new" ? "✦" : "—"}
-                    </span>
+            themes.slice(0, 5).map((t, i) => (
+              <div key={i} style={{ marginBottom: 14 }}>
+                <div style={s.themeHeaderRow}>
+                  <span style={s.themeName}>{t.theme}</span>
+                  <div style={s.themeStats}>
+                    <span style={s.themePct}>{t.percentage}%</span>
+                    {t.change != null && (
+                      <span style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        color: t.trend === "up" && t.theme === "Anxiety" ? COLORS.red
+                          : t.trend === "up" ? COLORS.green
+                          : COLORS.textMuted,
+                      }}>
+                        {t.trend === "up" ? "+" : t.trend === "down" ? "" : ""}{t.change ?? ""}
+                      </span>
+                    )}
                   </div>
-                  <div style={s.themeBarBg}>
-                    <div style={{ ...s.themeBarFill, width: `${Math.min(t.percentage, 100)}%` }} />
-                  </div>
-                  <span style={s.themePct}>{t.percentage}%</span>
                 </div>
-              ))}
+                <div style={s.themeBarBg}>
+                  <div style={{
+                    width: `${Math.min(t.percentage, 100)}%`,
+                    height: "100%",
+                    borderRadius: 3,
+                    background: themeColors[i % themeColors.length],
+                    transition: "width 0.5s ease",
+                  }} />
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* AI Insight */}
+          {pulse?.insight ? (
+            <div style={s.insightCard}>
+              <div style={s.insightRow}>
+                <span style={{ fontSize: 16 }}>💡</span>
+                <div>
+                  <div style={s.insightTitle}>AI Insight</div>
+                  <div style={s.insightText}>{pulse.insight.text}</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={s.insightCard}>
+              <div style={s.insightRow}>
+                <span style={{ fontSize: 16 }}>💡</span>
+                <div style={{ flex: 1 }}>
+                  <div style={s.insightTitle}>AI Insight</div>
+                  <div style={s.insightText}>
+                    {generatingInsight ? "Generating insight..." : "Click to generate an AI-powered insight based on your congregation's conversations."}
+                  </div>
+                </div>
+                {!generatingInsight && !pulse?.insight && (
+                  <button style={s.insightBtn} onClick={handleGenerateInsight}>Generate</button>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* AI Insight card */}
-      <div style={{ ...s.card, marginBottom: 24 }}>
-        <div style={s.insightHeader}>
-          <div>
-            <h3 style={s.cardTitle}>AI Pastoral Insight</h3>
-            <p style={s.cardSubtitle}>Weekly analysis of your congregation's spiritual needs</p>
-          </div>
-          {!pulse?.insight && (
-            <button
-              style={s.generateBtn}
-              onClick={handleGenerateInsight}
-              disabled={generatingInsight}
-            >
-              {generatingInsight ? "Generating..." : "Generate Insight"}
-            </button>
+      {/* Two Column: Needs Attention + Active Journeys */}
+      <div style={s.twoCol}>
+        {/* Needs Attention */}
+        <div style={s.card}>
+          <div style={s.cardTitle}>Needs Attention</div>
+          <div style={{ height: 16 }} />
+          {attentionItems.length === 0 ? (
+            <p style={s.noData}>All members are active! No one needs outreach right now.</p>
+          ) : (
+            attentionItems.map((a, i) => (
+              <div key={i} style={{
+                ...s.attentionRow,
+                borderBottom: i < attentionItems.length - 1 ? `1px solid ${COLORS.border}` : "none",
+              }}>
+                <div style={{ ...s.attentionIcon, background: `${a.color}12` }}>{a.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={s.attentionName}>{a.name}</div>
+                  <div style={s.attentionDetail}>{a.detail}</div>
+                </div>
+                <button style={s.attentionBtn}>{a.action}</button>
+              </div>
+            ))
           )}
         </div>
-        {pulse?.insight ? (
-          <div style={s.insightBody}>
-            <div style={s.insightIcon}>✝</div>
-            <p style={s.insightText}>{pulse.insight.text}</p>
-            {pulse.insight.generated_at && (
-              <p style={s.insightDate}>
-                Generated {new Date(pulse.insight.generated_at).toLocaleDateString()}
-              </p>
-            )}
-          </div>
-        ) : !generatingInsight ? (
-          <p style={s.noData}>
-            Click "Generate Insight" to get an AI-powered analysis of what your congregation needs this week.
-          </p>
-        ) : null}
-      </div>
 
-      {/* Needs Attention */}
-      {attention && (attention.declining?.length > 0 || attention.inactive?.length > 0 || attention.new_members?.length > 0 || attention.milestones?.length > 0) && (
-        <div style={{ ...s.card, marginBottom: 24 }}>
-          <h3 style={s.cardTitle}>Needs Attention</h3>
-          <p style={s.cardSubtitle}>Members who may need pastoral outreach</p>
-          <div style={s.attentionGrid}>
-            {attention.declining?.length > 0 && (
-              <AttentionGroup
-                label="Declining"
-                color="#e67e22"
-                members={attention.declining}
-              />
-            )}
-            {attention.inactive?.length > 0 && (
-              <AttentionGroup
-                label="Inactive"
-                color="#e74c3c"
-                members={attention.inactive}
-              />
-            )}
-            {attention.new_members?.length > 0 && (
-              <AttentionGroup
-                label="New Members"
-                color="#2ecc71"
-                members={attention.new_members}
-              />
-            )}
-            {attention.milestones?.length > 0 && (
-              <AttentionGroup
-                label="Streak Milestones"
-                color={COLORS.gold}
-                members={attention.milestones.map(m => ({ ...m, display_name: `${m.display_name} — ${m.milestone} day streak!` }))}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Quick actions + Invite code */}
-      <div style={s.twoCol}>
+        {/* Active Journeys / Quick Actions */}
         <div style={s.card}>
-          <h3 style={s.cardTitle}>Quick Actions</h3>
-          <div style={s.actions}>
-            <button style={s.actionBtn} onClick={() => navigate("/portal/sermons")}>
-              + Create Sermon Study
-            </button>
-            <button style={s.actionBtn} onClick={() => navigate("/portal/events")}>
-              + Create Event
-            </button>
-            <button style={s.actionBtn} onClick={() => navigate("/portal/announcements")}>
-              + Post Announcement
-            </button>
-            <button style={s.actionBtn} onClick={() => navigate("/portal/devotionals")}>
-              + Write Devotional
-            </button>
+          <div style={s.cardHeaderRow}>
+            <div style={s.cardTitle}>Quick Actions</div>
           </div>
-        </div>
-
-        {church.invite_code && (
-          <div style={s.card}>
-            <h3 style={s.cardTitle}>Invite Code</h3>
-            <div style={s.inviteCard}>
-              <div style={s.inviteCode}>{church.invite_code}</div>
+          <div style={{ height: 8 }} />
+          {[
+            { label: "+ Create Sermon Study", path: "/portal/sermons" },
+            { label: "+ Create Event", path: "/portal/events" },
+            { label: "+ Post Announcement", path: "/portal/announcements" },
+            { label: "+ Write Devotional", path: "/portal/devotionals" },
+          ].map((action, i) => (
+            <div key={i} style={{
+              padding: "14px 0",
+              borderBottom: i < 3 ? `1px solid ${COLORS.border}` : "none",
+            }}>
               <button
-                style={s.copyBtn}
-                onClick={() => navigator.clipboard.writeText(church.invite_code)}
+                onClick={() => navigate(action.path)}
+                style={s.quickActionBtn}
               >
-                Copy
+                {action.label}
               </button>
             </div>
-            <p style={s.inviteHint}>
-              Share this code with your congregation. They enter it in the Devotion app to join your church.
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-
-// ─── SparkCard Component ──────────────────────────────────
-
-function SparkCard({ label, value, prevValue, sparkData = [] }) {
-  const trend = prevValue != null && typeof value === "number"
-    ? value > prevValue ? "up" : value < prevValue ? "down" : "flat"
-    : null;
-
-  // Mini sparkline
-  const maxVal = Math.max(...sparkData, 1);
-  const points = sparkData.map((v, i) => {
-    const x = sparkData.length > 1 ? (i / (sparkData.length - 1)) * 80 : 40;
-    const y = 24 - (v / maxVal) * 20;
-    return `${x},${y}`;
-  }).join(" ");
-
-  return (
-    <div style={s.sparkCard}>
-      <div style={s.sparkTop}>
-        <div style={s.sparkValue}>{value}</div>
-        {trend && (
-          <span style={{ ...s.sparkTrend, color: trend === "up" ? "#2ecc71" : trend === "down" ? "#e74c3c" : COLORS.textMuted }}>
-            {trend === "up" ? "↑" : trend === "down" ? "↓" : "—"}
-          </span>
-        )}
-      </div>
-      {sparkData.length > 1 && (
-        <svg width="80" height="28" style={{ marginBottom: 6, opacity: 0.6 }}>
-          <polyline
-            points={points}
-            fill="none"
-            stroke={COLORS.gold}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-      <div style={s.sparkLabel}>{label}</div>
-    </div>
-  );
-}
-
-
-// ─── AttentionGroup Component ─────────────────────────────
-
-function AttentionGroup({ label, color, members }) {
-  return (
-    <div style={s.attentionGroup}>
-      <div style={s.attentionLabel}>
-        <span style={{ ...s.attentionDot, background: color }} />
-        <span>{label}</span>
-        <span style={s.attentionCount}>{members.length}</span>
-      </div>
-      {members.slice(0, 5).map((m, i) => (
-        <div key={m.id || i} style={s.attentionMember}>
-          <span style={s.attentionName}>{m.display_name || "Anonymous"}</span>
-          {m.last_active_at && (
-            <span style={s.attentionDate}>
-              Last active {new Date(m.last_active_at).toLocaleDateString()}
-            </span>
-          )}
+          ))}
         </div>
-      ))}
-      {members.length > 5 && (
-        <p style={s.attentionMore}>+ {members.length - 5} more</p>
+      </div>
+
+      {/* Invite Code */}
+      {church.invite_code && (
+        <div style={{ ...s.card, marginBottom: 24 }}>
+          <div style={s.cardHeaderRow}>
+            <div>
+              <div style={s.cardTitle}>Invite Code</div>
+              <div style={s.cardSubtitle}>Share this code with your congregation to join in the Devotion app</div>
+            </div>
+          </div>
+          <div style={s.inviteRow}>
+            <div style={s.inviteCode}>{church.invite_code}</div>
+            <button
+              style={s.copyBtn}
+              onClick={() => navigator.clipboard.writeText(church.invite_code)}
+            >
+              Copy Code
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -344,8 +370,8 @@ function AttentionGroup({ label, color, members }) {
 
 const s = {
   page: {
-    padding: "32px 40px",
-    maxWidth: 1100,
+    padding: "28px 36px",
+    maxWidth: 1200,
   },
   loading: {
     padding: 60,
@@ -355,7 +381,7 @@ const s = {
   spinner: {
     width: 28,
     height: 28,
-    border: `2px solid ${COLORS.gold}`,
+    border: `2px solid ${COLORS.accent}`,
     borderTopColor: "transparent",
     borderRadius: "50%",
     animation: "spin 0.8s linear infinite",
@@ -365,70 +391,90 @@ const s = {
     textAlign: "center",
   },
   emptyText: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 14,
-    color: COLORS.textMuted,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 32,
-    fontWeight: 400,
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontFamily: "'Nunito Sans', sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     color: COLORS.textMuted,
   },
 
-  // Stats grid
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: 16,
+  // Header
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 28,
   },
-
-  // Spark cards
-  sparkCard: {
-    padding: "22px 20px 18px",
-    borderRadius: 16,
-    background: COLORS.bgCard,
-    border: `1px solid ${COLORS.border}`,
-    display: "flex",
-    flexDirection: "column",
-  },
-  sparkTop: {
-    display: "flex",
-    alignItems: "baseline",
-    gap: 8,
+  greeting: {
+    fontSize: 13,
+    color: COLORS.textMuted,
     marginBottom: 4,
   },
-  sparkValue: {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 32,
-    fontWeight: 400,
-    color: COLORS.text,
-    lineHeight: 1,
-  },
-  sparkTrend: {
-    fontSize: 16,
+  title: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 28,
     fontWeight: 700,
+    color: COLORS.text,
   },
-  sparkLabel: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 11,
+  headerActions: {
+    display: "flex",
+    gap: 10,
+  },
+  outlineBtn: {
+    padding: "10px 20px",
+    borderRadius: 10,
+    border: `1.5px solid ${COLORS.border}`,
+    background: COLORS.card,
+    fontSize: 13,
     fontWeight: 600,
-    color: COLORS.textMuted,
-    letterSpacing: "0.05em",
-    textTransform: "uppercase",
+    color: COLORS.textBody,
+    cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif",
+  },
+  accentBtn: {
+    padding: "10px 20px",
+    borderRadius: 10,
+    border: "none",
+    background: COLORS.accent,
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#fff",
+    cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif",
   },
 
-  // Two column layout
+  // Stats
+  statsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 14,
+    marginBottom: 24,
+  },
+  statCard: {
+    background: COLORS.card,
+    border: `1px solid ${COLORS.border}`,
+    borderRadius: 14,
+    padding: "18px 20px",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    fontWeight: 500,
+    marginBottom: 8,
+  },
+  statValue: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 30,
+    fontWeight: 700,
+    marginBottom: 4,
+    color: COLORS.text,
+  },
+
+  // Two column layouts
+  twoColWide: {
+    display: "grid",
+    gridTemplateColumns: "1.6fr 1fr",
+    gap: 20,
+    marginBottom: 24,
+  },
   twoCol: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -438,248 +484,250 @@ const s = {
 
   // Cards
   card: {
-    padding: "24px",
-    borderRadius: 16,
-    background: COLORS.bgCard,
+    background: COLORS.card,
     border: `1px solid ${COLORS.border}`,
+    borderRadius: 16,
+    padding: "22px 24px",
+  },
+  cardHeaderRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
   },
   cardTitle: {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 20,
-    fontWeight: 500,
+    fontSize: 16,
+    fontWeight: 700,
     color: COLORS.text,
-    marginBottom: 2,
   },
   cardSubtitle: {
-    fontFamily: "'Nunito Sans', sans-serif",
     fontSize: 12,
     color: COLORS.textMuted,
-    marginBottom: 20,
+    marginTop: 2,
   },
   noData: {
-    fontFamily: "'Nunito Sans', sans-serif",
     fontSize: 13,
-    color: COLORS.textDim,
+    color: COLORS.textMuted,
     fontStyle: "italic",
     lineHeight: 1.6,
   },
 
-  // Bar chart
-  chartArea: {
-    height: 180,
+  // Legend
+  legendRow: {
     display: "flex",
-    alignItems: "flex-end",
+    gap: 12,
+    fontSize: 12,
+    color: COLORS.textMuted,
   },
+  legendItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 4,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+  },
+
+  // Bar chart
   barChart: {
+    display: "flex",
+    gap: 12,
+    alignItems: "flex-end",
+    height: 160,
+    marginBottom: 8,
+    marginTop: 20,
+  },
+  barGroup: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    height: "100%",
+  },
+  barPair: {
+    flex: 1,
     display: "flex",
     alignItems: "flex-end",
     gap: 3,
     width: "100%",
-    height: "100%",
   },
-  barCol: {
-    flex: 1,
-    height: "100%",
-    display: "flex",
-    alignItems: "flex-end",
-    cursor: "default",
-  },
-  bar: {
-    width: "100%",
-    borderRadius: "3px 3px 0 0",
-    minHeight: 2,
-    transition: "height 0.3s ease",
-  },
-
-  // Theme list (Spiritual Pulse)
-  themeList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
-  themeRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-  },
-  themeLabel: {
-    width: 120,
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    flexShrink: 0,
-  },
-  themeName: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 13,
-    fontWeight: 500,
-    color: COLORS.text,
-  },
-  themeTrend: {
-    fontSize: 12,
-    color: COLORS.gold,
-  },
-  themeBarBg: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-    background: `${COLORS.gold}15`,
-    overflow: "hidden",
-  },
-  themeBarFill: {
-    height: "100%",
-    borderRadius: 4,
-    background: `linear-gradient(to right, ${COLORS.gold}, ${COLORS.goldLight})`,
-    transition: "width 0.4s ease",
-  },
-  themePct: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 12,
+  barLabel: {
+    fontSize: 11,
     fontWeight: 600,
     color: COLORS.textMuted,
-    width: 40,
-    textAlign: "right",
-    flexShrink: 0,
+    marginTop: 8,
+  },
+
+  // Scripture engagement
+  scriptureSection: {
+    borderTop: `1px solid ${COLORS.border}`,
+    paddingTop: 16,
+    marginTop: 8,
+  },
+  scriptureSectionTitle: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: COLORS.textSec,
+    marginBottom: 10,
+  },
+  scriptureRow: {
+    display: "flex",
+    gap: 10,
+  },
+  scripturePill: {
+    flex: 1,
+    padding: "10px 12px",
+    borderRadius: 10,
+    background: COLORS.accentLight,
+    textAlign: "center",
+  },
+  scriptureCount: {
+    fontSize: 18,
+    fontWeight: 700,
+    color: COLORS.accent,
+  },
+  scriptureRef: {
+    fontSize: 10,
+    color: COLORS.textSec,
+    marginTop: 2,
+  },
+  scripturePct: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    marginTop: 1,
+  },
+
+  // Spiritual Pulse themes
+  themeHeaderRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  themeName: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: COLORS.textBody,
+  },
+  themeStats: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+  },
+  themePct: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: COLORS.text,
+  },
+  themeBarBg: {
+    height: 6,
+    borderRadius: 3,
+    background: COLORS.sand,
   },
 
   // AI Insight
-  insightHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 4,
+  insightCard: {
+    marginTop: 16,
+    padding: "14px 16px",
+    borderRadius: 12,
+    background: `${COLORS.amber}10`,
+    border: `1px solid ${COLORS.amber}25`,
   },
-  generateBtn: {
-    padding: "8px 18px",
-    borderRadius: 8,
-    border: `1px solid ${COLORS.borderHover}`,
-    background: COLORS.goldDim,
-    color: COLORS.gold,
-    fontFamily: "'Nunito Sans', sans-serif",
+  insightRow: {
+    display: "flex",
+    gap: 8,
+    alignItems: "flex-start",
+  },
+  insightTitle: {
     fontSize: 12,
     fontWeight: 700,
+    color: COLORS.text,
+    marginBottom: 3,
+  },
+  insightText: {
+    fontSize: 12,
+    color: COLORS.textSec,
+    lineHeight: 1.5,
+  },
+  insightBtn: {
+    padding: "6px 14px",
+    borderRadius: 8,
+    border: `1.5px solid ${COLORS.border}`,
+    background: COLORS.card,
+    fontSize: 11,
+    fontWeight: 700,
+    color: COLORS.textBody,
     cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif",
     whiteSpace: "nowrap",
     flexShrink: 0,
   },
-  insightBody: {
-    padding: "18px 20px",
-    borderRadius: 12,
-    background: `${COLORS.gold}08`,
-    border: `1px solid ${COLORS.gold}20`,
-    position: "relative",
-  },
-  insightIcon: {
-    position: "absolute",
-    top: 14,
-    right: 16,
-    fontSize: 20,
-    color: `${COLORS.gold}40`,
-  },
-  insightText: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 14,
-    color: COLORS.text,
-    lineHeight: 1.7,
-    paddingRight: 30,
-  },
-  insightDate: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 11,
-    color: COLORS.textDim,
-    marginTop: 10,
-  },
 
   // Attention
-  attentionGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 20,
-  },
-  attentionGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-  },
-  attentionLabel: {
+  attentionRow: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 12,
-    fontWeight: 700,
-    color: COLORS.text,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-    marginBottom: 4,
+    gap: 12,
+    padding: "12px 0",
   },
-  attentionDot: {
-    width: 8,
-    height: 8,
-    borderRadius: "50%",
+  attentionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 16,
     flexShrink: 0,
   },
-  attentionCount: {
-    fontWeight: 400,
-    color: COLORS.textMuted,
-  },
-  attentionMember: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "8px 12px",
-    borderRadius: 8,
-    background: `${COLORS.gold}06`,
-    border: `1px solid ${COLORS.border}`,
-  },
   attentionName: {
-    fontFamily: "'Nunito Sans', sans-serif",
     fontSize: 13,
+    fontWeight: 700,
     color: COLORS.text,
   },
-  attentionDate: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 11,
-    color: COLORS.textDim,
-  },
-  attentionMore: {
-    fontFamily: "'Nunito Sans', sans-serif",
+  attentionDetail: {
     fontSize: 12,
     color: COLORS.textMuted,
-    fontStyle: "italic",
-    paddingLeft: 12,
+  },
+  attentionBtn: {
+    padding: "6px 14px",
+    borderRadius: 8,
+    border: `1.5px solid ${COLORS.border}`,
+    background: COLORS.card,
+    fontSize: 11,
+    fontWeight: 700,
+    color: COLORS.textBody,
+    cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif",
+    whiteSpace: "nowrap",
   },
 
   // Quick actions
-  actions: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  actionBtn: {
-    padding: "10px 18px",
-    borderRadius: 10,
-    border: `1px solid ${COLORS.borderHover}`,
-    background: "transparent",
-    color: COLORS.gold,
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 13,
-    fontWeight: 600,
+  quickActionBtn: {
+    background: "none",
+    border: "none",
+    fontSize: 14,
+    fontWeight: 700,
+    color: COLORS.accent,
     cursor: "pointer",
-    transition: "all 0.2s",
+    fontFamily: "'DM Sans', sans-serif",
+    padding: 0,
   },
-  inviteCard: {
+
+  // Invite
+  inviteRow: {
     display: "flex",
     alignItems: "center",
     gap: 16,
+    marginTop: 16,
     padding: "14px 18px",
     borderRadius: 12,
-    background: `${COLORS.gold}08`,
-    border: `1px solid ${COLORS.borderHover}`,
-    marginBottom: 8,
+    background: COLORS.accentLight,
+    border: `1px solid ${COLORS.accentMid}`,
   },
   inviteCode: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'Playfair Display', serif",
     fontSize: 22,
     fontWeight: 600,
     color: COLORS.text,
@@ -690,17 +738,11 @@ const s = {
     padding: "8px 18px",
     borderRadius: 8,
     border: "none",
-    background: COLORS.goldDim,
-    color: COLORS.gold,
-    fontFamily: "'Nunito Sans', sans-serif",
+    background: COLORS.accent,
+    color: "#fff",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",
-  },
-  inviteHint: {
-    fontFamily: "'Nunito Sans', sans-serif",
-    fontSize: 12,
-    color: COLORS.textDim,
-    marginTop: 4,
   },
 };

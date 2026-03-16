@@ -38,7 +38,7 @@ export default function FormModal({ title, fields, initialValues = {}, onSubmit,
             <div key={field.name} style={s.fieldGroup}>
               <label style={s.label}>
                 {field.label}
-                {field.required && <span style={{ color: COLORS.gold }}> *</span>}
+                {field.required && <span style={{ color: COLORS.red }}> *</span>}
               </label>
               {field.type === "textarea" ? (
                 <textarea
@@ -100,7 +100,7 @@ const s = {
   overlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.6)",
+    background: "rgba(0,0,0,0.3)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -113,15 +113,16 @@ const s = {
     maxWidth: 520,
     padding: "32px 28px",
     borderRadius: 16,
-    background: COLORS.bgDeep,
+    background: COLORS.card,
     border: `1px solid ${COLORS.border}`,
     maxHeight: "90vh",
     overflowY: "auto",
+    boxShadow: "0 8px 40px rgba(0,0,0,0.08)",
   },
   title: {
-    fontFamily: "'Cormorant Garamond', serif",
+    fontFamily: "'Playfair Display', serif",
     fontSize: 24,
-    fontWeight: 400,
+    fontWeight: 700,
     color: COLORS.text,
     marginBottom: 24,
   },
@@ -129,7 +130,7 @@ const s = {
     marginBottom: 18,
   },
   label: {
-    fontFamily: "'Nunito Sans', sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 12,
     fontWeight: 600,
     color: COLORS.textMuted,
@@ -142,10 +143,10 @@ const s = {
     width: "100%",
     padding: "11px 14px",
     borderRadius: 10,
-    border: `1px solid rgba(201, 168, 76, 0.15)`,
-    background: "rgba(255,255,255,0.04)",
+    border: `1.5px solid ${COLORS.border}`,
+    background: COLORS.bg,
     color: COLORS.text,
-    fontFamily: "'Nunito Sans', sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     outline: "none",
     boxSizing: "border-box",
@@ -154,7 +155,7 @@ const s = {
     display: "flex",
     alignItems: "center",
     gap: 8,
-    fontFamily: "'Nunito Sans', sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     color: COLORS.text,
     cursor: "pointer",
@@ -162,12 +163,12 @@ const s = {
   checkbox: {
     width: 16,
     height: 16,
-    accentColor: COLORS.gold,
+    accentColor: COLORS.accent,
   },
   error: {
-    fontFamily: "'Nunito Sans', sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
-    color: "#e57373",
+    color: COLORS.red,
     marginBottom: 12,
   },
   actions: {
@@ -179,10 +180,10 @@ const s = {
   cancelBtn: {
     padding: "10px 20px",
     borderRadius: 8,
-    border: `1px solid ${COLORS.border}`,
-    background: "transparent",
-    color: COLORS.textMuted,
-    fontFamily: "'Nunito Sans', sans-serif",
+    border: `1.5px solid ${COLORS.border}`,
+    background: COLORS.card,
+    color: COLORS.textSec,
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
@@ -191,9 +192,9 @@ const s = {
     padding: "10px 24px",
     borderRadius: 8,
     border: "none",
-    background: `linear-gradient(135deg, ${COLORS.gold}, #b8973e)`,
+    background: COLORS.accent,
     color: "#fff",
-    fontFamily: "'Nunito Sans', sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer",

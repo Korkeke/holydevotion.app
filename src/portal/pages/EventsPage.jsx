@@ -142,7 +142,7 @@ const s = {
   loading: { padding: 60, display: "flex", justifyContent: "center" },
   spinner: {
     width: 28, height: 28,
-    border: `2px solid ${COLORS.gold}`, borderTopColor: "transparent",
+    border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent",
     borderRadius: "50%", animation: "spin 0.8s linear infinite",
   },
   header: {
@@ -150,25 +150,25 @@ const s = {
     marginBottom: 24,
   },
   title: {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 28, fontWeight: 400, color: COLORS.text,
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 28, fontWeight: 700, color: COLORS.text,
   },
   createBtn: {
     padding: "10px 20px", borderRadius: 10, border: "none",
-    background: `linear-gradient(135deg, ${COLORS.gold}, #b8973e)`,
-    color: "#fff", fontFamily: "'Nunito Sans', sans-serif",
+    background: COLORS.accent,
+    color: "#fff", fontFamily: "'DM Sans', sans-serif",
     fontSize: 13, fontWeight: 700, cursor: "pointer",
   },
   editBtn: {
     padding: "6px 14px", borderRadius: 6,
-    border: `1px solid ${COLORS.borderHover}`, background: "transparent",
-    color: COLORS.gold, fontFamily: "'Nunito Sans', sans-serif",
+    border: `1px solid ${COLORS.border}`, background: "transparent",
+    color: COLORS.accent, fontFamily: "'DM Sans', sans-serif",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
   },
   deleteBtn: {
     padding: "6px 14px", borderRadius: 6,
     border: `1px solid rgba(192,57,43,0.3)`, background: "transparent",
-    color: "#e57373", fontFamily: "'Nunito Sans', sans-serif",
+    color: "#e57373", fontFamily: "'DM Sans', sans-serif",
     fontSize: 12, fontWeight: 600, cursor: "pointer",
   },
 };
