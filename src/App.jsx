@@ -1141,53 +1141,51 @@ function ContactPage() {
 function ChurchesPage({ setPage }) {
   const plans = [
     {
-      name: "Community",
-      price: "19",
+      name: "Church",
+      price: "49",
       period: "/month",
-      desc: "For small groups, Bible studies, and campus ministries",
-      size: "Up to 25 members",
+      desc: "For growing churches ready to bring their congregation into one place",
+      size: "Up to 250 members",
       features: [
-        "Shared community space in the app",
-        "Group prayer wall",
-        "Shared devotional plans",
-        "Basic group analytics",
-        "1 admin account",
+        "Branded church space in the app",
+        "Events & announcements",
+        "Shared devotionals",
+        "Community prayer wall",
+        "Member management",
+        "8 theme presets to match your brand",
+        "Invite code for your congregation",
       ],
       highlight: false,
     },
     {
-      name: "Church",
+      name: "Church Plus",
       price: "99",
       period: "/month",
-      desc: "For established churches ready to deepen member engagement",
-      size: "Up to 500 members",
+      desc: "For churches wanting AI-powered engagement and deeper pastoral insight",
+      size: "Up to 1,000 members",
       features: [
-        "Everything in Community",
-        "Branded church dashboard",
-        "Custom banner & logo in app",
-        "Event announcements",
-        "Member engagement insights",
-        "Weekly devotional scheduling",
-        "3 admin accounts",
-        "Priority support",
+        "Everything in Church",
+        "AI sermon reflections — 7-day guided studies",
+        "Spiritual Pulse dashboard",
+        "AI pastoral insights (weekly)",
+        "Engagement analytics & charts",
+        "Member activity tracking & streaks",
+        "Needs-attention alerts",
       ],
       highlight: true,
     },
     {
       name: "Church Pro",
-      price: "249",
+      price: "199",
       period: "/month",
-      desc: "For larger congregations wanting full customization and analytics",
+      desc: "For large congregations wanting the full Devotion platform",
       size: "Unlimited members",
       features: [
-        "Everything in Church",
-        "Custom color theming in app",
-        "Advanced engagement analytics",
-        "Multiple ministry dashboards",
-        "Custom devotional content",
+        "Everything in Church Plus",
+        "Advanced analytics & reporting",
         "Unlimited admin accounts",
-        "API access",
-        "Dedicated support",
+        "Priority support",
+        "Early access to new features",
       ],
       highlight: false,
     },
@@ -1198,11 +1196,11 @@ function ChurchesPage({ setPage }) {
       {/* Hero */}
       <section style={{ ...s.section, paddingTop: 140, paddingBottom: 40 }}>
         <RevealBlock style={{ textAlign: "center", marginBottom: 24 }}>
-          <SectionTag>FOR CHURCHES & COMMUNITIES</SectionTag>
-          <SectionTitle>Give your congregation{"\n"}a home inside Devotion.</SectionTitle>
-          <p style={{ ...s.heroSub, fontSize: 17, maxWidth: 600, margin: "20px auto 0" }}>
-            Whether you lead a small group of 10 or a church of thousands,
-            Devotion gives your community a branded space to grow in faith together.
+          <SectionTag>FOR CHURCHES & CONGREGATIONS</SectionTag>
+          <SectionTitle>Turn Sunday's sermon into a week-long{"\n"}spiritual growth experience.</SectionTitle>
+          <p style={{ ...s.heroSub, fontSize: 17, maxWidth: 640, margin: "20px auto 0" }}>
+            AI-powered sermon reflections, spiritual health insights, and pastoral intelligence
+            — built for churches that take discipleship seriously.
           </p>
         </RevealBlock>
       </section>
@@ -1218,7 +1216,7 @@ function ChurchesPage({ setPage }) {
           {[
             { num: "1", icon: "palette", title: "Make it yours", desc: "Upload your logo, choose your colors, write a welcome message. Your church's space in Devotion is ready before your coffee gets cold.", time: "5 min" },
             { num: "2", icon: "heart", title: "Invite your people", desc: "Share your unique church code from the pulpit, in a text, or in your bulletin. Members join with one tap inside the app.", time: "2 min" },
-            { num: "3", icon: "sun", title: "Watch faith grow", desc: "Schedule shared devotionals, see who's engaging, post announcements. Your congregation is growing closer to God and each other.", time: "Ongoing" },
+            { num: "3", icon: "sun", title: "Watch faith grow", desc: "Create sermon studies that generate AI-powered daily reflections. See your congregation's Spiritual Pulse. Know who needs pastoral care before they ask.", time: "Ongoing" },
           ].map((step, i) => (
             <RevealBlock key={i} delay={i * 0.15}>
               <div style={{ display: "flex", gap: 24, marginBottom: i < 2 ? 0 : 0 }}>
@@ -1275,18 +1273,18 @@ function ChurchesPage({ setPage }) {
       {/* What's included for members */}
       <section style={s.section}>
         <RevealBlock style={{ textAlign: "center", marginBottom: 56 }}>
-          <SectionTag>FOR YOUR MEMBERS</SectionTag>
-          <SectionTitle>What your congregation{"\n"}experiences in the app.</SectionTitle>
+          <SectionTag>WHAT MAKES DEVOTION DIFFERENT</SectionTag>
+          <SectionTitle>Features no other{"\n"}church app offers.</SectionTitle>
         </RevealBlock>
 
         <div style={s.threeGrid}>
           {[
-            { icon: <Icon name="church" />, title: "Your Church's Space", desc: "A branded community page inside Devotion with your logo, colors, welcome message, and service times. Feels like home." },
-            { icon: <Icon name="book" />, title: "Shared Devotionals", desc: "Schedule devotionals for your whole church. Everyone reads the same Scripture and reflects together, even from home." },
-            { icon: <Icon name="hands" />, title: "Community Prayer Wall", desc: "Members can share prayer requests and pray for each other. Anonymous or named, their choice. Builds real connection." },
-            { icon: <Icon name="calendar" />, title: "Events & Announcements", desc: "Post upcoming services, retreats, small group meetings, and announcements directly to your members' feed in the app." },
-            { icon: <Icon name="chart" />, title: "Engagement Insights", desc: "See how your community is engaging. Devotional completion, prayer activity, and active members, without seeing anyone's private data." },
-            { icon: <Icon name="palette" />, title: "Your Brand, Your Identity", desc: "Custom logo, banner image, accent colors, and welcome message. Your church's presence in the app looks and feels like yours." },
+            { icon: <Icon name="book" />, title: "AI Sermon Reflections", desc: "Create a sermon study and Devotion generates 7 daily reflections for your congregation. Scripture-grounded, theologically validated, ready in seconds." },
+            { icon: <Icon name="chart" />, title: "Spiritual Pulse", desc: "See what your congregation is seeking guidance on. Conversation themes like faith, anxiety, gratitude, and relationships — updated weekly, always anonymous." },
+            { icon: <Icon name="sun" />, title: "AI Pastoral Insights", desc: "Weekly AI-generated insights help you understand your congregation's spiritual state. Know who needs encouragement before they ask." },
+            { icon: <Icon name="hands" />, title: "Community Prayer Wall", desc: "Members share prayer requests and pray for each other. Anonymous or named, their choice. \"I'm praying\" reactions build real connection." },
+            { icon: <Icon name="calendar" />, title: "Events & Announcements", desc: "Post services, retreats, small group meetings, and announcements directly to your members' feed. Pin important updates to the top." },
+            { icon: <Icon name="palette" />, title: "Your Brand, Your Identity", desc: "Choose from 8 theme presets. Your church's presence in the app looks and feels like yours — logo, banner, colors, and welcome message." },
           ].map((item, i) => (
             <RevealBlock key={i} delay={i * 0.08}>
               <FeatureCardHome {...item} />
@@ -1299,9 +1297,9 @@ function ChurchesPage({ setPage }) {
       <section style={{ ...s.section, borderTop: `1px solid ${COLORS.border}` }}>
         <RevealBlock style={{ textAlign: "center", marginBottom: 56 }}>
           <SectionTag>PRICING</SectionTag>
-          <SectionTitle>Plans for every size{"\n"}of community.</SectionTitle>
+          <SectionTitle>Plans for every size{"\n"}of congregation.</SectionTitle>
           <p style={{ ...s.heroSub, fontSize: 15, maxWidth: 500, margin: "16px auto 0" }}>
-            Try any plan free for 7 days.
+            Setup takes 10 minutes. Your congregation can join today.
           </p>
         </RevealBlock>
 
@@ -1325,7 +1323,7 @@ function ChurchesPage({ setPage }) {
           {[
             { q: "Do my members need to pay for the app?", a: "No. Devotion is free to download and use for individuals. Your church plan gives your members access to your community space and shared features at no additional cost to them." },
             { q: "Can I see my members' private prayers or reflections?", a: "Absolutely not. Member privacy is sacred. You can see engagement metrics (who's active, devotional completion rates) but never anyone's personal spiritual content." },
-            { q: "How do members join my church in the app?", a: "You'll get a unique church code and invite link. Members tap the 'Communities' button in the app, enter your code, and they're in. Takes seconds." },
+            { q: "How do members join my church in the app?", a: "You'll get a unique church code. Members tap the Church tab in the app, enter your code, and they're in. Takes seconds." },
             { q: "Can I cancel anytime?", a: "Yes. No contracts, no cancellation fees. Your community data is exported to you if you choose to leave." },
             { q: "What if we outgrow our plan?", a: "Upgrade anytime from your dashboard. Your community, content, and settings carry over seamlessly." },
             { q: "Is the content theologically sound?", a: "Every piece of content in Devotion is validated against Scripture through a dual-layer safety system. Nothing heretical reaches your members." },
@@ -1337,18 +1335,51 @@ function ChurchesPage({ setPage }) {
         </div>
       </section>
 
+      {/* Early adopter */}
+      <section style={{ ...s.section, borderTop: `1px solid ${COLORS.border}` }}>
+        <RevealBlock style={{ textAlign: "center" }}>
+          <div style={{
+            padding: "40px 32px",
+            borderRadius: 20,
+            border: `1.5px solid ${COLORS.gold}`,
+            background: "linear-gradient(165deg, rgba(201,168,76,0.06), rgba(10,14,26,0.9))",
+            maxWidth: 600,
+            margin: "0 auto",
+          }}>
+            <p style={{
+              fontFamily: "'Nunito Sans', sans-serif",
+              fontSize: 12, fontWeight: 600, color: COLORS.gold,
+              letterSpacing: "0.15em", textTransform: "uppercase",
+              marginBottom: 12,
+            }}>EARLY ACCESS</p>
+            <h3 style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "clamp(24px, 3vw, 30px)", fontWeight: 400,
+              color: COLORS.text, lineHeight: 1.3, marginBottom: 12,
+            }}>Be among the first churches{"\n"}to bring AI-powered discipleship{"\n"}to their congregation.</h3>
+            <p style={{
+              fontFamily: "'Nunito Sans', sans-serif",
+              fontSize: 14, fontWeight: 300, color: COLORS.textMuted,
+              lineHeight: 1.7, maxWidth: 460, margin: "0 auto",
+            }}>
+              We're onboarding a limited number of churches during our launch period.
+              Early churches get direct access to the team and influence on what we build next.
+            </p>
+          </div>
+        </RevealBlock>
+      </section>
+
       {/* CTA */}
       <section style={{ ...s.section, paddingBottom: 120 }}>
         <div style={s.churchCTA}>
           <div style={s.churchCTAGlow} />
           <RevealBlock style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
-            <SectionTitle>Ready to bring your{"\n"}community into Devotion?</SectionTitle>
+            <SectionTitle>Ready to bring your{"\n"}congregation into Devotion?</SectionTitle>
             <p style={{ ...s.heroSub, marginBottom: 32, fontSize: 16 }}>
-              7-day free trial. Setup takes 10 minutes.<br />
-              Your congregation can join today.
+              Setup takes 10 minutes. Your congregation can join today.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <GoldButton large>Start Free Trial</GoldButton>
+              <GoldButton large onClick={() => window.location.href = "/portal/signup"}>Get Started</GoldButton>
               <GoldButton outline large onClick={() => { setPage("Contact"); window.scrollTo(0,0); }}>Talk to Us First</GoldButton>
             </div>
           </RevealBlock>
@@ -1435,8 +1466,8 @@ function PricingCard({ name, price, period, desc, size, features, highlight }) {
         ))}
       </div>
 
-      <GoldButton large outline={!highlight}>
-        {highlight ? "Start Free Trial" : "Get Started"}
+      <GoldButton large outline={!highlight} onClick={() => window.location.href = "/portal/signup"}>
+        Get Started
       </GoldButton>
     </div>
   );
