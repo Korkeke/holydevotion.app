@@ -50,7 +50,7 @@ const PLANS = [
 ];
 
 const THEMES = {
-  gold_cream:   { label: "Gold & Cream",    accent: "#c9a84c", bg: "#FAF8F5" },
+  gold_navy:    { label: "Gold & Navy",      accent: "#c9a84c", bg: "#0D1F35" },
   royal_purple: { label: "Royal Purple",   accent: "#9b59b6", bg: "#1a0e2e" },
   forest_green: { label: "Forest Green",   accent: "#27ae60", bg: "#0e1a14" },
   crimson:      { label: "Crimson",         accent: "#c0392b", bg: "#1a0e0e" },
@@ -74,7 +74,7 @@ export default function SignupPage() {
   const [churchName, setChurchName] = useState("");
   const [denomination, setDenomination] = useState("");
   const [city, setCity] = useState("");
-  const [theme, setTheme] = useState("gold_cream");
+  const [theme, setTheme] = useState("gold_navy");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -179,7 +179,13 @@ export default function SignupPage() {
     return (
       <div style={s.page}>
         <div style={s.planPage}>
-          <div style={s.cross}>✝</div>
+          {/* Devotion branding */}
+          <div style={s.brandRow}>
+            <span style={s.brandCross}>✝</span>
+            <span style={s.brandName}>Devotion</span>
+          </div>
+          <div style={s.brandTagline}>Church Portal</div>
+
           <h1 style={s.title}>Choose Your Plan</h1>
           <p style={s.subtitle}>Start managing your congregation's spiritual journey</p>
 
@@ -445,6 +451,32 @@ const s = {
     background: COLORS.card,
     border: `1px solid ${COLORS.border}`,
     textAlign: "center",
+  },
+  brandRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    marginBottom: 4,
+  },
+  brandCross: {
+    fontSize: 28,
+    color: COLORS.accent,
+  },
+  brandName: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 26,
+    fontWeight: 700,
+    color: COLORS.text,
+    letterSpacing: "-0.01em",
+  },
+  brandTagline: {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13,
+    color: COLORS.textMuted,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    marginBottom: 32,
   },
   cross: {
     fontSize: 32,
