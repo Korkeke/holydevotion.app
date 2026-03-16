@@ -3,6 +3,52 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { COLORS } from "../../colors";
 
+const PLANS = [
+  {
+    id: "church",
+    name: "Church",
+    price: "$49",
+    period: "/month",
+    members: "Up to 250 members",
+    features: [
+      "Events & announcements",
+      "Devotionals & prayer wall",
+      "Member management",
+      "Church theme customization",
+      "Invite code for congregation",
+    ],
+  },
+  {
+    id: "church_plus",
+    name: "Church Plus",
+    price: "$99",
+    period: "/month",
+    members: "Up to 1,000 members",
+    popular: true,
+    features: [
+      "Everything in Church",
+      "Sermon studies with AI reflections",
+      "AI pastoral insights",
+      "Engagement analytics",
+      "Member activity tracking",
+    ],
+  },
+  {
+    id: "church_pro",
+    name: "Church Pro",
+    price: "$199",
+    period: "/month",
+    members: "Unlimited members",
+    features: [
+      "Everything in Church Plus",
+      "Advanced analytics & reporting",
+      "Spiritual pulse dashboard",
+      "Needs-attention alerts",
+      "Priority support",
+    ],
+  },
+];
+
 const THEMES = {
   gold_cream:   { label: "Gold & Cream",    accent: "#c9a84c", bg: "#FAF8F5" },
   royal_purple: { label: "Royal Purple",   accent: "#9b59b6", bg: "#1a0e2e" },
@@ -20,7 +66,8 @@ export default function SignupPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // 0 = plan select, 1 = reg code, 2 = account, 3 = church
+  const [selectedPlan, setSelectedPlan] = useState("church_plus");
   const [regCode, setRegCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,18 +83,19 @@ export default function SignupPage() {
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
     if (sessionId) {
+      setStep(1); // Show reg code step
       fetch(`${API_BASE}/api/stripe/success?session_id=${sessionId}`)
         .then((r) => r.json())
         .then((data) => {
           if (data.code) {
             setRegCode(data.code);
-            setStep(1);
           }
         })
         .catch(() => {});
     }
     if (searchParams.get("cancelled")) {
       setError("Payment was cancelled. You can try again.");
+      setStep(0);
     }
   }, []);
 
@@ -58,6 +106,7 @@ export default function SignupPage() {
       const res = await fetch(`${API_BASE}/api/stripe/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: selectedPlan }),
       });
       const data = await res.json();
       if (data.url) {
@@ -78,7 +127,6 @@ export default function SignupPage() {
     setLoading(true);
 
     if (step === 1) {
-      // Validate registration code is not empty
       if (!regCode.trim()) {
         setError("Please enter your registration code.");
         setLoading(false);
@@ -126,12 +174,100 @@ export default function SignupPage() {
     }
   }
 
+  // ─── Step 0: Plan Selection ─────────────────────────
+  if (step === 0) {
+    return (
+      <div style={s.page}>
+        <div style={s.planPage}>
+          <div style={s.cross}>✝</div>
+          <h1 style={s.title}>Choose Your Plan</h1>
+          <p style={s.subtitle}>Start managing your congregation's spiritual journey</p>
+
+          <div style={s.planGrid}>
+            {PLANS.map((plan) => {
+              const selected = selectedPlan === plan.id;
+              return (
+                <div
+                  key={plan.id}
+                  onClick={() => setSelectedPlan(plan.id)}
+                  style={{
+                    ...s.planCard,
+                    borderColor: selected ? COLORS.accent : COLORS.border,
+                    boxShadow: selected ? `0 0 20px ${COLORS.accent}20` : "none",
+                  }}
+                >
+                  {plan.popular && (
+                    <div style={s.popularBadge}>Most Popular</div>
+                  )}
+                  <div style={s.planName}>{plan.name}</div>
+                  <div style={s.planPriceRow}>
+                    <span style={s.planPrice}>{plan.price}</span>
+                    <span style={s.planPeriod}>{plan.period}</span>
+                  </div>
+                  <div style={s.planMembers}>{plan.members}</div>
+                  <div style={s.planDivider} />
+                  <ul style={s.featureList}>
+                    {plan.features.map((f, i) => (
+                      <li key={i} style={s.featureItem}>
+                        <span style={s.checkmark}>✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <div style={{
+                    ...s.planRadio,
+                    borderColor: selected ? COLORS.accent : COLORS.border,
+                  }}>
+                    {selected && <div style={s.planRadioInner} />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {error && <p style={s.error}>{error}</p>}
+
+          <button
+            onClick={handleStripeCheckout}
+            disabled={checkoutLoading}
+            style={s.button}
+          >
+            {checkoutLoading
+              ? "Redirecting to payment..."
+              : `Subscribe — ${PLANS.find(p => p.id === selectedPlan)?.price}/month`}
+          </button>
+
+          <div style={s.divider}>
+            <span style={s.dividerLine} />
+            <span style={s.dividerText}>or</span>
+            <span style={s.dividerLine} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            style={s.codeBtn}
+          >
+            I have a registration code
+          </button>
+
+          <p style={s.footer}>
+            Already have an account?{" "}
+            <Link to="/portal/login" style={s.link}>Sign in</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Steps 1-3: Registration Code → Account → Church ─
   const stepTitles = [
+    "",
     "Registration Code",
     "Create Your Account",
     "Set Up Your Church",
   ];
   const stepSubtitles = [
+    "",
     "Enter the code you received after subscribing",
     "Set up your admin credentials",
     "Tell us about your church",
@@ -141,8 +277,8 @@ export default function SignupPage() {
     <div style={s.page}>
       <div style={s.card}>
         <div style={s.cross}>✝</div>
-        <h1 style={s.title}>{stepTitles[step - 1]}</h1>
-        <p style={s.subtitle}>{stepSubtitles[step - 1]}</p>
+        <h1 style={s.title}>{stepTitles[step]}</h1>
+        <p style={s.subtitle}>{stepSubtitles[step]}</p>
 
         {/* Step indicator */}
         <div style={s.steps}>
@@ -169,22 +305,6 @@ export default function SignupPage() {
                 placeholder="HOLY-XXXX-XXXX"
                 autoFocus
               />
-              <div style={s.divider}>
-                <span style={s.dividerLine} />
-                <span style={s.dividerText}>or</span>
-                <span style={s.dividerLine} />
-              </div>
-              <button
-                type="button"
-                onClick={handleStripeCheckout}
-                disabled={checkoutLoading}
-                style={s.checkoutBtn}
-              >
-                {checkoutLoading ? "Redirecting..." : "Subscribe — $99/month"}
-              </button>
-              <p style={s.checkoutHint}>
-                You'll receive a registration code after payment.
-              </p>
             </>
           )}
 
@@ -298,15 +418,13 @@ export default function SignupPage() {
                   : "Create Church"}
           </button>
 
-          {step > 1 && (
-            <button
-              type="button"
-              onClick={() => { setStep(step - 1); setError(""); }}
-              style={s.backBtn}
-            >
-              ← Back
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => { setStep(step - 1); setError(""); }}
+            style={s.backBtn}
+          >
+            ← Back
+          </button>
         </form>
 
         <p style={s.footer}>
@@ -326,6 +444,12 @@ const s = {
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
+  },
+  planPage: {
+    width: "100%",
+    maxWidth: 900,
+    textAlign: "center",
+    padding: "48px 0",
   },
   card: {
     width: "100%",
@@ -352,8 +476,123 @@ const s = {
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     color: COLORS.textMuted,
-    marginBottom: 24,
+    marginBottom: 32,
   },
+
+  // Plan grid
+  planGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: 16,
+    marginBottom: 32,
+  },
+  planCard: {
+    position: "relative",
+    padding: "28px 20px 20px",
+    borderRadius: 16,
+    border: `2px solid ${COLORS.border}`,
+    background: COLORS.card,
+    cursor: "pointer",
+    transition: "all 0.2s",
+    textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  popularBadge: {
+    position: "absolute",
+    top: -12,
+    left: "50%",
+    transform: "translateX(-50%)",
+    padding: "4px 14px",
+    borderRadius: 20,
+    background: COLORS.accent,
+    color: "#fff",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 11,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  },
+  planName: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 18,
+    fontWeight: 700,
+    color: COLORS.text,
+    marginBottom: 12,
+  },
+  planPriceRow: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 2,
+    marginBottom: 4,
+  },
+  planPrice: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 36,
+    fontWeight: 700,
+    color: COLORS.text,
+  },
+  planPeriod: {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 14,
+    color: COLORS.textMuted,
+  },
+  planMembers: {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13,
+    color: COLORS.accent,
+    fontWeight: 600,
+    marginBottom: 16,
+  },
+  planDivider: {
+    width: "100%",
+    height: 1,
+    background: COLORS.border,
+    marginBottom: 16,
+  },
+  featureList: {
+    listStyle: "none",
+    padding: 0,
+    margin: 0,
+    textAlign: "left",
+    width: "100%",
+    flex: 1,
+  },
+  featureItem: {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 13,
+    color: COLORS.textBody,
+    padding: "4px 0",
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  checkmark: {
+    color: COLORS.accent,
+    fontWeight: 700,
+    fontSize: 14,
+    flexShrink: 0,
+  },
+  planRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: "50%",
+    border: `2px solid ${COLORS.border}`,
+    marginTop: 16,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "border-color 0.2s",
+  },
+  planRadioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: "50%",
+    background: COLORS.accent,
+  },
+
+  // Steps
   steps: {
     display: "flex",
     alignItems: "center",
@@ -371,6 +610,8 @@ const s = {
     height: 2,
     background: COLORS.border,
   },
+
+  // Form
   form: {
     textAlign: "left",
   },
@@ -401,7 +642,7 @@ const s = {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    margin: "20px 0",
+    margin: "16px 0",
   },
   dividerLine: {
     flex: 1,
@@ -415,25 +656,18 @@ const s = {
     textTransform: "uppercase",
     letterSpacing: "0.08em",
   },
-  checkoutBtn: {
+  codeBtn: {
     width: "100%",
     padding: "14px 0",
     borderRadius: 12,
     border: `1px solid ${COLORS.border}`,
     background: "transparent",
-    color: COLORS.accent,
+    color: COLORS.textSec,
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: 15,
-    fontWeight: 700,
+    fontSize: 14,
+    fontWeight: 600,
     cursor: "pointer",
     transition: "all 0.2s",
-  },
-  checkoutHint: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 12,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    marginTop: 8,
   },
   themeGrid: {
     display: "grid",
