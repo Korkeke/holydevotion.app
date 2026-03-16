@@ -4,6 +4,7 @@ import { useAuth } from "../AuthContext";
 
 const NAV_ITEMS = [
   { label: "Dashboard", path: "/portal", icon: "grid" },
+  { label: "Sermons", path: "/portal/sermons", icon: "sermon" },
   { label: "Events", path: "/portal/events", icon: "calendar" },
   { label: "Announcements", path: "/portal/announcements", icon: "megaphone" },
   { label: "Devotionals", path: "/portal/devotionals", icon: "book" },
@@ -17,6 +18,11 @@ const ICONS = {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
       <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  ),
+  sermon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
     </svg>
   ),
   calendar: (

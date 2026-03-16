@@ -13,6 +13,7 @@ const DevotionalsPage = lazy(() => import("./portal/pages/DevotionalsPage"));
 const PrayerWallPage = lazy(() => import("./portal/pages/PrayerWallPage"));
 const MembersPage = lazy(() => import("./portal/pages/MembersPage"));
 const SettingsPage = lazy(() => import("./portal/pages/SettingsPage"));
+const SermonsPage = lazy(() => import("./portal/pages/SermonsPage"));
 
 // ─── Constants ──────────────────────────────────────────────────────
 const COLORS = {
@@ -1585,6 +1586,7 @@ export default function DevotionSite() {
               <Route index element={<DashboardPage />} />
               <Route path="events" element={<EventsPage />} />
               <Route path="announcements" element={<AnnouncementsPage />} />
+              <Route path="sermons" element={<SermonsPage />} />
               <Route path="devotionals" element={<DevotionalsPage />} />
               <Route path="prayers" element={<PrayerWallPage />} />
               <Route path="members" element={<MembersPage />} />
