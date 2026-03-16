@@ -4,7 +4,7 @@ import { useAuth } from "../AuthContext";
 import { COLORS } from "../../colors";
 
 const THEMES = {
-  gold_navy:    { label: "Gold & Navy",    accent: "#c9a84c", bg: "#0a0e1a" },
+  gold_cream:   { label: "Gold & Cream",    accent: "#c9a84c", bg: "#FAF8F5" },
   royal_purple: { label: "Royal Purple",   accent: "#9b59b6", bg: "#1a0e2e" },
   forest_green: { label: "Forest Green",   accent: "#27ae60", bg: "#0e1a14" },
   crimson:      { label: "Crimson",         accent: "#c0392b", bg: "#1a0e0e" },
@@ -27,7 +27,7 @@ export default function SignupPage() {
   const [churchName, setChurchName] = useState("");
   const [denomination, setDenomination] = useState("");
   const [city, setCity] = useState("");
-  const [theme, setTheme] = useState("gold_navy");
+  const [theme, setTheme] = useState("gold_cream");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
