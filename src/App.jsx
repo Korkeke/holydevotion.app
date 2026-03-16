@@ -1161,13 +1161,13 @@ function ChurchesPage({ setPage }) {
       name: "Church Plus",
       price: "99",
       period: "/month",
-      desc: "For churches wanting AI-powered engagement and deeper pastoral insight",
+      desc: "For churches wanting automated engagement tools and deeper pastoral insight",
       size: "Up to 1,000 members",
       features: [
         "Everything in Church",
-        "AI sermon reflections — 7-day guided studies",
+        "Automated sermon reflections, 7-day guided studies",
         "Spiritual Pulse dashboard",
-        "AI pastoral insights (weekly)",
+        "Weekly pastoral insights",
         "Engagement analytics & charts",
         "Member activity tracking & streaks",
         "Needs-attention alerts",
@@ -1199,8 +1199,8 @@ function ChurchesPage({ setPage }) {
           <SectionTag>FOR CHURCHES & CONGREGATIONS</SectionTag>
           <SectionTitle>Turn Sunday's sermon into a week-long{"\n"}spiritual growth experience.</SectionTitle>
           <p style={{ ...s.heroSub, fontSize: 17, maxWidth: 640, margin: "20px auto 0" }}>
-            AI-powered sermon reflections, spiritual health insights, and pastoral intelligence
-            — built for churches that take discipleship seriously.
+            Automated sermon reflections, spiritual health insights, and pastoral intelligence
+            built for churches that take discipleship seriously.
           </p>
         </RevealBlock>
       </section>
@@ -1216,7 +1216,7 @@ function ChurchesPage({ setPage }) {
           {[
             { num: "1", icon: "palette", title: "Make it yours", desc: "Upload your logo, choose your colors, write a welcome message. Your church's space in Devotion is ready before your coffee gets cold.", time: "5 min" },
             { num: "2", icon: "heart", title: "Invite your people", desc: "Share your unique church code from the pulpit, in a text, or in your bulletin. Members join with one tap inside the app.", time: "2 min" },
-            { num: "3", icon: "sun", title: "Watch faith grow", desc: "Create sermon studies that generate AI-powered daily reflections. See your congregation's Spiritual Pulse. Know who needs pastoral care before they ask.", time: "Ongoing" },
+            { num: "3", icon: "sun", title: "Watch faith grow", desc: "Create sermon studies that automatically generate daily reflections. See your congregation's Spiritual Pulse. Know who needs pastoral care before they ask.", time: "Ongoing" },
           ].map((step, i) => (
             <RevealBlock key={i} delay={i * 0.15}>
               <div style={{ display: "flex", gap: 24, marginBottom: i < 2 ? 0 : 0 }}>
@@ -1279,12 +1279,12 @@ function ChurchesPage({ setPage }) {
 
         <div style={s.threeGrid}>
           {[
-            { icon: <Icon name="book" />, title: "AI Sermon Reflections", desc: "Create a sermon study and Devotion generates 7 daily reflections for your congregation. Scripture-grounded, theologically validated, ready in seconds." },
-            { icon: <Icon name="chart" />, title: "Spiritual Pulse", desc: "See what your congregation is seeking guidance on. Conversation themes like faith, anxiety, gratitude, and relationships — updated weekly, always anonymous." },
-            { icon: <Icon name="sun" />, title: "AI Pastoral Insights", desc: "Weekly AI-generated insights help you understand your congregation's spiritual state. Know who needs encouragement before they ask." },
+            { icon: <Icon name="book" />, title: "Automated Sermon Reflections", desc: "Create a sermon study and Devotion generates 7 daily reflections for your congregation. Scripture-grounded, theologically validated, ready in seconds." },
+            { icon: <Icon name="chart" />, title: "Spiritual Pulse", desc: "See what your congregation is seeking guidance on. Conversation themes like faith, anxiety, gratitude, and relationships, updated weekly, always anonymous." },
+            { icon: <Icon name="sun" />, title: "Pastoral Insights", desc: "Weekly generated insights help you understand your congregation's spiritual state. Know who needs encouragement before they ask." },
             { icon: <Icon name="hands" />, title: "Community Prayer Wall", desc: "Members share prayer requests and pray for each other. Anonymous or named, their choice. \"I'm praying\" reactions build real connection." },
             { icon: <Icon name="calendar" />, title: "Events & Announcements", desc: "Post services, retreats, small group meetings, and announcements directly to your members' feed. Pin important updates to the top." },
-            { icon: <Icon name="palette" />, title: "Your Brand, Your Identity", desc: "Choose from 8 theme presets. Your church's presence in the app looks and feels like yours — logo, banner, colors, and welcome message." },
+            { icon: <Icon name="palette" />, title: "Your Brand, Your Identity", desc: "Choose from 8 theme presets. Your church's presence in the app looks and feels like yours. Logo, banner, colors, and welcome message." },
           ].map((item, i) => (
             <RevealBlock key={i} delay={i * 0.08}>
               <FeatureCardHome {...item} />
@@ -1356,7 +1356,7 @@ function ChurchesPage({ setPage }) {
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "clamp(24px, 3vw, 30px)", fontWeight: 400,
               color: COLORS.text, lineHeight: 1.3, marginBottom: 12,
-            }}>Be among the first churches{"\n"}to bring AI-powered discipleship{"\n"}to their congregation.</h3>
+            }}>Be among the first churches{"\n"}to bring automated discipleship{"\n"}to their congregation.</h3>
             <p style={{
               fontFamily: "'Nunito Sans', sans-serif",
               fontSize: 14, fontWeight: 300, color: COLORS.textMuted,
