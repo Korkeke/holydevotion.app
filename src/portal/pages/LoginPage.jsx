@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../AuthContext";
-import { COLORS } from "../../colors";
+
+const BRAND = {
+  bg: "#0a0e1a",
+  navy: "#0f1632",
+  gold: "#c9a84c",
+  text: "#e8e4dc",
+  textMuted: "rgba(232, 228, 220, 0.5)",
+  border: "rgba(201, 168, 76, 0.1)",
+};
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -32,6 +40,9 @@ export default function LoginPage() {
 
   return (
     <div style={s.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+      `}</style>
       <div style={s.card}>
         <div style={s.cross}>✝</div>
         <h1 style={s.title}>Church Portal</h1>
@@ -77,47 +88,46 @@ export default function LoginPage() {
 const s = {
   page: {
     minHeight: "100vh",
-    background: COLORS.bg,
+    background: BRAND.bg,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
+    fontFamily: "'DM Sans', sans-serif",
   },
   card: {
     width: "100%",
     maxWidth: 420,
     padding: "48px 36px",
     borderRadius: 20,
-    background: COLORS.card,
-    border: `1px solid ${COLORS.border}`,
+    background: BRAND.navy,
+    border: `1px solid ${BRAND.border}`,
     textAlign: "center",
   },
   cross: {
     fontSize: 32,
-    color: COLORS.accentMid,
+    color: BRAND.gold,
     marginBottom: 16,
   },
   title: {
     fontFamily: "'Playfair Display', serif",
     fontSize: 28,
     fontWeight: 700,
-    color: COLORS.text,
+    color: BRAND.text,
     marginBottom: 6,
   },
   subtitle: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
-    color: COLORS.textMuted,
+    color: BRAND.textMuted,
     marginBottom: 32,
   },
   form: {
     textAlign: "left",
   },
   label: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 12,
     fontWeight: 600,
-    color: COLORS.textMuted,
+    color: BRAND.textMuted,
     letterSpacing: "0.05em",
     textTransform: "uppercase",
     display: "block",
@@ -127,9 +137,9 @@ const s = {
     width: "100%",
     padding: "12px 14px",
     borderRadius: 10,
-    border: `1px solid ${COLORS.border}`,
-    background: COLORS.bg,
-    color: COLORS.text,
+    border: `1px solid ${BRAND.border}`,
+    background: BRAND.bg,
+    color: BRAND.text,
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     outline: "none",
@@ -137,7 +147,6 @@ const s = {
     transition: "border-color 0.2s",
   },
   error: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
     color: "#e57373",
     marginTop: 12,
@@ -148,22 +157,22 @@ const s = {
     padding: "14px 0",
     borderRadius: 12,
     border: "none",
-    background: COLORS.accent,
+    background: `linear-gradient(135deg, ${BRAND.gold}, #b8973e)`,
     color: "#fff",
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 15,
     fontWeight: 700,
     cursor: "pointer",
     transition: "opacity 0.2s",
+    boxShadow: "0 4px 20px rgba(201, 168, 76, 0.3)",
   },
   footer: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: BRAND.textMuted,
     marginTop: 24,
   },
   link: {
-    color: COLORS.accent,
+    color: BRAND.gold,
     textDecoration: "none",
     fontWeight: 600,
   },

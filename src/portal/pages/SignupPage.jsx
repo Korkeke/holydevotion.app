@@ -3,6 +3,22 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { COLORS } from "../../colors";
 
+// Devotion brand colors (matches main website)
+const BRAND = {
+  bg: "#0a0e1a",
+  bgCard: "rgba(15, 22, 45, 0.7)",
+  navy: "#0f1632",
+  navyLight: "#1a2347",
+  gold: "#c9a84c",
+  goldLight: "#e8cc6e",
+  goldDim: "rgba(201, 168, 76, 0.15)",
+  text: "#e8e4dc",
+  textMuted: "rgba(232, 228, 220, 0.5)",
+  textDim: "rgba(232, 228, 220, 0.3)",
+  border: "rgba(201, 168, 76, 0.1)",
+  borderHover: "rgba(201, 168, 76, 0.25)",
+};
+
 const PLANS = [
   {
     id: "church",
@@ -177,19 +193,24 @@ export default function SignupPage() {
   // ─── Step 0: Plan Selection ─────────────────────────
   if (step === 0) {
     return (
-      <div style={s.page}>
-        <div style={s.planPage}>
-          {/* Devotion branding */}
-          <div style={s.brandRow}>
-            <span style={s.brandCross}>✝</span>
-            <span style={s.brandName}>Devotion</span>
-          </div>
-          <div style={s.brandTagline}>Church Portal</div>
+      <div style={b.page}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+          @keyframes spin { to { transform: rotate(360deg); } }
+        `}</style>
 
-          <h1 style={s.title}>Choose Your Plan</h1>
-          <p style={s.subtitle}>Start managing your congregation's spiritual journey</p>
+        {/* Fixed header bar */}
+        <div style={b.header}>
+          <span style={b.headerCross}>✝</span>
+          <span style={b.headerName}>Devotion</span>
+          <span style={b.headerTag}>Church Portal</span>
+        </div>
 
-          <div style={s.planGrid}>
+        <div style={b.planPage}>
+          <h1 style={b.title}>Choose Your Plan</h1>
+          <p style={b.subtitle}>Start managing your congregation's spiritual journey</p>
+
+          <div style={b.planGrid}>
             {PLANS.map((plan) => {
               const selected = selectedPlan === plan.id;
               return (
@@ -197,54 +218,54 @@ export default function SignupPage() {
                   key={plan.id}
                   onClick={() => setSelectedPlan(plan.id)}
                   style={{
-                    ...s.planCard,
-                    borderColor: selected ? COLORS.accent : COLORS.border,
-                    boxShadow: selected ? `0 0 20px ${COLORS.accent}20` : "none",
+                    ...b.planCard,
+                    borderColor: selected ? BRAND.gold : BRAND.border,
+                    boxShadow: selected ? `0 0 30px ${BRAND.goldDim}` : "none",
                   }}
                 >
                   {plan.popular && (
-                    <div style={s.popularBadge}>Most Popular</div>
+                    <div style={b.popularBadge}>Most Popular</div>
                   )}
-                  <div style={s.planName}>{plan.name}</div>
-                  <div style={s.planPriceRow}>
-                    <span style={s.planPrice}>{plan.price}</span>
-                    <span style={s.planPeriod}>{plan.period}</span>
+                  <div style={b.planName}>{plan.name}</div>
+                  <div style={b.planPriceRow}>
+                    <span style={b.planPrice}>{plan.price}</span>
+                    <span style={b.planPeriod}>{plan.period}</span>
                   </div>
-                  <div style={s.planMembers}>{plan.members}</div>
-                  <div style={s.planDivider} />
-                  <ul style={s.featureList}>
+                  <div style={b.planMembers}>{plan.members}</div>
+                  <div style={b.planDivider} />
+                  <ul style={b.featureList}>
                     {plan.features.map((f, i) => (
-                      <li key={i} style={s.featureItem}>
-                        <span style={s.checkmark}>✓</span> {f}
+                      <li key={i} style={b.featureItem}>
+                        <span style={b.checkmark}>✓</span> {f}
                       </li>
                     ))}
                   </ul>
                   <div style={{
-                    ...s.planRadio,
-                    borderColor: selected ? COLORS.accent : COLORS.border,
+                    ...b.planRadio,
+                    borderColor: selected ? BRAND.gold : BRAND.border,
                   }}>
-                    {selected && <div style={s.planRadioInner} />}
+                    {selected && <div style={b.planRadioInner} />}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {error && <p style={s.error}>{error}</p>}
+          {error && <p style={b.error}>{error}</p>}
 
           <button
             onClick={handleStripeCheckout}
             disabled={checkoutLoading}
-            style={s.button}
+            style={b.subscribeBtn}
           >
             {checkoutLoading
               ? "Redirecting to payment..."
               : `Subscribe — ${PLANS.find(p => p.id === selectedPlan)?.price}/month`}
           </button>
 
-          <p style={s.footer}>
+          <p style={b.footer}>
             Already have an account?{" "}
-            <Link to="/portal/login" style={s.link}>Sign in</Link>
+            <Link to="/portal/login" style={b.link}>Sign in</Link>
           </p>
         </div>
       </div>
@@ -266,34 +287,38 @@ export default function SignupPage() {
   ];
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
-        <div style={s.cross}>✝</div>
-        <h1 style={s.title}>{stepTitles[step]}</h1>
-        <p style={s.subtitle}>{stepSubtitles[step]}</p>
+    <div style={b.page}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+      `}</style>
+
+      <div style={b.formCard}>
+        <div style={b.formCross}>✝</div>
+        <h1 style={b.formTitle}>{stepTitles[step]}</h1>
+        <p style={b.formSubtitle}>{stepSubtitles[step]}</p>
 
         {/* Step indicator */}
-        <div style={s.steps}>
+        <div style={b.steps}>
           {[1, 2, 3].map((n, i) => (
             <div key={n} style={{ display: "flex", alignItems: "center" }}>
-              {i > 0 && <div style={s.stepLine} />}
+              {i > 0 && <div style={b.stepLine} />}
               <div style={{
-                ...s.stepDot,
-                background: step >= n ? COLORS.accent : COLORS.border,
+                ...b.stepDot,
+                background: step >= n ? BRAND.gold : BRAND.border,
               }} />
             </div>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} style={s.form}>
+        <form onSubmit={handleSubmit} style={b.form}>
           {step === 1 && (
             <>
-              <label style={s.label}>Registration Code</label>
+              <label style={b.label}>Registration Code</label>
               <input
                 type="text"
                 value={regCode}
                 onChange={(e) => setRegCode(e.target.value.toUpperCase())}
-                style={{ ...s.input, fontFamily: "'Courier New', monospace", fontSize: 16, letterSpacing: "0.08em", textAlign: "center" }}
+                style={{ ...b.input, fontFamily: "'Courier New', monospace", fontSize: 16, letterSpacing: "0.08em", textAlign: "center" }}
                 placeholder="HOLY-XXXX-XXXX"
                 autoFocus
               />
@@ -302,24 +327,24 @@ export default function SignupPage() {
 
           {step === 2 && (
             <>
-              <label style={s.label}>Email</label>
+              <label style={b.label}>Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                style={s.input}
+                style={b.input}
                 placeholder="pastor@church.org"
                 autoFocus
               />
 
-              <label style={{ ...s.label, marginTop: 16 }}>Password</label>
+              <label style={{ ...b.label, marginTop: 16 }}>Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                style={s.input}
+                style={b.input}
                 placeholder="At least 6 characters"
               />
             </>
@@ -327,55 +352,55 @@ export default function SignupPage() {
 
           {step === 3 && (
             <>
-              <label style={s.label}>Church Name *</label>
+              <label style={b.label}>Church Name *</label>
               <input
                 type="text"
                 value={churchName}
                 onChange={(e) => setChurchName(e.target.value)}
                 required
-                style={s.input}
+                style={b.input}
                 placeholder="Grace Community Church"
                 autoFocus
               />
 
-              <label style={{ ...s.label, marginTop: 16 }}>
+              <label style={{ ...b.label, marginTop: 16 }}>
                 Denomination <span style={{ opacity: 0.5 }}>(optional)</span>
               </label>
               <input
                 type="text"
                 value={denomination}
                 onChange={(e) => setDenomination(e.target.value)}
-                style={s.input}
+                style={b.input}
                 placeholder="e.g. Baptist, Non-denominational"
               />
 
-              <label style={{ ...s.label, marginTop: 16 }}>
+              <label style={{ ...b.label, marginTop: 16 }}>
                 City <span style={{ opacity: 0.5 }}>(optional)</span>
               </label>
               <input
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                style={s.input}
+                style={b.input}
                 placeholder="e.g. Dallas, TX"
               />
 
-              <label style={{ ...s.label, marginTop: 20 }}>Theme</label>
-              <div style={s.themeGrid}>
+              <label style={{ ...b.label, marginTop: 20 }}>Theme</label>
+              <div style={b.themeGrid}>
                 {Object.entries(THEMES).map(([key, t]) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setTheme(key)}
                     style={{
-                      ...s.themeCard,
-                      borderColor: theme === key ? t.accent : COLORS.border,
+                      ...b.themeCard,
+                      borderColor: theme === key ? t.accent : BRAND.border,
                       boxShadow: theme === key ? `0 0 12px ${t.accent}33` : "none",
                     }}
                   >
                     <div style={{
                       width: "100%", height: 28, borderRadius: 6,
-                      background: `linear-gradient(135deg, ${t.bg}, ${t.bg})`,
+                      background: t.bg,
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <div style={{
@@ -385,7 +410,7 @@ export default function SignupPage() {
                     </div>
                     <span style={{
                       fontFamily: "'DM Sans', sans-serif", fontSize: 10,
-                      color: theme === key ? t.accent : COLORS.textMuted,
+                      color: theme === key ? t.accent : BRAND.textMuted,
                       fontWeight: theme === key ? 700 : 400,
                       marginTop: 4,
                     }}>{t.label}</span>
@@ -395,10 +420,10 @@ export default function SignupPage() {
             </>
           )}
 
-          {error && <p style={s.error}>{error}</p>}
+          {error && <p style={b.error}>{error}</p>}
 
           <button type="submit" disabled={loading} style={{
-            ...s.button,
+            ...b.subscribeBtn,
             ...(step === 1 && !regCode.trim() ? { opacity: 0.5 } : {}),
           }}>
             {loading
@@ -413,88 +438,77 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => { setStep(step - 1); setError(""); }}
-            style={s.backBtn}
+            style={b.backBtn}
           >
             ← Back
           </button>
         </form>
 
-        <p style={s.footer}>
+        <p style={b.footer}>
           Already have an account?{" "}
-          <Link to="/portal/login" style={s.link}>Sign in</Link>
+          <Link to="/portal/login" style={b.link}>Sign in</Link>
         </p>
       </div>
     </div>
   );
 }
 
-const s = {
+// ─── Brand styles (dark navy + gold) ────────────────────
+const b = {
   page: {
     minHeight: "100vh",
-    background: COLORS.bg,
+    background: BRAND.bg,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    fontFamily: "'DM Sans', sans-serif",
+  },
+
+  // Header
+  header: {
+    width: "100%",
+    padding: "20px 32px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
+    gap: 10,
+    borderBottom: `1px solid ${BRAND.border}`,
   },
+  headerCross: {
+    fontSize: 22,
+    color: BRAND.gold,
+  },
+  headerName: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 20,
+    fontWeight: 700,
+    color: BRAND.text,
+  },
+  headerTag: {
+    fontSize: 11,
+    color: BRAND.textMuted,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    marginLeft: 4,
+  },
+
+  // Plan page
   planPage: {
     width: "100%",
-    maxWidth: 900,
+    maxWidth: 920,
     textAlign: "center",
-    padding: "48px 0",
-  },
-  card: {
-    width: "100%",
-    maxWidth: 440,
-    padding: "48px 36px",
-    borderRadius: 20,
-    background: COLORS.card,
-    border: `1px solid ${COLORS.border}`,
-    textAlign: "center",
-  },
-  brandRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    marginBottom: 4,
-  },
-  brandCross: {
-    fontSize: 28,
-    color: COLORS.accent,
-  },
-  brandName: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: 26,
-    fontWeight: 700,
-    color: COLORS.text,
-    letterSpacing: "-0.01em",
-  },
-  brandTagline: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 13,
-    color: COLORS.textMuted,
-    letterSpacing: "0.12em",
-    textTransform: "uppercase",
-    marginBottom: 32,
-  },
-  cross: {
-    fontSize: 32,
-    color: COLORS.accentMid,
-    marginBottom: 16,
+    padding: "48px 20px 60px",
   },
   title: {
     fontFamily: "'Playfair Display', serif",
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 700,
-    color: COLORS.text,
-    marginBottom: 6,
+    color: BRAND.text,
+    marginBottom: 8,
   },
   subtitle: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 14,
-    color: COLORS.textMuted,
-    marginBottom: 32,
+    fontSize: 15,
+    color: BRAND.textMuted,
+    marginBottom: 40,
   },
 
   // Plan grid
@@ -502,16 +516,16 @@ const s = {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
     gap: 16,
-    marginBottom: 32,
+    marginBottom: 36,
   },
   planCard: {
     position: "relative",
-    padding: "28px 20px 20px",
+    padding: "32px 22px 22px",
     borderRadius: 16,
-    border: `2px solid ${COLORS.border}`,
-    background: COLORS.card,
+    border: `1.5px solid ${BRAND.border}`,
+    background: BRAND.navy,
     cursor: "pointer",
-    transition: "all 0.2s",
+    transition: "all 0.25s ease",
     textAlign: "center",
     display: "flex",
     flexDirection: "column",
@@ -522,52 +536,50 @@ const s = {
     top: -12,
     left: "50%",
     transform: "translateX(-50%)",
-    padding: "4px 14px",
+    padding: "5px 16px",
     borderRadius: 20,
-    background: COLORS.accent,
+    background: `linear-gradient(135deg, ${BRAND.gold}, #b8973e)`,
     color: "#fff",
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 11,
     fontWeight: 700,
     whiteSpace: "nowrap",
+    letterSpacing: "0.02em",
   },
   planName: {
     fontFamily: "'Playfair Display', serif",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 700,
-    color: COLORS.text,
-    marginBottom: 12,
+    color: BRAND.text,
+    marginBottom: 14,
   },
   planPriceRow: {
     display: "flex",
     alignItems: "baseline",
     justifyContent: "center",
     gap: 2,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   planPrice: {
     fontFamily: "'Playfair Display', serif",
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: 700,
-    color: COLORS.text,
+    color: BRAND.gold,
   },
   planPeriod: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
-    color: COLORS.textMuted,
+    color: BRAND.textMuted,
   },
   planMembers: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
-    color: COLORS.accent,
+    color: BRAND.goldLight,
     fontWeight: 600,
-    marginBottom: 16,
+    marginBottom: 18,
   },
   planDivider: {
     width: "100%",
     height: 1,
-    background: COLORS.border,
-    marginBottom: 16,
+    background: BRAND.border,
+    marginBottom: 18,
   },
   featureList: {
     listStyle: "none",
@@ -578,16 +590,16 @@ const s = {
     flex: 1,
   },
   featureItem: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
-    color: COLORS.textBody,
-    padding: "4px 0",
+    color: BRAND.textMuted,
+    padding: "5px 0",
     display: "flex",
     alignItems: "flex-start",
     gap: 8,
+    lineHeight: 1.4,
   },
   checkmark: {
-    color: COLORS.accent,
+    color: BRAND.gold,
     fontWeight: 700,
     fontSize: 14,
     flexShrink: 0,
@@ -596,8 +608,8 @@ const s = {
     width: 20,
     height: 20,
     borderRadius: "50%",
-    border: `2px solid ${COLORS.border}`,
-    marginTop: 16,
+    border: `2px solid ${BRAND.border}`,
+    marginTop: 18,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -607,7 +619,55 @@ const s = {
     width: 10,
     height: 10,
     borderRadius: "50%",
-    background: COLORS.accent,
+    background: BRAND.gold,
+  },
+
+  // Subscribe button
+  subscribeBtn: {
+    width: "100%",
+    maxWidth: 420,
+    margin: "0 auto",
+    display: "block",
+    padding: "16px 0",
+    borderRadius: 12,
+    border: "none",
+    background: `linear-gradient(135deg, ${BRAND.gold}, #b8973e)`,
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif",
+    transition: "opacity 0.2s",
+    boxShadow: `0 4px 20px rgba(201, 168, 76, 0.3)`,
+  },
+
+  // Form card (steps 1-3)
+  formCard: {
+    width: "100%",
+    maxWidth: 440,
+    margin: "80px auto 40px",
+    padding: "48px 36px",
+    borderRadius: 20,
+    background: BRAND.navy,
+    border: `1px solid ${BRAND.border}`,
+    textAlign: "center",
+  },
+  formCross: {
+    fontSize: 32,
+    color: BRAND.gold,
+    marginBottom: 16,
+  },
+  formTitle: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 28,
+    fontWeight: 700,
+    color: BRAND.text,
+    marginBottom: 6,
+  },
+  formSubtitle: {
+    fontSize: 14,
+    color: BRAND.textMuted,
+    marginBottom: 24,
   },
 
   // Steps
@@ -626,7 +686,7 @@ const s = {
   stepLine: {
     width: 30,
     height: 2,
-    background: COLORS.border,
+    background: BRAND.border,
   },
 
   // Form
@@ -634,10 +694,9 @@ const s = {
     textAlign: "left",
   },
   label: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 12,
     fontWeight: 600,
-    color: COLORS.textMuted,
+    color: BRAND.textMuted,
     letterSpacing: "0.05em",
     textTransform: "uppercase",
     display: "block",
@@ -647,45 +706,14 @@ const s = {
     width: "100%",
     padding: "12px 14px",
     borderRadius: 10,
-    border: `1px solid ${COLORS.border}`,
-    background: COLORS.bg,
-    color: COLORS.text,
+    border: `1px solid ${BRAND.border}`,
+    background: BRAND.bg,
+    color: BRAND.text,
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     outline: "none",
     boxSizing: "border-box",
     transition: "border-color 0.2s",
-  },
-  divider: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    margin: "16px 0",
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    background: COLORS.border,
-  },
-  dividerText: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 12,
-    color: COLORS.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
-  },
-  codeBtn: {
-    width: "100%",
-    padding: "14px 0",
-    borderRadius: 12,
-    border: `1px solid ${COLORS.border}`,
-    background: "transparent",
-    color: COLORS.textSec,
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "pointer",
-    transition: "all 0.2s",
   },
   themeGrid: {
     display: "grid",
@@ -695,8 +723,8 @@ const s = {
   themeCard: {
     padding: "8px 4px 6px",
     borderRadius: 10,
-    border: `2px solid ${COLORS.border}`,
-    background: COLORS.bg,
+    border: `2px solid ${BRAND.border}`,
+    background: BRAND.bg,
     cursor: "pointer",
     display: "flex",
     flexDirection: "column",
@@ -704,45 +732,29 @@ const s = {
     transition: "all 0.2s",
   },
   error: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
     color: "#e57373",
     marginTop: 12,
-  },
-  button: {
-    width: "100%",
-    marginTop: 24,
-    padding: "14px 0",
-    borderRadius: 12,
-    border: "none",
-    background: COLORS.accent,
-    color: "#fff",
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 15,
-    fontWeight: 700,
-    cursor: "pointer",
-    transition: "opacity 0.2s",
   },
   backBtn: {
     width: "100%",
     marginTop: 10,
     padding: "12px 0",
     borderRadius: 12,
-    border: `1px solid ${COLORS.border}`,
+    border: `1px solid ${BRAND.border}`,
     background: "transparent",
-    color: COLORS.textMuted,
+    color: BRAND.textMuted,
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     cursor: "pointer",
   },
   footer: {
-    fontFamily: "'DM Sans', sans-serif",
     fontSize: 13,
-    color: COLORS.textMuted,
+    color: BRAND.textMuted,
     marginTop: 24,
   },
   link: {
-    color: COLORS.accent,
+    color: BRAND.gold,
     textDecoration: "none",
     fontWeight: 600,
   },
