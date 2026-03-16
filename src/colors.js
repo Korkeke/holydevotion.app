@@ -1,19 +1,26 @@
 export const COLORS = {
-  bg: "#FAF8F5",
-  bgSidebar: "#FDFCFA",
-  card: "#FFFFFF",
-  border: "#EDE9E3",
-  sand: "#F5F0EA",
-  accent: "#3D6B5E",
-  accentLight: "#EEF4F1",
-  accentMid: "#C8DDD5",
-  accentDark: "#2C5347",
-  text: "#2C2C2C",
-  textBody: "#4A4A4A",
-  textSec: "#7A7672",
-  textMuted: "#A8A29E",
+  // Deep navy backgrounds
+  bg: "#0D1B2A",
+  bgSidebar: "#0A1525",
+  card: "#142438",
+  border: "#1E3450",
+  sand: "#1A2D45",
+
+  // Gold accent palette
+  accent: "#C9A84C",
+  accentLight: "#C9A84C15",
+  accentMid: "#C9A84C40",
+  accentDark: "#B8973E",
+
+  // Text on dark
+  text: "#F0EDE8",
+  textBody: "#D4CFC8",
+  textSec: "#A09888",
+  textMuted: "#6B6358",
+
+  // Status colors
   red: "#C45A4A",
-  amber: "#C49A3C",
-  green: "#4A8B6F",
+  amber: "#D4A84C",
+  green: "#4A9B6F",
   white: "#FFFFFF",
 };

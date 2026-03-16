@@ -42,7 +42,7 @@ const portalCSS = `
   @keyframes spin { to { transform: rotate(360deg); } }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: #1E3450; border-radius: 3px; }
 
   @media (min-width: 769px) {
     .portal-hamburger { display: none !important; }
