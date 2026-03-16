@@ -118,8 +118,19 @@ export default function DashboardPage() {
   // Members for table
   const members = attention?.all_members || [];
 
+  const churchInitial = (church?.name || "C")[0].toUpperCase();
+
   return (
     <div style={s.page}>
+      {/* Church branding */}
+      <div style={s.churchBrand}>
+        <div style={s.churchBrandIcon}>{churchInitial}</div>
+        <div>
+          <div style={s.churchBrandName}>{church?.name || "Church Portal"}</div>
+          <div style={s.churchBrandPlan}>Shepherd Plan</div>
+        </div>
+      </div>
+
       {/* Header */}
       <div style={s.header}>
         <div>
@@ -394,6 +405,39 @@ const s = {
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     color: COLORS.textMuted,
+  },
+
+  // Church branding
+  churchBrand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 24,
+  },
+  churchBrandIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    background: COLORS.accent,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 18,
+    fontWeight: 700,
+    color: "#fff",
+    flexShrink: 0,
+  },
+  churchBrandName: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 18,
+    fontWeight: 700,
+    color: COLORS.text,
+  },
+  churchBrandPlan: {
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: 1,
   },
 
   // Header

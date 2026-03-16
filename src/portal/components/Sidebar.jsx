@@ -3,14 +3,14 @@ import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
 
 const NAV_ITEMS = [
-  { label: "Overview", path: "/portal", emoji: "📊" },
-  { label: "Sermon", path: "/portal/sermons", emoji: "📖" },
-  { label: "Events", path: "/portal/events", emoji: "📅" },
-  { label: "Announcements", path: "/portal/announcements", emoji: "📣" },
-  { label: "Devotionals", path: "/portal/devotionals", emoji: "📕" },
-  { label: "Prayer Wall", path: "/portal/prayers", emoji: "🙏" },
-  { label: "Members", path: "/portal/members", emoji: "👥" },
-  { label: "Settings", path: "/portal/settings", emoji: "⚙️" },
+  { label: "Overview", path: "/portal" },
+  { label: "Sermon", path: "/portal/sermons" },
+  { label: "Events", path: "/portal/events" },
+  { label: "Announcements", path: "/portal/announcements" },
+  { label: "Devotionals", path: "/portal/devotionals" },
+  { label: "Prayer Wall", path: "/portal/prayers" },
+  { label: "Members", path: "/portal/members" },
+  { label: "Settings", path: "/portal/settings" },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -73,7 +73,6 @@ export default function Sidebar({ open, onClose }) {
                   fontWeight: active ? 700 : 500,
                 }}
               >
-                <span style={{ fontSize: 16, width: 22, textAlign: "center" }}>{item.emoji}</span>
                 <span>{item.label}</span>
               </button>
             );
