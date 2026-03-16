@@ -41,6 +41,12 @@ export default function Sidebar({ open, onClose }) {
         className={`portal-sidebar ${open ? "open" : ""}`}
         style={s.sidebar}
       >
+        {/* Devotion branding */}
+        <div style={s.brand}>
+          <span style={s.brandCross}>✝</span>
+          <span style={s.brandName}>Devotion</span>
+        </div>
+
         {/* Church branding */}
         <div style={s.header}>
           <div style={s.churchIcon}>{churchInitial}</div>
@@ -113,6 +119,24 @@ const s = {
     transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1)",
     padding: "24px 16px",
     overflowY: "auto",
+  },
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "0 8px",
+    marginBottom: 24,
+  },
+  brandCross: {
+    fontSize: 20,
+    color: COLORS.accent,
+  },
+  brandName: {
+    fontFamily: "'Playfair Display', serif",
+    fontSize: 18,
+    fontWeight: 700,
+    color: COLORS.text,
+    letterSpacing: "-0.01em",
   },
   header: {
     display: "flex",
