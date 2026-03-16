@@ -1142,6 +1142,7 @@ function ChurchesPage({ setPage }) {
   const plans = [
     {
       name: "Church",
+      planId: "church",
       price: "49",
       period: "/month",
       desc: "For growing churches ready to bring their congregation into one place",
@@ -1159,6 +1160,7 @@ function ChurchesPage({ setPage }) {
     },
     {
       name: "Church Plus",
+      planId: "church_plus",
       price: "99",
       period: "/month",
       desc: "For churches wanting automated engagement tools and deeper pastoral insight",
@@ -1176,6 +1178,7 @@ function ChurchesPage({ setPage }) {
     },
     {
       name: "Church Pro",
+      planId: "church_pro",
       price: "199",
       period: "/month",
       desc: "For large congregations wanting the full Devotion platform",
@@ -1379,7 +1382,14 @@ function ChurchesPage({ setPage }) {
               Setup takes 10 minutes. Your congregation can join today.
             </p>
             <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <GoldButton large onClick={() => window.location.href = "/portal/signup"}>Get Started</GoldButton>
+              <GoldButton large onClick={() => {
+                fetch("https://devotion-backend-production.up.railway.app/api/stripe/checkout", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ plan: "church_plus" }),
+                }).then(r => r.json()).then(d => { if (d.url) window.location.href = d.url; })
+                  .catch(() => { window.location.href = "/portal/signup"; });
+              }}>Get Started</GoldButton>
               <GoldButton outline large onClick={() => { setPage("Contact"); window.scrollTo(0,0); }}>Talk to Us First</GoldButton>
             </div>
           </RevealBlock>
@@ -1389,8 +1399,29 @@ function ChurchesPage({ setPage }) {
   );
 }
 
-function PricingCard({ name, price, period, desc, size, features, highlight }) {
+function PricingCard({ name, price, period, desc, size, features, highlight, planId }) {
   const [h, setH] = useState(false);
+  const [checking, setChecking] = useState(false);
+
+  async function handleCheckout() {
+    if (checking) return;
+    setChecking(true);
+    try {
+      const res = await fetch("https://devotion-backend-production.up.railway.app/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      // Fallback to signup page
+      window.location.href = "/portal/signup";
+    }
+    setChecking(false);
+  }
   return (
     <div onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{
@@ -1466,8 +1497,8 @@ function PricingCard({ name, price, period, desc, size, features, highlight }) {
         ))}
       </div>
 
-      <GoldButton large outline={!highlight} onClick={() => window.location.href = "/portal/signup"}>
-        Get Started
+      <GoldButton large outline={!highlight} onClick={handleCheckout}>
+        {checking ? "Redirecting..." : "Get Started"}
       </GoldButton>
     </div>
   );
