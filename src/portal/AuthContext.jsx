@@ -62,16 +62,27 @@ export function AuthProvider({ children }) {
     // Guard: prevent onAuthStateChanged from calling loadChurch()
     // before the church record exists in the database.
     signingUpRef.current = true;
-    let cred;
+    let firebaseUser;
     try {
-      // Step 1: Create Firebase account
-      cred = await createUserWithEmailAndPassword(auth, email, password);
+      // Step 1: Create or sign into Firebase account.
+      // If a previous signup attempt created the account but church creation
+      // failed, the account already exists. Sign in with it instead.
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        firebaseUser = cred.user;
+      } catch (fbErr) {
+        if (fbErr?.code === "auth/email-already-in-use") {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          firebaseUser = cred.user;
+        } else {
+          throw fbErr;
+        }
+      }
 
       // Step 2: Create church via API
-      // IMPORTANT: Use raw fetch instead of the api.js post() helper.
-      // api.js redirects to /portal/login on 401, but a brand-new Firebase
-      // token may not be fully propagated yet. We handle errors here instead.
-      const token = await cred.user.getIdToken(true); // force refresh
+      // Use raw fetch instead of api.js post() helper to avoid the
+      // automatic 401 → /portal/login redirect during signup.
+      const token = await firebaseUser.getIdToken(true); // force refresh
       const BASE = "https://devotion-backend-production.up.railway.app";
       const res = await fetch(`${BASE}/api/churches`, {
         method: "POST",
@@ -92,10 +103,6 @@ export function AuthProvider({ children }) {
       setRole("owner");
       return resp;
     } catch (err) {
-      // Church creation failed — clean up orphaned Firebase account
-      if (cred?.user) {
-        try { await deleteUser(cred.user); } catch { /* best effort */ }
-      }
       const msg = err?.message || "Failed to create church. Please try again.";
       throw new Error(msg);
     } finally {

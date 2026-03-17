@@ -251,11 +251,7 @@ export default function OnboardingWizard() {
       goTo(5);
     } catch (err) {
       const msg = err?.code || err?.message || "";
-      if (msg.includes("email-already-in-use")) {
-        setError("An account with this email already exists.");
-        setLoading(false);
-        goTo(1);
-      } else if (msg.includes("Invalid registration code") || msg.includes("already used")) {
+      if (msg.includes("Invalid registration code") || msg.includes("already used")) {
         setError(msg);
         setLoading(false);
       } else {
