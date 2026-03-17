@@ -5,14 +5,15 @@ import { get, put, del } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 const THEMES = {
-  gold_navy:    { label: "Gold & Navy",    accent: "#c9a84c", bg: "#0a0e1a" },
-  royal_purple: { label: "Royal Purple",   accent: "#9b59b6", bg: "#1a0e2e" },
-  forest_green: { label: "Forest Green",   accent: "#27ae60", bg: "#0e1a14" },
-  crimson:      { label: "Crimson",         accent: "#c0392b", bg: "#1a0e0e" },
-  ocean_blue:   { label: "Ocean Blue",      accent: "#2980b9", bg: "#0e141a" },
-  rose:         { label: "Rose",            accent: "#e84393", bg: "#1a0e16" },
-  copper:       { label: "Copper",          accent: "#d4a373", bg: "#1a140e" },
-  silver:       { label: "Silver",          accent: "#bdc3c7", bg: "#12141a" },
+  devotion:       { label: "Devotion",              primary: "#0A0E1A", secondary: "#C9A84C" },
+  classic_navy:   { label: "Classic Navy",          primary: "#1B3A5C", secondary: "#C8A96E" },
+  sage_green:     { label: "Sage Green",            primary: "#3D6B5E", secondary: "#D4A853" },
+  burgundy:       { label: "Burgundy",              primary: "#7B2D3B", secondary: "#D4B896" },
+  warm_slate:     { label: "Warm Slate",            primary: "#4A5568", secondary: "#C08552" },
+  deep_teal:      { label: "Deep Teal",             primary: "#1A5E63", secondary: "#E8C16D" },
+  forest_green:   { label: "Forest Green",          primary: "#2E5E3F", secondary: "#D9C8A9" },
+  ivory_gold:     { label: "Ivory and Gold",        primary: "#B8A88A", secondary: "#7A6B4F" },
+  purple_gold:    { label: "Purple and Warm Gold",  primary: "#4A3060", secondary: "#C9B57A" },
 };
 
 const FIELDS = [
@@ -28,7 +29,10 @@ const FIELDS = [
 export default function SettingsPage() {
   const { church, role, signOutUser } = useAuth();
   const [form, setForm] = useState({});
-  const [selectedTheme, setSelectedTheme] = useState("gold_navy");
+  const [selectedTheme, setSelectedTheme] = useState("sage_green");
+  const [primaryColor, setPrimaryColor] = useState("#3D6B5E");
+  const [secondaryColor, setSecondaryColor] = useState("#D4A853");
+  const [isCustom, setIsCustom] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -46,7 +50,11 @@ export default function SettingsPage() {
         const vals = {};
         FIELDS.forEach((f) => { vals[f.key] = c[f.key] || ""; });
         setForm(vals);
-        setSelectedTheme(c.theme || "gold_navy");
+        const th = c.theme || "sage_green";
+        setSelectedTheme(th);
+        setPrimaryColor(c.accent_color || "#3D6B5E");
+        setSecondaryColor(c.secondary_color || "#D4A853");
+        setIsCustom(th === "custom" || !THEMES[th]);
       } catch {} finally { setLoading(false); }
     })();
   }, [church?.id]);
@@ -56,11 +64,11 @@ export default function SettingsPage() {
     setSaving(true);
     setSaved(false);
     try {
-      const t = THEMES[selectedTheme];
       await put(`/api/churches/${church.id}`, {
         ...form,
-        theme: selectedTheme,
-        accent_color: t ? t.accent : form.accent_color,
+        theme: isCustom ? "custom" : selectedTheme,
+        accent_color: primaryColor,
+        secondary_color: secondaryColor,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -141,39 +149,119 @@ export default function SettingsPage() {
       <div style={s.section}>
         <h2 style={s.sectionTitle}>App Theme</h2>
         <p style={s.sectionDesc}>Choose how your church looks in the Devotion app for your members.</p>
-        <div style={s.themeGrid}>
-          {Object.entries(THEMES).map(([key, t]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={async () => {
-                setSelectedTheme(key);
-                await put(`/api/churches/${church.id}`, { theme: key, accent_color: t.accent });
-              }}
-              style={{
-                ...s.themeCard,
-                borderColor: selectedTheme === key ? t.accent : COLORS.border,
-                boxShadow: selectedTheme === key ? `0 0 16px ${t.accent}33` : "none",
-              }}
-            >
-              <div style={{
-                width: "100%", height: 36, borderRadius: 8,
-                background: t.bg,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <div style={{
-                  width: 16, height: 16, borderRadius: "50%",
-                  background: t.accent,
-                }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
+          {Object.entries(THEMES).map(([key, t]) => {
+            const selected = !isCustom && selectedTheme === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={async () => {
+                  setSelectedTheme(key);
+                  setPrimaryColor(t.primary);
+                  setSecondaryColor(t.secondary);
+                  setIsCustom(false);
+                  await put(`/api/churches/${church.id}`, {
+                    theme: key,
+                    accent_color: t.primary,
+                    secondary_color: t.secondary,
+                  });
+                }}
+                style={{
+                  ...s.themeCard,
+                  borderColor: selected ? t.primary : COLORS.border,
+                  boxShadow: selected ? `0 0 16px ${t.primary}33` : "none",
+                }}
+              >
+                <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: t.primary, border: `2px solid ${COLORS.bgCard}`, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: t.secondary, border: `2px solid ${COLORS.bgCard}`, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                </div>
+                <span style={{
+                  fontFamily: "'DM Sans', sans-serif", fontSize: 10,
+                  color: selected ? t.primary : COLORS.textMuted,
+                  fontWeight: selected ? 700 : 400,
+                  marginTop: 6,
+                  textAlign: "center",
+                  lineHeight: 1.2,
+                }}>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom color option */}
+        <div style={{
+          padding: "14px 16px",
+          borderRadius: 12,
+          border: `1px solid ${isCustom ? primaryColor : COLORS.border}`,
+          background: isCustom ? `${primaryColor}10` : "transparent",
+          transition: "all 0.2s",
+        }}>
+          <button
+            type="button"
+            onClick={() => setIsCustom(true)}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600,
+              color: isCustom ? COLORS.text : COLORS.textMuted,
+              padding: 0, marginBottom: isCustom ? 12 : 0,
+              display: "block",
+            }}
+          >
+            🎨 Custom Colors
+          </button>
+          {isCustom && (
+            <div style={{ display: "flex", gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: "0.05em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Primary</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    style={{ width: 36, height: 32, border: "none", borderRadius: 6, cursor: "pointer", padding: 0 }}
+                  />
+                  <input
+                    type="text"
+                    value={primaryColor}
+                    onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setPrimaryColor(v); }}
+                    style={{ ...s.fieldInput, fontFamily: "monospace", fontSize: 12, padding: "6px 8px", width: "100%" }}
+                  />
+                </div>
               </div>
-              <span style={{
-                fontFamily: "'DM Sans', sans-serif", fontSize: 11,
-                color: selectedTheme === key ? t.accent : COLORS.textMuted,
-                fontWeight: selectedTheme === key ? 700 : 400,
-                marginTop: 6,
-              }}>{t.label}</span>
-            </button>
-          ))}
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, letterSpacing: "0.05em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>Accent</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input
+                    type="color"
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    style={{ width: 36, height: 32, border: "none", borderRadius: 6, cursor: "pointer", padding: 0 }}
+                  />
+                  <input
+                    type="text"
+                    value={secondaryColor}
+                    onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setSecondaryColor(v); }}
+                    style={{ ...s.fieldInput, fontFamily: "monospace", fontSize: 12, padding: "6px 8px", width: "100%" }}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  await put(`/api/churches/${church.id}`, {
+                    theme: "custom",
+                    accent_color: primaryColor,
+                    secondary_color: secondaryColor,
+                  });
+                }}
+                style={{ ...s.saveBtn, alignSelf: "flex-end", padding: "8px 16px", fontSize: 12 }}
+              >
+                Apply
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -6,14 +6,15 @@ import { post } from "../api";
 const API_BASE = "https://devotion-backend-production.up.railway.app";
 
 const THEMES = {
-  gold_navy:    { label: "Gold & Navy",    accent: "#c9a84c", bg: "#0D1F35" },
-  royal_purple: { label: "Royal Purple",   accent: "#9b59b6", bg: "#1a0e2e" },
-  forest_green: { label: "Forest Green",   accent: "#27ae60", bg: "#0e1a14" },
-  crimson:      { label: "Crimson",        accent: "#c0392b", bg: "#1a0e0e" },
-  ocean_blue:   { label: "Ocean Blue",     accent: "#2980b9", bg: "#0e141a" },
-  rose:         { label: "Rose",           accent: "#e84393", bg: "#1a0e16" },
-  copper:       { label: "Copper",         accent: "#d4a373", bg: "#1a140e" },
-  silver:       { label: "Silver",         accent: "#bdc3c7", bg: "#12141a" },
+  devotion:       { label: "Devotion",              primary: "#0A0E1A", secondary: "#C9A84C" },
+  classic_navy:   { label: "Classic Navy",          primary: "#1B3A5C", secondary: "#C8A96E" },
+  sage_green:     { label: "Sage Green",            primary: "#3D6B5E", secondary: "#D4A853" },
+  burgundy:       { label: "Burgundy",              primary: "#7B2D3B", secondary: "#D4B896" },
+  warm_slate:     { label: "Warm Slate",            primary: "#4A5568", secondary: "#C08552" },
+  deep_teal:      { label: "Deep Teal",             primary: "#1A5E63", secondary: "#E8C16D" },
+  forest_green:   { label: "Forest Green",          primary: "#2E5E3F", secondary: "#D9C8A9" },
+  ivory_gold:     { label: "Ivory and Gold",        primary: "#B8A88A", secondary: "#7A6B4F" },
+  purple_gold:    { label: "Purple and Warm Gold",  primary: "#4A3060", secondary: "#C9B57A" },
 };
 
 const SAGE = "#3D6B5E";
@@ -108,7 +109,10 @@ export default function OnboardingWizard() {
   const [brandingResult, setBrandingResult] = useState(null);
 
   // Step 4: Theme
-  const [theme, setTheme] = useState("gold_navy");
+  const [theme, setTheme] = useState("sage_green");
+  const [primaryColor, setPrimaryColor] = useState("#3D6B5E");
+  const [secondaryColor, setSecondaryColor] = useState("#D4A853");
+  const [isCustom, setIsCustom] = useState(false);
 
   // Step 5: Sermon
   const [sermonDescription, setSermonDescription] = useState("");
@@ -124,10 +128,10 @@ export default function OnboardingWizard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Accent color: sage before step 4, church's chosen theme after
-  const accent = currentStep != null && currentStep >= 4
-    ? (THEMES[theme]?.accent || SAGE)
-    : SAGE;
+  // Active colors: sage before step 4, church's chosen colors after
+  const activePrimary = currentStep != null && currentStep >= 4 ? primaryColor : SAGE;
+  const activeSecondary = currentStep != null && currentStep >= 4 ? secondaryColor : "#D4A853";
+  const accent = activePrimary; // backward compat alias
 
   // ─── Stripe session check on mount ───────────────────────────
 
@@ -195,7 +199,11 @@ export default function OnboardingWizard() {
       if (data.detected) {
         setBrandingResult(data);
         if (data.suggested_theme && THEMES[data.suggested_theme]) {
+          const preset = THEMES[data.suggested_theme];
           setTheme(data.suggested_theme);
+          setPrimaryColor(preset.primary);
+          setSecondaryColor(preset.secondary);
+          setIsCustom(false);
         }
       }
     } catch {
@@ -224,7 +232,9 @@ export default function OnboardingWizard() {
         denomination: denomination || undefined,
         city: city || undefined,
         website: website || undefined,
-        theme,
+        theme: isCustom ? "custom" : theme,
+        accent_color: primaryColor,
+        secondary_color: secondaryColor,
         registration_code: regCode.trim(),
       });
 
@@ -485,74 +495,161 @@ export default function OnboardingWizard() {
         {currentStep === 4 && (
           <div style={s.card}>
             <h1 style={s.heading}>Make it yours</h1>
-            <p style={s.sub}>Choose the color that represents your church. This sets the look and feel of your church space in the app.</p>
+            <p style={s.sub}>Choose the colors that represent your church. This sets the look and feel of your church space in the app.</p>
 
-            {brandingResult?.detected && (
-              <div style={{ ...s.detectedCard, borderColor: `${accent}33` }}>
+            {brandingResult?.detected && !isCustom && (
+              <div style={{ ...s.detectedCard, borderColor: `${primaryColor}33` }}>
                 <p style={{ margin: 0, fontSize: 13, color: "#7A7672" }}>We found this from your website:</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: THEMES[theme]?.accent || SAGE }} />
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: primaryColor }} />
                   <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 600, color: "#2C2C2C" }}>
-                    {THEMES[theme]?.label}
+                    {THEMES[theme]?.label || "Detected"}
                   </span>
                 </div>
               </div>
             )}
 
-            <div style={s.themeGrid}>
-              {Object.entries(THEMES).map(([key, t]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setTheme(key)}
-                  style={{
-                    ...s.themeCard,
-                    borderColor: theme === key ? t.accent : "#EDE9E3",
-                    boxShadow: theme === key ? `0 0 16px ${t.accent}33` : "none",
-                  }}
-                >
-                  <div style={{
-                    width: "100%", height: 32, borderRadius: 8,
-                    background: t.bg,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <div style={{ width: 16, height: 16, borderRadius: "50%", background: t.accent }} />
-                  </div>
-                  <span style={{
-                    fontFamily: "'DM Sans', sans-serif", fontSize: 11,
-                    color: theme === key ? t.accent : "#7A7672",
-                    fontWeight: theme === key ? 700 : 400,
-                    marginTop: 6,
-                  }}>{t.label}</span>
-                </button>
-              ))}
+            {/* Preset grid - 3 columns for 9 presets */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
+              {Object.entries(THEMES).map(([key, t]) => {
+                const selected = !isCustom && theme === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => {
+                      setTheme(key);
+                      setPrimaryColor(t.primary);
+                      setSecondaryColor(t.secondary);
+                      setIsCustom(false);
+                    }}
+                    style={{
+                      padding: "10px 8px 8px",
+                      borderRadius: 12,
+                      border: `2px solid ${selected ? t.primary : "#EDE9E3"}`,
+                      background: selected ? `${t.primary}08` : "#FDFCFA",
+                      cursor: "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 6,
+                      transition: "all 0.2s",
+                      boxShadow: selected ? `0 0 16px ${t.primary}22` : "none",
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: t.primary, border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }} />
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: t.secondary, border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }} />
+                    </div>
+                    <span style={{
+                      fontFamily: "'DM Sans', sans-serif", fontSize: 10,
+                      color: selected ? t.primary : "#7A7672",
+                      fontWeight: selected ? 700 : 400,
+                      textAlign: "center",
+                      lineHeight: 1.2,
+                    }}>{t.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Live preview */}
-            <div style={{ ...s.previewCard, borderColor: `${THEMES[theme]?.accent || SAGE}44` }}>
+            {/* Custom color option */}
+            <div style={{
+              padding: "16px",
+              borderRadius: 12,
+              border: `2px solid ${isCustom ? primaryColor : "#EDE9E3"}`,
+              background: isCustom ? `${primaryColor}08` : "#FDFCFA",
+              marginBottom: 20,
+              transition: "all 0.2s",
+            }}>
+              <button
+                type="button"
+                onClick={() => setIsCustom(true)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
+                  color: isCustom ? primaryColor : "#7A7672",
+                  padding: 0, marginBottom: isCustom ? 14 : 0,
+                  display: "block", width: "100%", textAlign: "left",
+                }}
+              >
+                🎨 Custom Colors
+              </button>
+              {isCustom && (
+                <div style={{ display: "flex", gap: 16 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...s.label, fontSize: 11, marginBottom: 6 }}>Primary Color</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <input
+                        type="color"
+                        value={primaryColor}
+                        onChange={(e) => { setPrimaryColor(e.target.value); setTheme("custom"); }}
+                        style={{ width: 40, height: 36, border: "none", borderRadius: 8, cursor: "pointer", padding: 0 }}
+                      />
+                      <input
+                        type="text"
+                        value={primaryColor}
+                        onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) { setPrimaryColor(v); setTheme("custom"); } }}
+                        style={{ ...s.input, fontFamily: "monospace", fontSize: 13, width: "100%", padding: "8px 10px" }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ ...s.label, fontSize: 11, marginBottom: 6 }}>Accent Color</label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <input
+                        type="color"
+                        value={secondaryColor}
+                        onChange={(e) => { setSecondaryColor(e.target.value); setTheme("custom"); }}
+                        style={{ width: 40, height: 36, border: "none", borderRadius: 8, cursor: "pointer", padding: 0 }}
+                      />
+                      <input
+                        type="text"
+                        value={secondaryColor}
+                        onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) { setSecondaryColor(v); setTheme("custom"); } }}
+                        style={{ ...s.input, fontFamily: "monospace", fontSize: 13, width: "100%", padding: "8px 10px" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Live preview - always warm light background */}
+            <div style={{ ...s.previewCard, borderColor: `${primaryColor}44` }}>
               <div style={{
-                background: THEMES[theme]?.bg || "#0a0e1a",
+                background: "#FAF8F5",
                 borderRadius: 12,
                 padding: "20px 16px",
                 textAlign: "center",
               }}>
-                <div style={{ fontSize: 20, color: THEMES[theme]?.accent || SAGE, marginBottom: 4 }}>✝</div>
+                <div style={{ fontSize: 20, color: secondaryColor, marginBottom: 4 }}>✝</div>
                 <h3 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontSize: 16, fontWeight: 700,
-                  color: "#e8e4dc", margin: "0 0 6px",
+                  color: primaryColor, margin: "0 0 6px",
                 }}>{churchName || "Your Church"}</h3>
                 <p style={{
                   fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 12, color: "rgba(232, 228, 220, 0.5)", margin: 0,
+                  fontSize: 12, color: "#7A7672", margin: 0,
                 }}>Welcome to our community</p>
-                <div style={{
-                  marginTop: 12, padding: "8px 16px", borderRadius: 8,
-                  background: THEMES[theme]?.accent || SAGE, display: "inline-block",
-                }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans', sans-serif" }}>
-                    Join Church
-                  </span>
+                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
+                  <div style={{
+                    padding: "8px 16px", borderRadius: 8,
+                    background: primaryColor, display: "inline-block",
+                  }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans', sans-serif" }}>
+                      Join Church
+                    </span>
+                  </div>
+                  <div style={{
+                    padding: "8px 12px", borderRadius: 8,
+                    background: `${secondaryColor}20`, border: `1px solid ${secondaryColor}40`,
+                  }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: secondaryColor, fontFamily: "'DM Sans', sans-serif" }}>
+                      Mark 4:35
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -560,7 +657,7 @@ export default function OnboardingWizard() {
             {error && <p style={s.error}>{error}</p>}
 
             <button
-              style={{ ...s.btn, background: THEMES[theme]?.accent || SAGE }}
+              style={{ ...s.btn, background: primaryColor }}
               onClick={handleCreateChurch}
               disabled={loading}
             >
