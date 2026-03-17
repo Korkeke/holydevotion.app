@@ -5,6 +5,7 @@ import PortalRoute from "./portal/PortalRoute";
 
 const LoginPage = lazy(() => import("./portal/pages/LoginPage"));
 const SignupPage = lazy(() => import("./portal/pages/SignupPage"));
+const OnboardingWizard = lazy(() => import("./portal/pages/OnboardingWizard"));
 const PortalLayout = lazy(() => import("./portal/PortalLayout"));
 const DashboardPage = lazy(() => import("./portal/pages/DashboardPage"));
 const EventsPage = lazy(() => import("./portal/pages/EventsPage"));
@@ -1646,7 +1647,7 @@ export default function DevotionSite() {
         <Suspense fallback={<PortalLoading />}>
           <Routes>
             <Route path="/portal/login" element={<LoginPage />} />
-            <Route path="/portal/signup" element={<SignupPage />} />
+            <Route path="/portal/signup" element={<OnboardingWizard />} />
             <Route path="/portal" element={<PortalRoute><PortalLayout /></PortalRoute>}>
               <Route index element={<DashboardPage />} />
               <Route path="events" element={<EventsPage />} />

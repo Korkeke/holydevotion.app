@@ -120,6 +120,39 @@ export default function DashboardPage() {
 
   const churchInitial = (church?.name || "C")[0].toUpperCase();
 
+  // ─── Getting Started Checklist ─────────────────────────
+  const [checklistDismissed, setChecklistDismissed] = useState(
+    () => localStorage.getItem("onboarding_checklist_dismissed") === "true"
+  );
+  const [memberCount, setMemberCount] = useState(0);
+
+  useEffect(() => {
+    if (!church?.id) return;
+    get(`/api/churches/${church.id}/members/count`).then((d) => {
+      setMemberCount(d?.count || 0);
+    }).catch(() => {});
+  }, [church?.id]);
+
+  const hasSermons = (engagement?.current_sermon?.title && engagement.current_sermon.title !== "Weekly Sermon") || (stats?.total_sermons > 0);
+  const hasAnnouncements = stats?.total_announcements > 0;
+  const hasBranding = church?.accent_color && church.accent_color !== "#c9a84c";
+  const hasMembers = memberCount >= 2;
+
+  const checklistItems = [
+    { label: "Create your church", done: true },
+    { label: "Set up branding", done: !!hasBranding, action: () => navigate("/portal/settings") },
+    { label: "Create your first sermon study", done: !!hasSermons, action: () => navigate("/portal/sermons") },
+    { label: "Share invite code with congregation", done: hasMembers, action: () => navigate("/portal/settings") },
+    { label: "Post your first announcement", done: !!hasAnnouncements, action: () => navigate("/portal/announcements") },
+  ];
+  const completedCount = checklistItems.filter((i) => i.done).length;
+  const allDone = completedCount === checklistItems.length;
+
+  function dismissChecklist() {
+    localStorage.setItem("onboarding_checklist_dismissed", "true");
+    setChecklistDismissed(true);
+  }
+
   return (
     <div style={s.page}>
       {/* Church branding */}
@@ -144,6 +177,74 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* Getting Started Checklist */}
+      {!checklistDismissed && !allDone && (
+        <div style={s.checklistCard}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div>
+              <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: COLORS.text }}>
+                Getting Started
+              </span>
+              <span style={{ fontSize: 13, color: COLORS.textMuted, marginLeft: 12 }}>
+                {completedCount} of {checklistItems.length} complete
+              </span>
+            </div>
+            <button onClick={dismissChecklist} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 18, padding: 4 }}>
+              ✕
+            </button>
+          </div>
+          <div style={{ height: 3, borderRadius: 2, background: "rgba(201,168,76,0.15)", marginBottom: 16 }}>
+            <div style={{ height: "100%", borderRadius: 2, background: COLORS.gold, width: `${(completedCount / checklistItems.length) * 100}%`, transition: "width 0.4s ease" }} />
+          </div>
+          {checklistItems.map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "10px 0",
+                borderBottom: i < checklistItems.length - 1 ? `1px solid rgba(201,168,76,0.08)` : "none",
+                cursor: item.action && !item.done ? "pointer" : "default",
+                opacity: item.done ? 0.6 : 1,
+              }}
+              onClick={() => { if (item.action && !item.done) item.action(); }}
+            >
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%",
+                background: item.done ? COLORS.gold : "transparent",
+                border: item.done ? "none" : `2px solid rgba(201,168,76,0.3)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                {item.done && <span style={{ color: "#0a0e1a", fontSize: 12, fontWeight: 700 }}>✓</span>}
+              </div>
+              <span style={{
+                fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: COLORS.text,
+                textDecoration: item.done ? "line-through" : "none",
+              }}>
+                {item.label}
+              </span>
+              {!item.done && item.action && (
+                <span style={{ marginLeft: "auto", fontSize: 12, color: COLORS.gold, fontWeight: 600 }}>
+                  Do it →
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {!checklistDismissed && allDone && (
+        <div style={s.checklistCard}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, color: COLORS.text }}>
+              🎉 You're all set! Your church is live on Devotion.
+            </span>
+            <button onClick={dismissChecklist} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 18, padding: 4 }}>
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div style={s.statsGrid}>
@@ -383,6 +484,13 @@ const s = {
   page: {
     padding: "28px 36px",
     maxWidth: 1200,
+  },
+  checklistCard: {
+    background: COLORS.bgCard,
+    border: `1px solid rgba(201, 168, 76, 0.15)`,
+    borderRadius: 16,
+    padding: "20px 24px",
+    marginBottom: 24,
   },
   loading: {
     padding: 60,
