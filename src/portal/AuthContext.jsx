@@ -68,7 +68,26 @@ export function AuthProvider({ children }) {
       cred = await createUserWithEmailAndPassword(auth, email, password);
 
       // Step 2: Create church via API
-      const resp = await post("/api/churches", churchData);
+      // IMPORTANT: Use raw fetch instead of the api.js post() helper.
+      // api.js redirects to /portal/login on 401, but a brand-new Firebase
+      // token may not be fully propagated yet. We handle errors here instead.
+      const token = await cred.user.getIdToken(true); // force refresh
+      const BASE = "https://devotion-backend-production.up.railway.app";
+      const res = await fetch(`${BASE}/api/churches`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(churchData),
+      });
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(body || `Church creation failed: ${res.status}`);
+      }
+
+      const resp = await res.json();
       setChurch(resp?.church || resp);
       setRole("owner");
       return resp;
