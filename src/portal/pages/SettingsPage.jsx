@@ -5,15 +5,15 @@ import { get, put, del } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 const THEMES = {
-  devotion:       { label: "Devotion",              primary: "#0A0E1A", secondary: "#C9A84C" },
-  classic_navy:   { label: "Classic Navy",          primary: "#1B3A5C", secondary: "#C8A96E" },
-  sage_green:     { label: "Sage Green",            primary: "#3D6B5E", secondary: "#D4A853" },
-  burgundy:       { label: "Burgundy",              primary: "#7B2D3B", secondary: "#D4B896" },
-  warm_slate:     { label: "Warm Slate",            primary: "#4A5568", secondary: "#C08552" },
-  deep_teal:      { label: "Deep Teal",             primary: "#1A5E63", secondary: "#E8C16D" },
-  forest_green:   { label: "Forest Green",          primary: "#2E5E3F", secondary: "#D9C8A9" },
-  ivory_gold:     { label: "Ivory and Gold",        primary: "#B8A88A", secondary: "#7A6B4F" },
-  purple_gold:    { label: "Purple and Warm Gold",  primary: "#4A3060", secondary: "#C9B57A" },
+  devotion:       { label: "Devotion",              accent: "#0A0E1A", secondary: "#C9A84C" },
+  classic_navy:   { label: "Classic Navy",          accent: "#1B3A5C", secondary: "#C8A96E" },
+  sage_green:     { label: "Sage Green",            accent: "#3D6B5E", secondary: "#D4A853" },
+  burgundy:       { label: "Burgundy",              accent: "#7B2D3B", secondary: "#D4B896" },
+  warm_slate:     { label: "Warm Slate",            accent: "#4A5568", secondary: "#C08552" },
+  deep_teal:      { label: "Deep Teal",             accent: "#1A5E63", secondary: "#E8C16D" },
+  forest_green:   { label: "Forest Green",          accent: "#2E5E3F", secondary: "#D9C8A9" },
+  ivory_gold:     { label: "Ivory and Gold",        accent: "#B8A88A", secondary: "#7A6B4F" },
+  purple_gold:    { label: "Purple and Warm Gold",  accent: "#4A3060", secondary: "#C9B57A" },
 };
 
 const FIELDS = [
@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const { church, role, signOutUser } = useAuth();
   const [form, setForm] = useState({});
   const [selectedTheme, setSelectedTheme] = useState("sage_green");
-  const [primaryColor, setPrimaryColor] = useState("#3D6B5E");
+  const [accentColor, setAccentColor] = useState("#3D6B5E");
   const [secondaryColor, setSecondaryColor] = useState("#D4A853");
   const [isCustom, setIsCustom] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ export default function SettingsPage() {
         setForm(vals);
         const th = c.theme || "sage_green";
         setSelectedTheme(th);
-        setPrimaryColor(c.accent_color || "#3D6B5E");
+        setAccentColor(c.accent_color || "#3D6B5E");
         setSecondaryColor(c.secondary_color || "#D4A853");
         setIsCustom(th === "custom" || !THEMES[th]);
       } catch {} finally { setLoading(false); }
@@ -67,7 +67,7 @@ export default function SettingsPage() {
       await put(`/api/churches/${church.id}`, {
         ...form,
         theme: isCustom ? "custom" : selectedTheme,
-        accent_color: primaryColor,
+        accent_color: accentColor,
         secondary_color: secondaryColor,
       });
       setSaved(true);
@@ -158,28 +158,28 @@ export default function SettingsPage() {
                 type="button"
                 onClick={async () => {
                   setSelectedTheme(key);
-                  setPrimaryColor(t.primary);
+                  setAccentColor(t.accent);
                   setSecondaryColor(t.secondary);
                   setIsCustom(false);
                   await put(`/api/churches/${church.id}`, {
                     theme: key,
-                    accent_color: t.primary,
+                    accent_color: t.accent,
                     secondary_color: t.secondary,
                   });
                 }}
                 style={{
                   ...s.themeCard,
-                  borderColor: selected ? t.primary : COLORS.border,
-                  boxShadow: selected ? `0 0 16px ${t.primary}33` : "none",
+                  borderColor: selected ? t.accent : COLORS.border,
+                  boxShadow: selected ? `0 0 16px ${t.accent}33` : "none",
                 }}
               >
                 <div style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: t.primary, border: `2px solid ${COLORS.bgCard}`, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: t.accent, border: `2px solid ${COLORS.bgCard}`, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
                   <div style={{ width: 22, height: 22, borderRadius: "50%", background: t.secondary, border: `2px solid ${COLORS.bgCard}`, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
                 </div>
                 <span style={{
                   fontFamily: "'DM Sans', sans-serif", fontSize: 10,
-                  color: selected ? t.primary : COLORS.textMuted,
+                  color: selected ? t.accent : COLORS.textMuted,
                   fontWeight: selected ? 700 : 400,
                   marginTop: 6,
                   textAlign: "center",
@@ -194,8 +194,8 @@ export default function SettingsPage() {
         <div style={{
           padding: "14px 16px",
           borderRadius: 12,
-          border: `1px solid ${isCustom ? primaryColor : COLORS.border}`,
-          background: isCustom ? `${primaryColor}10` : "transparent",
+          border: `1px solid ${isCustom ? accentColor : COLORS.border}`,
+          background: isCustom ? `${accentColor}10` : "transparent",
           transition: "all 0.2s",
         }}>
           <button
@@ -218,14 +218,14 @@ export default function SettingsPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <input
                     type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
                     style={{ width: 36, height: 32, border: "none", borderRadius: 6, cursor: "pointer", padding: 0 }}
                   />
                   <input
                     type="text"
-                    value={primaryColor}
-                    onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setPrimaryColor(v); }}
+                    value={accentColor}
+                    onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setAccentColor(v); }}
                     style={{ ...s.fieldInput, fontFamily: "monospace", fontSize: 12, padding: "6px 8px", width: "100%" }}
                   />
                 </div>
@@ -252,7 +252,7 @@ export default function SettingsPage() {
                 onClick={async () => {
                   await put(`/api/churches/${church.id}`, {
                     theme: "custom",
-                    accent_color: primaryColor,
+                    accent_color: accentColor,
                     secondary_color: secondaryColor,
                   });
                 }}

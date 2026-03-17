@@ -6,15 +6,15 @@ import { post } from "../api";
 const API_BASE = "https://devotion-backend-production.up.railway.app";
 
 const THEMES = {
-  devotion:       { label: "Devotion",              primary: "#0A0E1A", secondary: "#C9A84C" },
-  classic_navy:   { label: "Classic Navy",          primary: "#1B3A5C", secondary: "#C8A96E" },
-  sage_green:     { label: "Sage Green",            primary: "#3D6B5E", secondary: "#D4A853" },
-  burgundy:       { label: "Burgundy",              primary: "#7B2D3B", secondary: "#D4B896" },
-  warm_slate:     { label: "Warm Slate",            primary: "#4A5568", secondary: "#C08552" },
-  deep_teal:      { label: "Deep Teal",             primary: "#1A5E63", secondary: "#E8C16D" },
-  forest_green:   { label: "Forest Green",          primary: "#2E5E3F", secondary: "#D9C8A9" },
-  ivory_gold:     { label: "Ivory and Gold",        primary: "#B8A88A", secondary: "#7A6B4F" },
-  purple_gold:    { label: "Purple and Warm Gold",  primary: "#4A3060", secondary: "#C9B57A" },
+  devotion:       { label: "Devotion",              accent: "#0A0E1A", secondary: "#C9A84C" },
+  classic_navy:   { label: "Classic Navy",          accent: "#1B3A5C", secondary: "#C8A96E" },
+  sage_green:     { label: "Sage Green",            accent: "#3D6B5E", secondary: "#D4A853" },
+  burgundy:       { label: "Burgundy",              accent: "#7B2D3B", secondary: "#D4B896" },
+  warm_slate:     { label: "Warm Slate",            accent: "#4A5568", secondary: "#C08552" },
+  deep_teal:      { label: "Deep Teal",             accent: "#1A5E63", secondary: "#E8C16D" },
+  forest_green:   { label: "Forest Green",          accent: "#2E5E3F", secondary: "#D9C8A9" },
+  ivory_gold:     { label: "Ivory and Gold",        accent: "#B8A88A", secondary: "#7A6B4F" },
+  purple_gold:    { label: "Purple and Warm Gold",  accent: "#4A3060", secondary: "#C9B57A" },
 };
 
 const SAGE = "#3D6B5E";
@@ -110,7 +110,7 @@ export default function OnboardingWizard() {
 
   // Step 4: Theme
   const [theme, setTheme] = useState("sage_green");
-  const [primaryColor, setPrimaryColor] = useState("#3D6B5E");
+  const [accentColor, setAccentColor] = useState("#3D6B5E");
   const [secondaryColor, setSecondaryColor] = useState("#D4A853");
   const [isCustom, setIsCustom] = useState(false);
 
@@ -129,7 +129,7 @@ export default function OnboardingWizard() {
   const [loading, setLoading] = useState(false);
 
   // Active colors: sage before step 4, church's chosen colors after
-  const activePrimary = currentStep != null && currentStep >= 4 ? primaryColor : SAGE;
+  const activePrimary = currentStep != null && currentStep >= 4 ? accentColor : SAGE;
   const activeSecondary = currentStep != null && currentStep >= 4 ? secondaryColor : "#D4A853";
   const accent = activePrimary; // backward compat alias
 
@@ -198,10 +198,16 @@ export default function OnboardingWizard() {
       const data = await resp.json();
       if (data.detected) {
         setBrandingResult(data);
-        if (data.suggested_theme && THEMES[data.suggested_theme]) {
+        if (data.suggested_accent) {
+          // Use the actual scraped colors directly
+          setAccentColor(data.suggested_accent);
+          setSecondaryColor(data.suggested_secondary || data.suggested_accent);
+          setIsCustom(true);
+          setTheme("custom");
+        } else if (data.suggested_theme && THEMES[data.suggested_theme]) {
           const preset = THEMES[data.suggested_theme];
           setTheme(data.suggested_theme);
-          setPrimaryColor(preset.primary);
+          setAccentColor(preset.accent);
           setSecondaryColor(preset.secondary);
           setIsCustom(false);
         }
@@ -233,7 +239,7 @@ export default function OnboardingWizard() {
         city: city || undefined,
         website: website || undefined,
         theme: isCustom ? "custom" : theme,
-        accent_color: primaryColor,
+        accent_color: accentColor,
         secondary_color: secondaryColor,
         registration_code: regCode.trim(),
       });
@@ -334,7 +340,16 @@ export default function OnboardingWizard() {
         </div>
       )}
 
-      <div style={{ ...s.container, opacity: animating ? 0 : 1, transform: animating ? `translateX(${slideDir === "right" ? "20px" : "-20px"})` : "translateX(0)" }}>
+      <div style={s.container}>
+        {/* Persistent cross for steps 1-6 */}
+        {currentStep > 0 && (
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontSize: 28, color: accent }}>✝</div>
+          </div>
+        )}
+
+        {/* Step content (animated) */}
+        <div style={{ opacity: animating ? 0 : 1, transform: animating ? `translateX(${slideDir === "right" ? "20px" : "-20px"})` : "translateX(0)", transition: "opacity 0.15s ease, transform 0.15s ease" }}>
 
         {/* ─── Step 0: Welcome ─── */}
         {currentStep === 0 && <WelcomeStep onContinue={() => goTo(1)} />}
@@ -498,10 +513,10 @@ export default function OnboardingWizard() {
             <p style={s.sub}>Choose the colors that represent your church. This sets the look and feel of your church space in the app.</p>
 
             {brandingResult?.detected && !isCustom && (
-              <div style={{ ...s.detectedCard, borderColor: `${primaryColor}33` }}>
+              <div style={{ ...s.detectedCard, borderColor: `${accentColor}33` }}>
                 <p style={{ margin: 0, fontSize: 13, color: "#7A7672" }}>We found this from your website:</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: primaryColor }} />
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: accentColor }} />
                   <span style={{ fontFamily: "'Playfair Display', serif", fontWeight: 600, color: "#2C2C2C" }}>
                     {THEMES[theme]?.label || "Detected"}
                   </span>
@@ -519,31 +534,31 @@ export default function OnboardingWizard() {
                     type="button"
                     onClick={() => {
                       setTheme(key);
-                      setPrimaryColor(t.primary);
+                      setAccentColor(t.accent);
                       setSecondaryColor(t.secondary);
                       setIsCustom(false);
                     }}
                     style={{
                       padding: "10px 8px 8px",
                       borderRadius: 12,
-                      border: `2px solid ${selected ? t.primary : "#EDE9E3"}`,
-                      background: selected ? `${t.primary}08` : "#FDFCFA",
+                      border: `2px solid ${selected ? t.accent : "#EDE9E3"}`,
+                      background: selected ? `${t.accent}08` : "#FDFCFA",
                       cursor: "pointer",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
                       gap: 6,
                       transition: "all 0.2s",
-                      boxShadow: selected ? `0 0 16px ${t.primary}22` : "none",
+                      boxShadow: selected ? `0 0 16px ${t.accent}22` : "none",
                     }}
                   >
                     <div style={{ display: "flex", gap: 4 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: t.primary, border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }} />
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: t.accent, border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }} />
                       <div style={{ width: 24, height: 24, borderRadius: "50%", background: t.secondary, border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }} />
                     </div>
                     <span style={{
                       fontFamily: "'DM Sans', sans-serif", fontSize: 10,
-                      color: selected ? t.primary : "#7A7672",
+                      color: selected ? t.accent : "#7A7672",
                       fontWeight: selected ? 700 : 400,
                       textAlign: "center",
                       lineHeight: 1.2,
@@ -557,8 +572,8 @@ export default function OnboardingWizard() {
             <div style={{
               padding: "16px",
               borderRadius: 12,
-              border: `2px solid ${isCustom ? primaryColor : "#EDE9E3"}`,
-              background: isCustom ? `${primaryColor}08` : "#FDFCFA",
+              border: `2px solid ${isCustom ? accentColor : "#EDE9E3"}`,
+              background: isCustom ? `${accentColor}08` : "#FDFCFA",
               marginBottom: 20,
               transition: "all 0.2s",
             }}>
@@ -568,7 +583,7 @@ export default function OnboardingWizard() {
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
-                  color: isCustom ? primaryColor : "#7A7672",
+                  color: isCustom ? accentColor : "#7A7672",
                   padding: 0, marginBottom: isCustom ? 14 : 0,
                   display: "block", width: "100%", textAlign: "left",
                 }}
@@ -578,18 +593,18 @@ export default function OnboardingWizard() {
               {isCustom && (
                 <div style={{ display: "flex", gap: 16 }}>
                   <div style={{ flex: 1 }}>
-                    <label style={{ ...s.label, fontSize: 11, marginBottom: 6 }}>Primary Color</label>
+                    <label style={{ ...s.label, fontSize: 11, marginBottom: 6 }}>Accent Color</label>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <input
                         type="color"
-                        value={primaryColor}
-                        onChange={(e) => { setPrimaryColor(e.target.value); setTheme("custom"); }}
+                        value={accentColor}
+                        onChange={(e) => { setAccentColor(e.target.value); setTheme("custom"); }}
                         style={{ width: 40, height: 36, border: "none", borderRadius: 8, cursor: "pointer", padding: 0 }}
                       />
                       <input
                         type="text"
-                        value={primaryColor}
-                        onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) { setPrimaryColor(v); setTheme("custom"); } }}
+                        value={accentColor}
+                        onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) { setAccentColor(v); setTheme("custom"); } }}
                         style={{ ...s.input, fontFamily: "monospace", fontSize: 13, width: "100%", padding: "8px 10px" }}
                       />
                     </div>
@@ -616,7 +631,7 @@ export default function OnboardingWizard() {
             </div>
 
             {/* Live preview - always warm light background */}
-            <div style={{ ...s.previewCard, borderColor: `${primaryColor}44` }}>
+            <div style={{ ...s.previewCard, borderColor: `${accentColor}44` }}>
               <div style={{
                 background: "#FAF8F5",
                 borderRadius: 12,
@@ -627,7 +642,7 @@ export default function OnboardingWizard() {
                 <h3 style={{
                   fontFamily: "'Playfair Display', serif",
                   fontSize: 16, fontWeight: 700,
-                  color: primaryColor, margin: "0 0 6px",
+                  color: accentColor, margin: "0 0 6px",
                 }}>{churchName || "Your Church"}</h3>
                 <p style={{
                   fontFamily: "'DM Sans', sans-serif",
@@ -636,7 +651,7 @@ export default function OnboardingWizard() {
                 <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
                   <div style={{
                     padding: "8px 16px", borderRadius: 8,
-                    background: primaryColor, display: "inline-block",
+                    background: accentColor, display: "inline-block",
                   }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans', sans-serif" }}>
                       Join Church
@@ -657,7 +672,7 @@ export default function OnboardingWizard() {
             {error && <p style={s.error}>{error}</p>}
 
             <button
-              style={{ ...s.btn, background: primaryColor }}
+              style={{ ...s.btn, background: accentColor }}
               onClick={handleCreateChurch}
               disabled={loading}
             >
@@ -796,7 +811,8 @@ export default function OnboardingWizard() {
             </button>
           </div>
         )}
-      </div>
+        </div>{/* end animation wrapper */}
+      </div>{/* end container */}
     </div>
   );
 }
@@ -1005,6 +1021,10 @@ const s = {
     background: `radial-gradient(ellipse at center, #FDFCFA 0%, ${LINEN} 70%)`,
     fontFamily: "'DM Sans', sans-serif",
     padding: "0 20px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
   },
   spinner: {
     width: 28,
@@ -1038,11 +1058,10 @@ const s = {
     borderRadius: "0 2px 2px 0",
   },
   container: {
+    width: "100%",
     maxWidth: 600,
-    margin: "0 auto",
-    paddingTop: 48,
+    paddingTop: 24,
     paddingBottom: 48,
-    transition: "opacity 0.15s ease, transform 0.15s ease",
   },
   card: {
     background: "#FFFFFF",

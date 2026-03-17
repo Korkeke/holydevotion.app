@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -17,14 +17,15 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [churchLoading, setChurchLoading] = useState(false);
+  const signingUpRef = useRef(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setAuthLoading(false);
-      if (firebaseUser) {
+      if (firebaseUser && !signingUpRef.current) {
         loadChurch();
-      } else {
+      } else if (!firebaseUser) {
         setChurch(null);
         setRole(null);
       }
@@ -58,25 +59,28 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp(email, password, churchData) {
-    // Step 1: Create Firebase account
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-
-    // Step 2: Create church via API
+    // Guard: prevent onAuthStateChanged from calling loadChurch()
+    // before the church record exists in the database.
+    signingUpRef.current = true;
+    let cred;
     try {
+      // Step 1: Create Firebase account
+      cred = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Step 2: Create church via API
       const resp = await post("/api/churches", churchData);
       setChurch(resp?.church || resp);
       setRole("owner");
       return resp;
     } catch (err) {
       // Church creation failed — clean up orphaned Firebase account
-      try {
-        await deleteUser(cred.user);
-      } catch {
-        // Best effort cleanup
+      if (cred?.user) {
+        try { await deleteUser(cred.user); } catch { /* best effort */ }
       }
-      // Surface the actual error (e.g. "Invalid registration code")
       const msg = err?.message || "Failed to create church. Please try again.";
       throw new Error(msg);
+    } finally {
+      signingUpRef.current = false;
     }
   }
 
