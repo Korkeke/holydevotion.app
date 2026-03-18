@@ -561,10 +561,14 @@ export default function OnboardingWizard() {
       )}
 
       <div style={s.container}>
-        {/* Persistent cross for steps 1-6 */}
+        {/* Branded header for steps 1-6 */}
         {currentStep > 0 && (
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ fontSize: 28, color: accent }}>✝</div>
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <div style={{ fontSize: 36, color: accent, lineHeight: 1 }}>✝</div>
+            <div style={{
+              fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600,
+              color: accent, marginTop: 6, letterSpacing: "0.02em",
+            }}>Devotion</div>
           </div>
         )}
 
@@ -1064,10 +1068,32 @@ function WelcomeStep({ onContinue }) {
     }
   }, [done]);
 
+  // SVG line icons — 24x24, stroke 1.5, currentColor
+  const BookIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" /><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+    </svg>
+  );
+  const PulseIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  );
+  const BellIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
+    </svg>
+  );
+  const SparkleIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+    </svg>
+  );
+
   const features = [
-    { icon: "📖", title: "Guided Sermon Studies", desc: "You enter your sermon once. Devotion creates 7 daily reflections for your congregation. Scripture-grounded, theologically thoughtful, ready in seconds." },
-    { icon: "💡", title: "Spiritual Pulse", desc: "See what your congregation is seeking guidance on. Anonymous conversation themes like anxiety, grief, and purpose, updated weekly so you can preach to real needs." },
-    { icon: "🔔", title: "Pastoral Intelligence", desc: "When a member hits a streak milestone or goes quiet for a while, you'll know. So you can reach out before they have to ask." },
+    { icon: <BookIcon />, title: "Guided Sermon Studies", desc: "You enter your sermon once. Devotion creates 7 daily reflections for your congregation. Scripture-grounded, theologically thoughtful, ready in seconds." },
+    { icon: <PulseIcon />, title: "Spiritual Pulse", desc: "See what your congregation is seeking guidance on. Anonymous conversation themes like anxiety, grief, and purpose, updated weekly so you can preach to real needs." },
+    { icon: <BellIcon />, title: "Pastoral Intelligence", desc: "When a member hits a streak milestone or goes quiet for a while, you'll know. So you can reach out before they have to ask." },
   ];
 
   return (
@@ -1122,7 +1148,7 @@ function WelcomeStep({ onContinue }) {
               transform: cardsVisible > i ? "translateY(0)" : "translateY(12px)",
             }}
           >
-            <div style={{ fontSize: 24, lineHeight: 1 }}>{f.icon}</div>
+            <div style={{ color: SAGE, flexShrink: 0 }}>{f.icon}</div>
             <div style={{ flex: 1 }}>
               <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 700, color: "#2C2C2C", margin: "0 0 4px" }}>
                 {f.title}
@@ -1142,7 +1168,11 @@ function WelcomeStep({ onContinue }) {
           opacity: cardsVisible > 3 ? 1 : 0,
           transform: cardsVisible > 3 ? "translateY(0)" : "translateY(12px)",
         }}>
-          <div style={{ fontSize: 24, lineHeight: 1 }}>🚀</div>
+          <div style={{ color: SAGE, flexShrink: 0 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
+            </svg>
+          </div>
           <div style={{ flex: 1 }}>
             <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 700, color: "#2C2C2C", margin: "0 0 4px" }}>
               And we're just getting started
