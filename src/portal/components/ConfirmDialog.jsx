@@ -1,3 +1,4 @@
+import { COLORS } from "../../colors";
 import { useChurchColors } from "../useChurchColors";
 
 export default function ConfirmDialog({ title, message, onConfirm, onCancel, confirmLabel = "Delete", loading }) {

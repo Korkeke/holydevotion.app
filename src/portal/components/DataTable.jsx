@@ -1,3 +1,4 @@
+import { COLORS } from "../../colors";
 import { useChurchColors } from "../useChurchColors";
 
 export default function DataTable({ columns, data, emptyMessage = "Nothing here yet." }) {

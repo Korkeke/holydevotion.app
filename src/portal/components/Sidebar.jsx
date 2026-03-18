@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { COLORS } from "../../colors";
 import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 
