@@ -72,8 +72,15 @@ export function AuthProvider({ children }) {
         firebaseUser = cred.user;
       } catch (fbErr) {
         if (fbErr?.code === "auth/email-already-in-use") {
-          const cred = await signInWithEmailAndPassword(auth, email, password);
-          firebaseUser = cred.user;
+          try {
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            firebaseUser = cred.user;
+          } catch (signInErr) {
+            if (signInErr?.code === "auth/invalid-credential" || signInErr?.code === "auth/wrong-password") {
+              throw new Error("An account with this email already exists but the password doesn't match. Try a different password or log in at the portal.");
+            }
+            throw signInErr;
+          }
         } else {
           throw fbErr;
         }
