@@ -14,6 +14,15 @@ export default function DashboardPage() {
   const [attention, setAttention] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generatingInsight, setGeneratingInsight] = useState(false);
+  const [checklistDismissed, setChecklistDismissed] = useState(
+    () => localStorage.getItem("onboarding_checklist_dismissed") === "true"
+  );
+  const [memberCount, setMemberCount] = useState(0);
+
+  useEffect(() => {
+    if (!church?.id) return;
+    get(`/api/churches/${church.id}/members/count`).then(d => setMemberCount(d?.count || 0)).catch(() => {});
+  }, [church?.id]);
 
   useEffect(() => {
     if (churchLoading) return;
@@ -92,16 +101,6 @@ export default function DashboardPage() {
       attentionItems.push({ name: m.display_name || "Member", detail: "Engagement declining", action: "Reach Out" });
     });
   }
-
-  // Checklist
-  const [checklistDismissed, setChecklistDismissed] = useState(
-    () => localStorage.getItem("onboarding_checklist_dismissed") === "true"
-  );
-  const [memberCount, setMemberCount] = useState(0);
-  useEffect(() => {
-    if (!church?.id) return;
-    get(`/api/churches/${church.id}/members/count`).then(d => setMemberCount(d?.count || 0)).catch(() => {});
-  }, [church?.id]);
 
   const hasSermons = hasCurrentSermon || (stats?.total_sermons > 0);
   const hasAnnouncements = stats?.total_announcements > 0;
