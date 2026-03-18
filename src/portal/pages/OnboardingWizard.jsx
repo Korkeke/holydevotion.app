@@ -96,6 +96,7 @@ export default function OnboardingWizard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Step 2: Church
   const [churchName, setChurchName] = useState("");
@@ -384,6 +385,15 @@ export default function OnboardingWizard() {
               </button>
             </div>
 
+            <label style={{ ...s.label, marginTop: 16 }}>Confirm Password</label>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={s.input}
+              placeholder="Re-enter your password"
+            />
+
             {error && <p style={s.error}>{error}</p>}
 
             <button
@@ -391,6 +401,7 @@ export default function OnboardingWizard() {
               onClick={() => {
                 if (!email.trim()) { setError("Email is required."); return; }
                 if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+                if (password !== confirmPassword) { setError("Passwords don't match."); return; }
                 goTo(2);
               }}
             >
