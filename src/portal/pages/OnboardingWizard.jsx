@@ -19,19 +19,14 @@ const THEMES = {
 
 const SAGE = "#3D6B5E";
 const LINEN = "#FAF8F5";
+const GOLD = "#c9a84c";
 
-const PROGRESS = { 0: 0, 1: 0.2, 2: 0.35, 3: 0.5, 4: 0.65, 5: 0.8, 6: 0.95 };
-
-const DENOMINATIONS = [
-  "Baptist", "Catholic", "Non-denominational", "Methodist", "Presbyterian",
-  "Pentecostal", "Anglican", "Lutheran", "Other",
-];
+const STEP_LABELS = ["", "Account", "Your Church", "Website", "Colors", "Sermon", "Invite"];
+const PROGRESS = { 0: 0, 1: 0.17, 2: 0.33, 3: 0.5, 4: 0.67, 5: 0.83, 6: 1.0 };
 
 // ─── QR Code Generator (inline, zero deps) ────────────────────
 
 function generateQRDataURL(text) {
-  // Simple QR code using external API as img src
-  // This is reliable and avoids a complex inline QR algorithm
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
 }
 
@@ -62,7 +57,6 @@ function useTypewriter(lines, speed = 30, pauseBetween = 500) {
       }, speed);
       return () => clearTimeout(timer);
     } else {
-      // Line complete, pause then move to next
       const timer = setTimeout(() => {
         setCurrentLine((l) => l + 1);
         setCurrentChar(0);
@@ -75,6 +69,103 @@ function useTypewriter(lines, speed = 30, pauseBetween = 500) {
   return { displayedLines, done };
 }
 
+// ─── Phone Mockup Component ──────────────────────────────────
+
+function PhoneMockup({ churchName, accentColor, secondaryColor }) {
+  return (
+    <div style={{
+      width: 240, margin: "0 auto",
+      background: "#1a1a2e", borderRadius: 28,
+      padding: "12px 8px 8px", boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
+      border: "3px solid #2a2a3e",
+    }}>
+      {/* Notch */}
+      <div style={{ width: 60, height: 6, background: "#2a2a3e", borderRadius: 3, margin: "0 auto 8px" }} />
+
+      {/* Screen */}
+      <div style={{
+        background: "#FAF8F5", borderRadius: 18, overflow: "hidden",
+        fontFamily: "'DM Sans', sans-serif",
+      }}>
+        {/* Church Header */}
+        <div style={{ padding: "14px 14px 12px", textAlign: "center", borderBottom: "1px solid #EDE9E3" }}>
+          <div style={{ fontSize: 16, color: secondaryColor, marginBottom: 2 }}>✝</div>
+          <div style={{
+            fontFamily: "'Playfair Display', serif", fontSize: 13, fontWeight: 700,
+            color: accentColor,
+          }}>{churchName || "Your Church"}</div>
+          <div style={{ fontSize: 9, color: "#A8A29E", marginTop: 2 }}>12 members</div>
+        </div>
+
+        {/* Sermon Card */}
+        <div style={{ padding: "10px 14px" }}>
+          <div style={{ fontSize: 8, color: "#A8A29E", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 6 }}>
+            This Week's Sermon
+          </div>
+          <div style={{
+            background: "#fff", borderRadius: 10, padding: "10px 12px",
+            border: "1px solid #EDE9E3",
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, marginBottom: 4 }}>
+              Finding Peace in the Storm
+            </div>
+            <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
+              <span style={{
+                fontSize: 8, padding: "2px 6px", borderRadius: 4,
+                background: `${secondaryColor}18`, color: secondaryColor, fontWeight: 600,
+              }}>Mark 4:35-41</span>
+              <span style={{
+                fontSize: 8, padding: "2px 6px", borderRadius: 4,
+                background: `${secondaryColor}18`, color: secondaryColor, fontWeight: 600,
+              }}>Trust</span>
+            </div>
+            <div style={{ fontSize: 9, color: "#7A7672", lineHeight: 1.4 }}>
+              Day 1 of 7 — Settling Into the Passage
+            </div>
+            {/* Progress bar */}
+            <div style={{ height: 3, borderRadius: 2, background: "#EDE9E3", marginTop: 6 }}>
+              <div style={{ height: "100%", borderRadius: 2, background: accentColor, width: "14%" }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick action */}
+        <div style={{ padding: "4px 14px 10px" }}>
+          <div style={{
+            background: accentColor, borderRadius: 8, padding: "8px 0",
+            textAlign: "center", fontSize: 10, fontWeight: 700, color: "#fff",
+          }}>
+            Continue Today's Reflection
+          </div>
+        </div>
+
+        {/* Bottom Nav */}
+        <div style={{
+          display: "flex", justifyContent: "space-around", padding: "8px 0",
+          borderTop: "1px solid #EDE9E3", fontSize: 8, color: "#A8A29E",
+        }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, marginBottom: 1 }}>🏠</div>
+            <div style={{ color: accentColor, fontWeight: 600 }}>Home</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, marginBottom: 1 }}>📖</div>
+            <div>Sermons</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, marginBottom: 1 }}>🙏</div>
+            <div>Prayer</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 12, marginBottom: 1 }}>👥</div>
+            <div>Community</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────
 
 export default function OnboardingWizard() {
@@ -82,12 +173,16 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Animation variant: ?animation=A, B, or C (default B)
+  const animVariant = (searchParams.get("animation") || "B").toUpperCase();
+
   // Wizard state
   const [currentStep, setCurrentStep] = useState(null); // null = loading
   const [arriving, setArriving] = useState(false);
   const [arrivalDone, setArrivalDone] = useState(false);
   const [slideDir, setSlideDir] = useState("right");
   const [animating, setAnimating] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
 
   // Stripe
   const [regCode, setRegCode] = useState("");
@@ -102,7 +197,6 @@ export default function OnboardingWizard() {
   const [churchName, setChurchName] = useState("");
   const [denomination, setDenomination] = useState("");
   const [city, setCity] = useState("");
-  const [showDetails, setShowDetails] = useState(false);
 
   // Step 3: Website
   const [website, setWebsite] = useState("");
@@ -129,10 +223,26 @@ export default function OnboardingWizard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Active colors: sage before step 4, church's chosen colors after
+  // Active colors
   const activePrimary = currentStep != null && currentStep >= 4 ? accentColor : SAGE;
   const activeSecondary = currentStep != null && currentStep >= 4 ? secondaryColor : "#D4A853";
-  const accent = activePrimary; // backward compat alias
+  const accent = activePrimary;
+
+  // ─── Browser back button interception ────────────────────────
+
+  useEffect(() => {
+    if (currentStep === null || currentStep <= 0) return;
+
+    const handlePop = (e) => {
+      e.preventDefault();
+      window.history.pushState(null, "", window.location.href);
+      goTo(Math.max(0, currentStep - 1));
+    };
+
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, [currentStep]);
 
   // ─── Stripe session check on mount ───────────────────────────
 
@@ -164,13 +274,14 @@ export default function OnboardingWizard() {
   // Arrival animation timing
   useEffect(() => {
     if (arriving) {
+      const duration = animVariant === "A" ? 2500 : animVariant === "C" ? 2500 : 2000;
       const timer = setTimeout(() => {
         setArrivalDone(true);
         setCurrentStep(0);
-      }, 1500);
+      }, duration);
       return () => clearTimeout(timer);
     }
-  }, [arriving]);
+  }, [arriving, animVariant]);
 
   // ─── Step navigation ─────────────────────────────────────────
 
@@ -200,7 +311,6 @@ export default function OnboardingWizard() {
       if (data.detected) {
         setBrandingResult(data);
         if (data.suggested_accent) {
-          // Use the actual scraped colors directly
           setAccentColor(data.suggested_accent);
           setSecondaryColor(data.suggested_secondary || data.suggested_accent);
           setIsCustom(true);
@@ -269,7 +379,6 @@ export default function OnboardingWizard() {
     setSermonLoading(true);
     setError("");
     try {
-      // Calculate this Monday's date
       const now = new Date();
       const day = now.getDay();
       const diff = day === 0 ? -6 : 1 - day;
@@ -297,18 +406,39 @@ export default function OnboardingWizard() {
     });
   }
 
-  const sundayText = `We're excited to announce that our church is now on Devotion, an app that helps you grow in faith every day with guided sermon reflections, prayer, and community. Download Devotion from the App Store or Google Play, open the app, tap Church, and enter our code: ${inviteCode}. You'll be connected to our church and can start this week's sermon reflection right away.`;
+  const sundayText = `Our church is now on Devotion, an app for daily faith and guided sermon reflections. Download Devotion from the App Store or Google Play, tap Church, and enter code: ${inviteCode}. We'd love you to join us.`;
   const socialText = `Our church is on Devotion! Download the app, tap Church, and enter code ${inviteCode} to connect with our community and grow in faith together every day.`;
   const directText = `Hey! Our church just joined Devotion. Download it and enter code ${inviteCode} in the Church section to connect. It's free for our members!`;
+
+  // ─── Celebration + navigate ──────────────────────────────────
+
+  function handleFinish() {
+    setCelebrating(true);
+    setTimeout(() => navigate("/portal"), 2500);
+  }
 
   // ─── Arrival Animation ───────────────────────────────────────
 
   if (arriving && !arrivalDone) {
     return (
       <div style={s.arrivalPage}>
-        <style>{arrivalCSS}</style>
-        <div className="arrival-bloom" />
-        <div className="arrival-cross">✝</div>
+        <style>{getArrivalCSS(animVariant)}</style>
+        {animVariant === "A" && <>
+          <div className="arrival-glow" />
+          {[...Array(6)].map((_, i) => <div key={i} className={`arrival-ray arrival-ray-${i}`} />)}
+          <div className="arrival-cross-a">✝</div>
+        </>}
+        {animVariant === "B" && <>
+          <div className="arrival-line" />
+          <div className="arrival-curtain-left" />
+          <div className="arrival-curtain-right" />
+          <div className="arrival-cross-b">✝</div>
+        </>}
+        {animVariant === "C" && <>
+          <div className="arrival-spark" />
+          <div className="arrival-warmth" />
+          <div className="arrival-cross-c">✝</div>
+        </>}
       </div>
     );
   }
@@ -324,16 +454,46 @@ export default function OnboardingWizard() {
     );
   }
 
+  // ─── Celebration Screen ──────────────────────────────────────
+
+  if (celebrating) {
+    return (
+      <div style={{ ...s.page, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <style>{baseCSS + celebrationCSS}</style>
+        <div style={{ textAlign: "center", animation: "fadeSlideUp 0.6s ease" }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }} className="celebration-cross">✝</div>
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700,
+            color: "#2C2C2C", marginBottom: 8,
+          }}>Your church is live.</h1>
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: "#7A7672",
+            lineHeight: 1.6,
+          }}>Welcome to Devotion, Pastor.</p>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Render ──────────────────────────────────────────────────
 
   return (
     <div style={s.page}>
       <style>{baseCSS}</style>
 
-      {/* Progress bar */}
+      {/* Progress bar + step label */}
       {currentStep > 0 && (
-        <div style={s.progressTrack}>
-          <div style={{ ...s.progressFill, width: `${(PROGRESS[currentStep] || 0) * 100}%`, background: accent }} />
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50 }}>
+          <div style={s.progressTrack}>
+            <div style={{ ...s.progressFill, width: `${(PROGRESS[currentStep] || 0) * 100}%`, background: accent }} />
+          </div>
+          <div style={{
+            textAlign: "center", padding: "6px 0 4px",
+            fontSize: 11, fontWeight: 600, color: "#A8A29E",
+            fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em",
+          }}>
+            Step {currentStep} of 6 — {STEP_LABELS[currentStep]}
+          </div>
         </div>
       )}
 
@@ -354,7 +514,7 @@ export default function OnboardingWizard() {
         {/* ─── Step 1: Account ─── */}
         {currentStep === 1 && (
           <div style={s.card}>
-            <h1 style={s.heading}>First, let's create your account</h1>
+            <h1 style={s.heading}>Let's secure your account</h1>
             <p style={s.sub}>This is your personal login for managing your church.</p>
 
             <label style={s.label}>Email</label>
@@ -472,7 +632,7 @@ export default function OnboardingWizard() {
         {currentStep === 3 && (
           <div style={s.card}>
             <h1 style={s.heading}>Do you have a church website?</h1>
-            <p style={s.sub}>Paste your URL and we'll try to match your church's branding automatically.</p>
+            <p style={s.sub}>Paste your URL and we'll pull your church's colors automatically.</p>
 
             <input
               type="url"
@@ -500,7 +660,7 @@ export default function OnboardingWizard() {
             </button>
 
             <button style={s.textLink} onClick={() => goTo(4)}>
-              Skip, I'll pick colors manually
+              Skip for now
             </button>
             <button style={s.backLink} onClick={() => goTo(2)}>Back</button>
           </div>
@@ -510,7 +670,7 @@ export default function OnboardingWizard() {
         {currentStep === 4 && (
           <div style={s.card}>
             <h1 style={s.heading}>Make it yours</h1>
-            <p style={s.sub}>Choose the colors that represent your church. This sets the look and feel of your church space in the app.</p>
+            <p style={s.sub}>Choose the colors that represent your church. This is what your congregation will see.</p>
 
             {brandingResult?.detected && !isCustom && (
               <div style={{ ...s.detectedCard, borderColor: `${accentColor}33` }}>
@@ -524,7 +684,7 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            {/* Preset grid - 3 columns for 9 presets */}
+            {/* Preset grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
               {Object.entries(THEMES).map(([key, t]) => {
                 const selected = !isCustom && theme === key;
@@ -610,7 +770,7 @@ export default function OnboardingWizard() {
                     </div>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={{ ...s.label, fontSize: 11, marginBottom: 6 }}>Accent Color</label>
+                    <label style={{ ...s.label, fontSize: 11, marginBottom: 6 }}>Secondary Color</label>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <input
                         type="color"
@@ -630,44 +790,8 @@ export default function OnboardingWizard() {
               )}
             </div>
 
-            {/* Live preview - always warm light background */}
-            <div style={{ ...s.previewCard, borderColor: `${accentColor}44` }}>
-              <div style={{
-                background: "#FAF8F5",
-                borderRadius: 12,
-                padding: "20px 16px",
-                textAlign: "center",
-              }}>
-                <div style={{ fontSize: 20, color: secondaryColor, marginBottom: 4 }}>✝</div>
-                <h3 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: 16, fontWeight: 700,
-                  color: accentColor, margin: "0 0 6px",
-                }}>{churchName || "Your Church"}</h3>
-                <p style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 12, color: "#7A7672", margin: 0,
-                }}>Welcome to our community</p>
-                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 12 }}>
-                  <div style={{
-                    padding: "8px 16px", borderRadius: 8,
-                    background: accentColor, display: "inline-block",
-                  }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans', sans-serif" }}>
-                      Join Church
-                    </span>
-                  </div>
-                  <div style={{
-                    padding: "8px 12px", borderRadius: 8,
-                    background: `${secondaryColor}20`, border: `1px solid ${secondaryColor}40`,
-                  }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: secondaryColor, fontFamily: "'DM Sans', sans-serif" }}>
-                      Mark 4:35
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Live phone mockup preview */}
+            <PhoneMockup churchName={churchName} accentColor={accentColor} secondaryColor={secondaryColor} />
 
             {error && <p style={s.error}>{error}</p>}
 
@@ -694,7 +818,7 @@ export default function OnboardingWizard() {
                   value={sermonDescription}
                   onChange={(e) => setSermonDescription(e.target.value)}
                   style={s.textarea}
-                  placeholder="e.g. I preached about finding peace in the storm from Mark 4, about trusting God when life feels out of control"
+                  placeholder={"e.g. This Sunday I preached on trusting God through uncertainty, from Mark 4:35-41. The boat was sinking, but Jesus was asleep. Sometimes faith means resting in the storm."}
                   rows={4}
                   autoFocus
                 />
@@ -801,11 +925,17 @@ export default function OnboardingWizard() {
               >
                 {copied === "direct" ? "Copied!" : "Copy for text or email"}
               </button>
+              <a
+                href={`mailto:?subject=${encodeURIComponent(`${churchName || "Our Church"} is now on Devotion`)}&body=${encodeURIComponent(directText)}`}
+                style={{ ...s.shareBtn, textDecoration: "none", display: "block" }}
+              >
+                Send via email
+              </a>
             </div>
 
             <button
               style={{ ...s.btn, background: accent, marginTop: 24 }}
-              onClick={() => navigate("/portal")}
+              onClick={handleFinish}
             >
               Go to My Dashboard →
             </button>
@@ -823,8 +953,8 @@ export default function OnboardingWizard() {
 function WelcomeStep({ onContinue }) {
   const lines = [
     "Welcome to Devotion.",
-    "Our mission is to bring your congregation closer to each other and closer to God. Not just on Sunday, but every day of the week.",
-    "In the next 60 seconds, we'll set up your church's home inside the Devotion app. Your congregation will have a beautiful, branded space to grow in faith together.",
+    "You just took a meaningful step for your church. Starting today, your congregation will have a place to grow in faith together, not just on Sundays, but every day of the week.",
+    "Let's get your church set up. This will only take a couple of minutes.",
   ];
 
   const { displayedLines, done } = useTypewriter(lines, 30, 500);
@@ -845,7 +975,7 @@ function WelcomeStep({ onContinue }) {
   const features = [
     { icon: "📖", title: "Guided Sermon Studies", desc: "You enter your sermon once. Devotion creates 7 daily reflections for your congregation. Scripture-grounded, theologically thoughtful, ready in seconds." },
     { icon: "💡", title: "Spiritual Pulse", desc: "See what your congregation is seeking guidance on. Anonymous conversation themes like anxiety, grief, and purpose, updated weekly so you can preach to real needs." },
-    { icon: "🔔", title: "Pastoral Intelligence", desc: "Know who needs encouragement before they ask. Devotion tracks engagement and alerts you when a member goes quiet, hits a milestone, or might need a pastoral visit." },
+    { icon: "🔔", title: "Pastoral Intelligence", desc: "When a member hits a streak milestone or goes quiet for a while, you'll know. So you can reach out before they have to ask." },
   ];
 
   return (
@@ -944,49 +1074,143 @@ function WelcomeStep({ onContinue }) {
 }
 
 
-// ─── CSS Keyframes ─────────────────────────────────────────────
+// ─── CSS: Arrival Animations ─────────────────────────────────────
 
-const arrivalCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+function getArrivalCSS(variant) {
+  const fonts = `@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');`;
 
-  .arrival-bloom {
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at center, ${LINEN} 0%, ${LINEN} 100%);
-    transform: scale(0);
-    border-radius: 50%;
-    animation: bloom 0.7s ease 0.5s forwards;
-    z-index: 100;
+  if (variant === "A") {
+    // "Light Through Stained Glass"
+    return `${fonts}
+      .arrival-glow {
+        position: fixed; inset: 0; z-index: 1;
+        background: radial-gradient(circle at center, rgba(201,168,76,0.15) 0%, transparent 60%);
+        animation: glowGrow 2s ease forwards;
+      }
+      @keyframes glowGrow {
+        0% { opacity: 0; transform: scale(0.3); }
+        40% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; background: radial-gradient(circle at center, ${LINEN} 0%, ${LINEN} 100%); transform: scale(3); }
+      }
+      .arrival-ray {
+        position: fixed; top: 50%; left: 50%; width: 2px; height: 0;
+        background: linear-gradient(to bottom, ${GOLD}, transparent);
+        transform-origin: top center; z-index: 2; opacity: 0;
+        animation: rayGrow 1.5s ease 0.3s forwards;
+      }
+      .arrival-ray-0 { transform: translate(-50%, 0) rotate(0deg); }
+      .arrival-ray-1 { transform: translate(-50%, 0) rotate(60deg); }
+      .arrival-ray-2 { transform: translate(-50%, 0) rotate(120deg); }
+      .arrival-ray-3 { transform: translate(-50%, 0) rotate(180deg); }
+      .arrival-ray-4 { transform: translate(-50%, 0) rotate(240deg); }
+      .arrival-ray-5 { transform: translate(-50%, 0) rotate(300deg); }
+      @keyframes rayGrow {
+        0% { height: 0; opacity: 0; }
+        50% { height: 120px; opacity: 0.6; }
+        100% { height: 0; opacity: 0; }
+      }
+      .arrival-cross-a {
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        font-size: 40px; color: ${GOLD}; z-index: 10; opacity: 0;
+        filter: drop-shadow(0 0 30px rgba(201,168,76,0.5));
+        animation: crossAssemble 1s ease 0.5s forwards, crossSettle 1s ease 1.5s forwards;
+      }
+      @keyframes crossAssemble {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); filter: drop-shadow(0 0 60px rgba(201,168,76,0.8)); }
+        100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); filter: drop-shadow(0 0 30px rgba(201,168,76,0.5)); }
+      }
+      @keyframes crossSettle {
+        0% { color: ${GOLD}; transform: translate(-50%, -50%) scale(1.1); filter: drop-shadow(0 0 30px rgba(201,168,76,0.5)); }
+        100% { color: ${SAGE}; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 0px transparent); }
+      }
+    `;
   }
 
-  .arrival-cross {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 36px;
-    color: #c9a84c;
-    z-index: 101;
-    opacity: 0;
-    animation: crossFadeIn 0.5s ease forwards, crossTransition 0.7s ease 0.5s forwards;
-    filter: drop-shadow(0 0 40px rgba(201, 168, 76, 0.4));
+  if (variant === "B") {
+    // "The Unveiling"
+    return `${fonts}
+      .arrival-line {
+        position: fixed; top: 0; left: 50%; width: 2px; height: 0;
+        background: ${GOLD}; z-index: 10; transform: translateX(-50%);
+        animation: lineDown 0.5s ease forwards;
+        box-shadow: 0 0 20px rgba(201,168,76,0.6);
+      }
+      @keyframes lineDown {
+        from { height: 0; top: 0; }
+        to { height: 100vh; top: 0; }
+      }
+      .arrival-curtain-left, .arrival-curtain-right {
+        position: fixed; top: 0; width: 50vw; height: 100vh;
+        background: ${LINEN}; z-index: 5; transform: scaleX(0);
+      }
+      .arrival-curtain-left {
+        left: 0; transform-origin: right center;
+        animation: curtainReveal 0.7s ease 0.5s forwards;
+      }
+      .arrival-curtain-right {
+        right: 0; transform-origin: left center;
+        animation: curtainReveal 0.7s ease 0.5s forwards;
+      }
+      @keyframes curtainReveal {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
+      }
+      .arrival-cross-b {
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+        font-size: 40px; color: ${SAGE}; z-index: 20; opacity: 0;
+        animation: crossPulse 0.6s ease 1.2s forwards;
+      }
+      @keyframes crossPulse {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        60% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      }
+    `;
   }
 
-  @keyframes bloom {
-    from { transform: scale(0); opacity: 0.8; }
-    to { transform: scale(3); opacity: 1; }
-  }
+  // variant === "C" — "Ember to Flame"
+  return `${fonts}
+    .arrival-spark {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 4px; height: 4px; border-radius: 50%;
+      background: ${GOLD}; z-index: 10; opacity: 0;
+      box-shadow: 0 0 10px ${GOLD}, 0 0 20px rgba(201,168,76,0.5);
+      animation: sparkIgnite 0.8s ease forwards;
+    }
+    @keyframes sparkIgnite {
+      0% { opacity: 0; width: 4px; height: 4px; box-shadow: 0 0 5px ${GOLD}; }
+      30% { opacity: 1; width: 8px; height: 8px; box-shadow: 0 0 30px ${GOLD}, 0 0 60px rgba(201,168,76,0.3); }
+      60% { opacity: 1; width: 20px; height: 20px; box-shadow: 0 0 60px ${GOLD}, 0 0 120px rgba(201,168,76,0.2); }
+      100% { opacity: 0; width: 40px; height: 40px; }
+    }
+    .arrival-warmth {
+      position: fixed; inset: 0; z-index: 5;
+      background: radial-gradient(circle at center, ${LINEN} 0%, ${LINEN} 100%);
+      transform: scale(0); border-radius: 50%; opacity: 0;
+      animation: warmthSpread 1.2s ease 0.3s forwards;
+    }
+    @keyframes warmthSpread {
+      0% { transform: scale(0); opacity: 0; }
+      40% { opacity: 0.8; }
+      100% { transform: scale(3); opacity: 1; }
+    }
+    .arrival-cross-c {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 40px; color: ${GOLD}; z-index: 20; opacity: 0;
+      filter: drop-shadow(0 0 40px rgba(201,168,76,0.6));
+      animation: flameToCross 1.2s ease 1s forwards;
+    }
+    @keyframes flameToCross {
+      0% { opacity: 0; color: ${GOLD}; filter: drop-shadow(0 0 40px rgba(201,168,76,0.6)); transform: translate(-50%, -50%) scale(0.6); }
+      40% { opacity: 1; color: ${GOLD}; filter: drop-shadow(0 0 20px rgba(201,168,76,0.4)); transform: translate(-50%, -50%) scale(1.1); }
+      70% { filter: drop-shadow(0 0 10px rgba(201,168,76,0.2)); transform: translate(-50%, -50%) scale(1.05); }
+      100% { opacity: 1; color: ${SAGE}; filter: drop-shadow(0 0 0px transparent); transform: translate(-50%, -50%) scale(1); }
+    }
+  `;
+}
 
-  @keyframes crossFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
 
-  @keyframes crossTransition {
-    from { color: #c9a84c; filter: drop-shadow(0 0 40px rgba(201, 168, 76, 0.4)); }
-    to { color: ${SAGE}; filter: drop-shadow(0 0 0px transparent); }
-  }
-`;
+// ─── CSS: Base + Celebration ────────────────────────────────────
 
 const baseCSS = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
@@ -1003,6 +1227,20 @@ const baseCSS = `
   input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: ${SAGE} !important;
+  }
+`;
+
+const celebrationCSS = `
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .celebration-cross {
+    animation: celebPulse 2s ease infinite;
+  }
+  @keyframes celebPulse {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.1); opacity: 1; }
   }
 `;
 
@@ -1044,13 +1282,8 @@ const s = {
     animation: "spin 0.8s linear infinite",
   },
   progressTrack: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
+    height: 4,
     background: "#EDE9E3",
-    zIndex: 50,
   },
   progressFill: {
     height: "100%",
@@ -1060,7 +1293,7 @@ const s = {
   container: {
     width: "100%",
     maxWidth: 600,
-    paddingTop: 24,
+    paddingTop: 40,
     paddingBottom: 48,
   },
   card: {
@@ -1194,37 +1427,12 @@ const s = {
     boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
     transition: "opacity 0.4s ease, transform 0.4s ease",
   },
-  themeGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: 10,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  themeCard: {
-    padding: "10px 6px 8px",
-    borderRadius: 12,
-    border: "2px solid #EDE9E3",
-    background: "#FDFCFA",
-    cursor: "pointer",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    transition: "all 0.2s",
-  },
   detectedCard: {
     padding: "14px 16px",
     borderRadius: 12,
     border: "1px solid",
     background: "#FDFCFA",
     marginBottom: 20,
-  },
-  previewCard: {
-    border: "1px solid",
-    borderRadius: 16,
-    padding: 12,
-    background: "#FDFCFA",
-    marginBottom: 8,
   },
   codeBox: {
     display: "flex",
