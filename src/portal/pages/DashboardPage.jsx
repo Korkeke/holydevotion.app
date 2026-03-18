@@ -56,7 +56,7 @@ export default function DashboardPage() {
     setGeneratingInsight(false);
   };
 
-  if (churchLoading || loading) {
+  if (churchLoading) {
     return (
       <div style={s.loading}>
         <div style={s.spinner} />
@@ -71,6 +71,9 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  // Show the dashboard structure immediately even while analytics load.
+  // This prevents the blank screen when church exists but data hasn't arrived.
 
   const dailyData = engagement?.daily || [];
   const maxMessages = Math.max(...dailyData.map(d => d.messages), 1);

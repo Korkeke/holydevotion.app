@@ -814,15 +814,40 @@ export default function OnboardingWizard() {
 
             <button
               style={{ ...s.btn, background: accent }}
-              onClick={() => {
+              onClick={async () => {
+                setError("");
                 if (!email.trim()) { setError("Email is required."); return; }
                 if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
                 if (password !== confirmPassword) { setError("Passwords don't match."); return; }
+
+                // Quick email-in-use check by attempting to create and immediately catching
+                try {
+                  const { createUserWithEmailAndPassword: create, deleteUser: del } = await import("firebase/auth");
+                  const { auth: fbAuth } = await import("../../firebase");
+                  const cred = await create(fbAuth, email, password);
+                  // Success — account is new. Delete it so signUp() can recreate it later
+                  // with proper error handling and church creation in one flow.
+                  await del(cred.user);
+                } catch (err) {
+                  if (err?.code === "auth/email-already-in-use") {
+                    setError("An account with this email already exists. If this is yours, your password must match the one you used before.");
+                  } else if (err?.code === "auth/invalid-email") {
+                    setError("Please enter a valid email address.");
+                    return;
+                  }
+                  // For other errors (network, etc), let them proceed — signUp() will handle it
+                }
+
                 goTo(2);
               }}
             >
               Continue →
             </button>
+
+            <p style={{ fontSize: 12, color: "#A8A29E", textAlign: "center", marginTop: 16 }}>
+              Already have an account?{" "}
+              <a href="/portal/login" style={{ color: SAGE, fontWeight: 600, textDecoration: "none" }}>Sign in</a>
+            </p>
           </div>
         )}
 
