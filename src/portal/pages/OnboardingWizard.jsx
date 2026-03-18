@@ -427,9 +427,10 @@ export default function OnboardingWizard() {
     });
   }
 
-  const sundayText = `Our church is now on Devotion, an app for daily faith and guided sermon reflections. Download Devotion from the App Store or Google Play, tap Church, and enter code: ${inviteCode}. We'd love you to join us.`;
-  const socialText = `Our church is on Devotion! Download the app, tap Church, and enter code ${inviteCode} to connect with our community and grow in faith together every day.`;
-  const directText = `Hey! Our church just joined Devotion. Download it and enter code ${inviteCode} in the Church section to connect. It's free for our members!`;
+  const cn = churchName || "Our Church";
+  const sundayText = `We're excited to share that ${cn} is now on Devotion, a daily faith app with guided sermon reflections, prayer tools, and community features.\n\nHow to join:\n1. Download Devotion from the App Store or Google Play (holydevotion.app/download)\n2. Open the app and tap "Church"\n3. Enter our code: ${inviteCode}\n\nJoining our church on Devotion is completely free and gives you upgraded access, including daily sermon reflections, prayer tools, and community features. Each week you'll receive guided reflections based on the Sunday sermon.\n\nPlease share this only with our congregation.`;
+  const socialText = `${cn} is on Devotion! Daily sermon reflections, prayer tools, and community features for our congregation.\n\nDownload: holydevotion.app/download\nTap Church, enter code: ${inviteCode}\n\nGrow in faith together, every day of the week.`;
+  const directText = `Hey! ${cn} just joined Devotion, a daily faith app. Download it at holydevotion.app/download, tap Church, and enter code ${inviteCode} to connect with us.\n\nYou'll get upgraded access with daily sermon reflections, prayer tools, and community features at no cost.`;
 
   // ─── Celebration + navigate ──────────────────────────────────
 
@@ -972,12 +973,16 @@ export default function OnboardingWizard() {
                 {copied === "direct" ? "Copied!" : "Copy for text or email"}
               </button>
               <a
-                href={`mailto:?subject=${encodeURIComponent(`${churchName || "Our Church"} is now on Devotion`)}&body=${encodeURIComponent(directText)}`}
+                href={`mailto:?subject=${encodeURIComponent(`${cn} is now on Devotion`)}&body=${encodeURIComponent(directText)}`}
                 style={{ ...s.shareBtn, textDecoration: "none", display: "block" }}
               >
                 Send via email
               </a>
             </div>
+
+            <p style={{ fontSize: 12, color: "#A8A29E", textAlign: "center", marginTop: 12, lineHeight: 1.5 }}>
+              Please share this code only with your congregation.
+            </p>
 
             <button
               style={{ ...s.btn, background: accent, marginTop: 24 }}
