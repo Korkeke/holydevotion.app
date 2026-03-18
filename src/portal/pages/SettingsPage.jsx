@@ -29,7 +29,7 @@ const FIELDS = [
 
 export default function SettingsPage() {
   const COLORS = useChurchColors();
-  const { church, role, signOutUser } = useAuth();
+  const { church, role, signOutUser, reloadChurch } = useAuth();
   const [form, setForm] = useState({});
   const [selectedTheme, setSelectedTheme] = useState("sage_green");
   const [accentColor, setAccentColor] = useState("#3D6B5E");
@@ -73,6 +73,7 @@ export default function SettingsPage() {
         secondary_color: secondaryColor,
       });
       setSaved(true);
+      reloadChurch(); // update portal colors immediately
       setTimeout(() => setSaved(false), 3000);
     } finally { setSaving(false); }
   }
@@ -149,8 +150,8 @@ export default function SettingsPage() {
 
       {/* Theme */}
       <div style={s.section}>
-        <h2 style={s.sectionTitle}>App Theme</h2>
-        <p style={s.sectionDesc}>Choose how your church looks in the Devotion app for your members.</p>
+        <h2 style={s.sectionTitle}>Church Theme</h2>
+        <p style={s.sectionDesc}>These colors apply to both this dashboard and your church's space in the Devotion app.</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
           {Object.entries(THEMES).map(([key, t]) => {
             const selected = !isCustom && selectedTheme === key;
@@ -168,6 +169,7 @@ export default function SettingsPage() {
                     accent_color: t.accent,
                     secondary_color: t.secondary,
                   });
+                  reloadChurch();
                 }}
                 style={{
                   ...s.themeCard,
@@ -257,6 +259,7 @@ export default function SettingsPage() {
                     accent_color: accentColor,
                     secondary_color: secondaryColor,
                   });
+                  reloadChurch();
                 }}
                 style={{ ...s.saveBtn, alignSelf: "flex-end", padding: "8px 16px", fontSize: 12 }}
               >
