@@ -18,18 +18,32 @@ export default function DashboardPage() {
     if (churchLoading) return;
     if (!church?.id) { setLoading(false); return; }
 
-    const base = `/api/churches/${church.id}`;
-    Promise.all([
-      get(`${base}/analytics`).catch(() => null),
-      get(`${base}/analytics/pulse`).catch(() => null),
-      get(`${base}/analytics/engagement`).catch(() => null),
-      get(`${base}/analytics/attention`).catch(() => null),
-    ]).then(([s, p, e, a]) => {
-      setStats(s);
-      setPulse(p);
-      setEngagement(e);
-      setAttention(a);
-    }).finally(() => setLoading(false));
+    async function fetchData(retryCount = 0) {
+      const base = `/api/churches/${church.id}`;
+      try {
+        const [s, p, e, a] = await Promise.all([
+          get(`${base}/analytics`).catch(() => null),
+          get(`${base}/analytics/pulse`).catch(() => null),
+          get(`${base}/analytics/engagement`).catch(() => null),
+          get(`${base}/analytics/attention`).catch(() => null),
+        ]);
+        setStats(s);
+        setPulse(p);
+        setEngagement(e);
+        setAttention(a);
+
+        // If all returned null (membership not propagated yet), retry once
+        if (!s && !p && !e && !a && retryCount < 2) {
+          await new Promise((r) => setTimeout(r, 2000));
+          return fetchData(retryCount + 1);
+        }
+      } catch {
+        // Silent fail — dashboard will show empty state
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, [church?.id, churchLoading]);
 
   const handleGenerateInsight = async () => {

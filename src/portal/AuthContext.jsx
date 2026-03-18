@@ -18,12 +18,13 @@ export function AuthProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [churchLoading, setChurchLoading] = useState(false);
   const signingUpRef = useRef(false);
+  const justSignedUpRef = useRef(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setAuthLoading(false);
-      if (firebaseUser && !signingUpRef.current) {
+      if (firebaseUser && !signingUpRef.current && !justSignedUpRef.current) {
         loadChurch();
       } else if (!firebaseUser) {
         setChurch(null);
@@ -137,6 +138,14 @@ export function AuthProvider({ children }) {
 
       setChurch(resp?.church || resp);
       setRole("owner");
+
+      // Prevent loadChurch() from racing for 5 seconds after signup.
+      // The church state is already set from the signup response.
+      // This gives the backend time to propagate the membership record
+      // so /api/churches/me returns the correct data.
+      justSignedUpRef.current = true;
+      setTimeout(() => { justSignedUpRef.current = false; }, 5000);
+
       return resp;
     } catch (err) {
       const msg = err?.message || "Failed to create church. Please try again.";
