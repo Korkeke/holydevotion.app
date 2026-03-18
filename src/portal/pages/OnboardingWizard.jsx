@@ -293,14 +293,13 @@ export default function OnboardingWizard() {
     }
   }, []);
 
-  // Arrival animation timing
+  // Arrival animation timing — show continue button after animation finishes
+  const [animFinished, setAnimFinished] = useState(false);
   useEffect(() => {
     if (arriving) {
+      setAnimFinished(false);
       const duration = animVariant === "A" ? 2500 : animVariant === "C" ? 2500 : 2000;
-      const timer = setTimeout(() => {
-        setArrivalDone(true);
-        setCurrentStep(0);
-      }, duration);
+      const timer = setTimeout(() => setAnimFinished(true), duration);
       return () => clearTimeout(timer);
     }
   }, [arriving, animVariant]);
@@ -463,29 +462,44 @@ export default function OnboardingWizard() {
           <div className="arrival-cross-c">✝</div>
         </>}
 
-        {/* Animation selector — pick your favorite, then we'll remove this */}
-        {(
+        {/* Animation selector + continue — visible after animation finishes */}
+        {animFinished && (
           <div style={{
-            position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
-            zIndex: 200, display: "flex", gap: 8,
+            position: "fixed", bottom: 0, left: 0, right: 0,
+            zIndex: 200, padding: "16px 20px 24px",
+            background: "linear-gradient(to top, rgba(10,14,26,0.95) 0%, transparent 100%)",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
           }}>
-            {["A", "B", "C"].map((v) => (
-              <button
-                key={v}
-                onClick={() => {
-                  setArrivalDone(false);
-                  setAnimVariant(v);
-                }}
-                style={{
-                  padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-                  background: animVariant === v ? GOLD : "rgba(255,255,255,0.15)",
-                  color: animVariant === v ? "#0a0e1a" : "#fff",
-                  fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700,
-                }}
-              >
-                {v === "A" ? "Stained Glass" : v === "B" ? "Unveiling" : "Ember"}
-              </button>
-            ))}
+            <div style={{ display: "flex", gap: 8 }}>
+              {["A", "B", "C"].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => {
+                    setAnimFinished(false);
+                    setAnimVariant(v);
+                  }}
+                  style={{
+                    padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
+                    background: animVariant === v ? GOLD : "rgba(255,255,255,0.15)",
+                    color: animVariant === v ? "#0a0e1a" : "#fff",
+                    fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700,
+                  }}
+                >
+                  {v === "A" ? "Stained Glass" : v === "B" ? "Unveiling" : "Ember"}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => { setArrivalDone(true); setCurrentStep(0); }}
+              style={{
+                padding: "12px 48px", borderRadius: 10, border: "none", cursor: "pointer",
+                background: GOLD, color: "#0a0e1a",
+                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 700,
+                boxShadow: `0 4px 20px rgba(201,168,76,0.3)`,
+              }}
+            >
+              Continue →
+            </button>
           </div>
         )}
       </div>
