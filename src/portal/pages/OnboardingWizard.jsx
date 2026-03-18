@@ -267,11 +267,16 @@ export default function OnboardingWizard() {
     return () => window.removeEventListener("popstate", handlePop);
   }, [currentStep]);
 
-  // ─── Stripe session check on mount ───────────────────────────
+  // ─── Stripe session / code check on mount ─────────────────────
+  const [showCodeEntry, setShowCodeEntry] = useState(false);
+  const [manualCode, setManualCode] = useState("");
 
   useEffect(() => {
     const sessionId = searchParams.get("session_id");
+    const codeParam = searchParams.get("code");
+
     if (sessionId) {
+      // Coming from Stripe checkout redirect
       fetch(`${API_BASE}/api/stripe/success?session_id=${sessionId}`)
         .then((r) => r.json())
         .then((data) => {
@@ -286,11 +291,17 @@ export default function OnboardingWizard() {
         .catch(() => {
           window.location.href = "/churches";
         });
+    } else if (codeParam) {
+      // Coming from emailed link with ?code=HOLY-XXXX-XXXX
+      setRegCode(codeParam.trim().toUpperCase());
+      setArriving(true);
     } else if (searchParams.get("cancelled")) {
       setError("Payment was cancelled. You can try again on the Churches page.");
       setCurrentStep(0);
     } else {
-      window.location.href = "/churches";
+      // No session_id and no code — show manual code entry
+      setShowCodeEntry(true);
+      setCurrentStep(-1); // special state for code entry screen
     }
   }, []);
 
@@ -634,6 +645,63 @@ export default function OnboardingWizard() {
       <div style={{ ...s.page, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <style>{baseCSS}</style>
         <div style={s.spinner} />
+      </div>
+    );
+  }
+
+  // ─── Manual Code Entry (no session_id, no code param) ─────────
+
+  if (currentStep === -1 && showCodeEntry) {
+    return (
+      <div style={s.page}>
+        <style>{baseCSS}</style>
+        <div style={s.container}>
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <div style={{ fontSize: 36, color: SAGE, lineHeight: 1 }}>✝</div>
+            <div style={{
+              fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600,
+              color: SAGE, marginTop: 6, letterSpacing: "0.02em",
+            }}>Devotion</div>
+          </div>
+
+          <div style={s.card}>
+            <h1 style={s.heading}>Have a registration code?</h1>
+            <p style={s.sub}>Enter the code from your purchase confirmation email to set up your church.</p>
+
+            <input
+              type="text"
+              value={manualCode}
+              onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+              style={{ ...s.input, fontSize: 18, padding: "14px 16px", textAlign: "center", letterSpacing: "0.05em", fontFamily: "'Playfair Display', serif" }}
+              placeholder="HOLY-XXXX-XXXX"
+              autoFocus
+            />
+
+            {error && <p style={s.error}>{error}</p>}
+
+            <button
+              style={{ ...s.btn, background: SAGE }}
+              onClick={() => {
+                if (!manualCode.trim()) { setError("Please enter your registration code."); return; }
+                setRegCode(manualCode.trim());
+                setShowCodeEntry(false);
+                setArriving(true);
+              }}
+            >
+              Continue →
+            </button>
+
+            <div style={{ textAlign: "center", marginTop: 20 }}>
+              <p style={{ fontSize: 13, color: "#A8A29E", margin: "0 0 4px" }}>Don't have a code?</p>
+              <a
+                href="/churches"
+                style={{ fontSize: 14, color: SAGE, fontWeight: 600, textDecoration: "none" }}
+              >
+                Get started at holydevotion.app/churches
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

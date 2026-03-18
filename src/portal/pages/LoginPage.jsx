@@ -1,21 +1,16 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 
-const BRAND = {
-  bg: "#0a0e1a",
-  navy: "#0f1632",
-  gold: "#c9a84c",
-  text: "#e8e4dc",
-  textMuted: "rgba(232, 228, 220, 0.5)",
-  border: "rgba(201, 168, 76, 0.1)",
-};
+const SAGE = "#3D6B5E";
+const LINEN = "#FAF8F5";
 
 export default function LoginPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -41,11 +36,20 @@ export default function LoginPage() {
   return (
     <div style={s.page}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+        input:focus { outline: none; border-color: ${SAGE} !important; }
       `}</style>
+
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ fontSize: 36, color: SAGE, lineHeight: 1 }}>✝</div>
+        <div style={{
+          fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600,
+          color: SAGE, marginTop: 6, letterSpacing: "0.02em",
+        }}>Devotion</div>
+      </div>
+
       <div style={s.card}>
-        <div style={s.cross}>✝</div>
-        <h1 style={s.title}>Church Portal</h1>
+        <h1 style={s.title}>Welcome back</h1>
         <p style={s.subtitle}>Sign in to manage your church</p>
 
         <form onSubmit={handleSubmit} style={s.form}>
@@ -57,17 +61,27 @@ export default function LoginPage() {
             required
             style={s.input}
             placeholder="pastor@church.org"
+            autoFocus
           />
 
           <label style={{ ...s.label, marginTop: 16 }}>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={s.input}
-            placeholder="••••••••"
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={s.input}
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={s.eyeBtn}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
 
           {error && <p style={s.error}>{error}</p>}
 
@@ -78,7 +92,7 @@ export default function LoginPage() {
 
         <p style={s.footer}>
           Don't have an account?{" "}
-          <Link to="/portal/signup" style={s.link}>Create one</Link>
+          <a href="/churches" style={s.link}>Get started</a>
         </p>
       </div>
     </div>
@@ -88,8 +102,9 @@ export default function LoginPage() {
 const s = {
   page: {
     minHeight: "100vh",
-    background: BRAND.bg,
+    background: `radial-gradient(ellipse at center, #FDFCFA 0%, ${LINEN} 70%)`,
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
@@ -97,29 +112,26 @@ const s = {
   },
   card: {
     width: "100%",
-    maxWidth: 420,
-    padding: "48px 36px",
+    maxWidth: 440,
+    padding: "40px 36px",
     borderRadius: 20,
-    background: BRAND.navy,
-    border: `1px solid ${BRAND.border}`,
-    textAlign: "center",
-  },
-  cross: {
-    fontSize: 32,
-    color: BRAND.gold,
-    marginBottom: 16,
+    background: "#FFFFFF",
+    border: "1px solid #EDE9E3",
+    boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
   },
   title: {
     fontFamily: "'Playfair Display', serif",
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 700,
-    color: BRAND.text,
+    color: "#2C2C2C",
     marginBottom: 6,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: BRAND.textMuted,
-    marginBottom: 32,
+    color: "#7A7672",
+    marginBottom: 28,
+    textAlign: "center",
   },
   form: {
     textAlign: "left",
@@ -127,7 +139,7 @@ const s = {
   label: {
     fontSize: 12,
     fontWeight: 600,
-    color: BRAND.textMuted,
+    color: "#7A7672",
     letterSpacing: "0.05em",
     textTransform: "uppercase",
     display: "block",
@@ -137,18 +149,31 @@ const s = {
     width: "100%",
     padding: "12px 14px",
     borderRadius: 10,
-    border: `1px solid ${BRAND.border}`,
-    background: BRAND.bg,
-    color: BRAND.text,
+    border: "1px solid #EDE9E3",
+    background: "#FDFCFA",
+    color: "#2C2C2C",
     fontFamily: "'DM Sans', sans-serif",
     fontSize: 14,
     outline: "none",
     boxSizing: "border-box",
     transition: "border-color 0.2s",
   },
+  eyeBtn: {
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
+    color: "#7A7672",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "'DM Sans', sans-serif",
+  },
   error: {
     fontSize: 13,
-    color: "#e57373",
+    color: "#c0392b",
     marginTop: 12,
   },
   button: {
@@ -157,22 +182,23 @@ const s = {
     padding: "14px 0",
     borderRadius: 12,
     border: "none",
-    background: `linear-gradient(135deg, ${BRAND.gold}, #b8973e)`,
+    background: SAGE,
     color: "#fff",
     fontFamily: "'DM Sans', sans-serif",
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 700,
     cursor: "pointer",
     transition: "opacity 0.2s",
-    boxShadow: "0 4px 20px rgba(201, 168, 76, 0.3)",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
   },
   footer: {
     fontSize: 13,
-    color: BRAND.textMuted,
+    color: "#7A7672",
     marginTop: 24,
+    textAlign: "center",
   },
   link: {
-    color: BRAND.gold,
+    color: SAGE,
     textDecoration: "none",
     fontWeight: 600,
   },
