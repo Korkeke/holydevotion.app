@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, post } from "../api";
 
 export default function DashboardPage() {
   const { church, churchLoading, user } = useAuth();
   const navigate = useNavigate();
+  const C = useChurchColors();
   const [stats, setStats] = useState(null);
   const [pulse, setPulse] = useState(null);
   const [engagement, setEngagement] = useState(null);
@@ -31,17 +32,11 @@ export default function DashboardPage() {
         setPulse(p);
         setEngagement(e);
         setAttention(a);
-
-        // If all returned null (membership not propagated yet), retry once
         if (!s && !p && !e && !a && retryCount < 2) {
           await new Promise((r) => setTimeout(r, 2000));
           return fetchData(retryCount + 1);
         }
-      } catch {
-        // Silent fail — dashboard will show empty state
-      } finally {
-        setLoading(false);
-      }
+      } catch {} finally { setLoading(false); }
     }
     fetchData();
   }, [church?.id, churchLoading]);
@@ -58,860 +53,314 @@ export default function DashboardPage() {
 
   if (churchLoading) {
     return (
-      <div style={s.loading}>
-        <div style={s.spinner} />
+      <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
+        <div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       </div>
     );
   }
 
   if (!church) {
     return (
-      <div style={s.empty}>
-        <p style={s.emptyText}>No church found. Please complete signup.</p>
+      <div style={{ padding: 60, textAlign: "center" }}>
+        <p style={{ fontSize: 14, color: C.textMuted }}>No church found. Please complete signup.</p>
       </div>
     );
   }
 
-  // Show the dashboard structure immediately even while analytics load.
-  // This prevents the blank screen when church exists but data hasn't arrived.
-
-  const dailyData = engagement?.daily || [];
-  const maxMessages = Math.max(...dailyData.map(d => d.messages), 1);
   const userName = user?.email?.split("@")[0] || "Pastor";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const hasCurrentSermon = engagement?.current_sermon?.title && engagement.current_sermon.title !== "Weekly Sermon";
 
-  // Sermon data from engagement
-  const sermonTitle = engagement?.current_sermon?.title || "Weekly Sermon";
-  const sermonWeek = engagement?.current_sermon?.week || "";
-  const weeklySermonData = engagement?.sermon_daily || [
-    { day: "Mon", reflections: 0, opens: 0 },
-    { day: "Tue", reflections: 0, opens: 0 },
-    { day: "Wed", reflections: 0, opens: 0 },
-    { day: "Thu", reflections: 0, opens: 0 },
-    { day: "Fri", reflections: 0, opens: 0 },
-    { day: "Sat", reflections: 0, opens: 0 },
-    { day: "Sun", reflections: 0, opens: 0 },
+  // Sermon completion dots
+  const sermonDays = engagement?.sermon_daily || [
+    { day: "Mon" }, { day: "Tue" }, { day: "Wed" }, { day: "Thu" }, { day: "Fri" }, { day: "Sat" }, { day: "Sun" },
   ];
-  const maxSermon = Math.max(...weeklySermonData.map(d => Math.max(d.reflections || 0, d.opens || 0)), 1);
 
-  // Theme data
+  // Themes
   const themes = pulse?.themes || [];
-  const themeColors = [COLORS.amber, COLORS.accent, COLORS.red, COLORS.accentMid, COLORS.green];
 
-  // Attention items
+  // Attention
   const attentionItems = [];
   if (attention?.inactive?.length > 0) {
-    const m = attention.inactive[0];
-    attentionItems.push({
-      icon: "💛",
-      name: m.display_name || "Member",
-      detail: `Inactive ${m.days_inactive || "?"} days · Was active regularly`,
-      action: "Reach Out",
-      color: COLORS.amber,
+    attention.inactive.slice(0, 2).forEach(m => {
+      attentionItems.push({ name: m.display_name || "Member", detail: `Inactive ${m.days_inactive || "?"} days`, action: "Reach Out" });
     });
   }
   if (attention?.declining?.length > 0) {
-    const m = attention.declining[0];
-    attentionItems.push({
-      icon: "💛",
-      name: m.display_name || "Member",
-      detail: "Engagement declining",
-      action: "Reach Out",
-      color: COLORS.amber,
-    });
-  }
-  const totalInactive = (attention?.inactive?.length || 0) + (attention?.declining?.length || 0);
-  if (totalInactive > 2) {
-    attentionItems.push({
-      icon: "⚠️",
-      name: `${totalInactive - 2} members`,
-      detail: "Haven't opened the app this week",
-      action: "View List",
-      color: COLORS.red,
+    attention.declining.slice(0, 2).forEach(m => {
+      attentionItems.push({ name: m.display_name || "Member", detail: "Engagement declining", action: "Reach Out" });
     });
   }
 
-  // Members for table
-  const members = attention?.all_members || [];
-
-  const churchInitial = (church?.name || "C")[0].toUpperCase();
-
-  // ─── Getting Started Checklist ─────────────────────────
+  // Checklist
   const [checklistDismissed, setChecklistDismissed] = useState(
     () => localStorage.getItem("onboarding_checklist_dismissed") === "true"
   );
   const [memberCount, setMemberCount] = useState(0);
-
   useEffect(() => {
     if (!church?.id) return;
-    get(`/api/churches/${church.id}/members/count`).then((d) => {
-      setMemberCount(d?.count || 0);
-    }).catch(() => {});
+    get(`/api/churches/${church.id}/members/count`).then(d => setMemberCount(d?.count || 0)).catch(() => {});
   }, [church?.id]);
 
-  const hasSermons = (engagement?.current_sermon?.title && engagement.current_sermon.title !== "Weekly Sermon") || (stats?.total_sermons > 0);
+  const hasSermons = hasCurrentSermon || (stats?.total_sermons > 0);
   const hasAnnouncements = stats?.total_announcements > 0;
-  const hasBranding = church?.accent_color && church.accent_color !== "#c9a84c";
+  const hasBranding = church?.accent_color && church.accent_color !== "#c9a84c" && church.accent_color !== "#3D6B5E";
   const hasMembers = memberCount >= 2;
-
   const checklistItems = [
     { label: "Create your church", done: true },
     { label: "Set up branding", done: !!hasBranding, action: () => navigate("/portal/settings") },
     { label: "Create your first sermon study", done: !!hasSermons, action: () => navigate("/portal/sermons") },
-    { label: "Share invite code with congregation", done: hasMembers, action: () => navigate("/portal/settings") },
-    { label: "Post your first announcement", done: !!hasAnnouncements, action: () => navigate("/portal/announcements") },
+    { label: "Share invite code", done: hasMembers, action: () => navigate("/portal/settings") },
+    { label: "Post an announcement", done: !!hasAnnouncements, action: () => navigate("/portal/announcements") },
   ];
-  const completedCount = checklistItems.filter((i) => i.done).length;
+  const completedCount = checklistItems.filter(i => i.done).length;
   const allDone = completedCount === checklistItems.length;
-
   function dismissChecklist() {
     localStorage.setItem("onboarding_checklist_dismissed", "true");
     setChecklistDismissed(true);
   }
 
   return (
-    <div style={s.page}>
-      {/* Church branding */}
-      <div style={s.churchBrand}>
-        <div style={s.churchBrandIcon}>{churchInitial}</div>
+    <div style={{ padding: "28px 36px", maxWidth: 1200 }}>
+      {/* Greeting + Quick Actions */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
         <div>
-          <div style={s.churchBrandName}>{church?.name || "Church Portal"}</div>
-          <div style={s.churchBrandPlan}>Shepherd Plan</div>
+          <div style={{ fontSize: 13, color: C.textMuted, marginBottom: 4 }}>{greeting}, {userName}</div>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, color: C.text }}>
+            {church?.name || "Dashboard"}
+          </div>
         </div>
-      </div>
-
-      {/* Header */}
-      <div style={s.header}>
-        <div>
-          <div style={s.greeting}>{greeting}, {userName}</div>
-          <div style={s.title}>Church Overview</div>
-        </div>
-        <div style={s.headerActions}>
-          <button style={s.outlineBtn}>This Week ▾</button>
-          <button style={s.accentBtn} onClick={() => navigate("/portal/sermons")}>
-            + Update Sermon
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={() => navigate("/portal/sermons")}
+            style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, fontSize: 13, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            + This Week's Sermon
+          </button>
+          <button
+            onClick={() => navigate("/portal/announcements")}
+            style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card, fontSize: 13, fontWeight: 600, color: C.textBody, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            Post Announcement
           </button>
         </div>
       </div>
 
-      {/* Getting Started Checklist */}
-      {!checklistDismissed && !allDone && (
-        <div style={s.checklistCard}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div>
-              <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: COLORS.text }}>
-                Getting Started
-              </span>
-              <span style={{ fontSize: 13, color: COLORS.textMuted, marginLeft: 12 }}>
-                {completedCount} of {checklistItems.length} complete
-              </span>
-            </div>
-            <button onClick={dismissChecklist} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 18, padding: 4 }}>
-              ✕
-            </button>
-          </div>
-          <div style={{ height: 3, borderRadius: 2, background: "rgba(201,168,76,0.15)", marginBottom: 16 }}>
-            <div style={{ height: "100%", borderRadius: 2, background: COLORS.gold, width: `${(completedCount / checklistItems.length) * 100}%`, transition: "width 0.4s ease" }} />
-          </div>
-          {checklistItems.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "10px 0",
-                borderBottom: i < checklistItems.length - 1 ? `1px solid rgba(201,168,76,0.08)` : "none",
-                cursor: item.action && !item.done ? "pointer" : "default",
-                opacity: item.done ? 0.6 : 1,
-              }}
-              onClick={() => { if (item.action && !item.done) item.action(); }}
-            >
-              <div style={{
-                width: 22, height: 22, borderRadius: "50%",
-                background: item.done ? COLORS.gold : "transparent",
-                border: item.done ? "none" : `2px solid rgba(201,168,76,0.3)`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                {item.done && <span style={{ color: "#0a0e1a", fontSize: 12, fontWeight: 700 }}>✓</span>}
-              </div>
-              <span style={{
-                fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: COLORS.text,
-                textDecoration: item.done ? "line-through" : "none",
-              }}>
-                {item.label}
-              </span>
-              {!item.done && item.action && (
-                <span style={{ marginLeft: "auto", fontSize: 12, color: COLORS.gold, fontWeight: 600 }}>
-                  Do it →
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      {!checklistDismissed && allDone && (
-        <div style={s.checklistCard}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, color: COLORS.text }}>
-              🎉 You're all set! Your church is live on Devotion.
-            </span>
-            <button onClick={dismissChecklist} style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 18, padding: 4 }}>
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Stat Cards */}
-      <div style={s.statsGrid}>
+      {/* Weekly Snapshot — 4 stat cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
         {[
-          { label: "Total Members", value: stats?.member_count ?? 0, change: `${stats?.new_members_this_month ?? 0} this month`, dir: "up" },
-          { label: "Active This Week", value: stats?.active_this_week ?? engagement?.active_this_week ?? 0, change: `${stats?.active_pct ?? "—"}% of members`, dir: "up" },
-          { label: "Sermon Engagement", value: engagement?.sermon_completion_rate != null ? `${engagement.sermon_completion_rate}%` : "—", change: engagement?.sermon_change || "", dir: "up" },
-          { label: "Avg. Session Length", value: engagement?.avg_session_length || "—", change: engagement?.session_change || "", dir: "up" },
+          { label: "Active This Week", value: stats?.active_this_week ?? engagement?.active_this_week ?? "—", sub: `${stats?.active_pct ?? "—"}% of members` },
+          { label: "Sermon Completion", value: engagement?.sermon_completion_rate != null ? `${engagement.sermon_completion_rate}%` : "—", sub: engagement?.sermon_change || "" },
+          { label: "Total Members", value: stats?.member_count ?? memberCount, sub: `${stats?.new_members_this_month ?? 0} new this month` },
+          { label: "Avg. Streak", value: engagement?.avg_session_length || "—", sub: "" },
         ].map((stat, i) => (
-          <div key={i} style={s.statCard}>
-            <div style={s.statLabel}>{stat.label}</div>
-            <div style={s.statValue}>{stat.value}</div>
-            {stat.change && (
-              <div style={{ fontSize: 12, fontWeight: 600, color: stat.dir === "up" ? COLORS.green : COLORS.red }}>
-                {stat.dir === "up" ? "↑ " : "↓ "}{stat.change}
-              </div>
-            )}
+          <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "18px 20px" }}>
+            <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 500, marginBottom: 8 }}>{stat.label}</div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 4 }}>{stat.value}</div>
+            {stat.sub && <div style={{ fontSize: 12, color: C.green, fontWeight: 600 }}>↑ {stat.sub}</div>}
           </div>
         ))}
       </div>
 
-      {/* Two Column: Sermon Chart + Spiritual Pulse */}
-      <div style={s.twoColWide}>
-        {/* Sermon Engagement Chart */}
-        <div style={s.card}>
-          <div style={s.cardHeaderRow}>
-            <div>
-              <div style={s.cardTitle}>Sermon Engagement</div>
-              <div style={s.cardSubtitle}>{sermonTitle}{sermonWeek ? ` · ${sermonWeek}` : ""}</div>
-            </div>
-            <div style={s.legendRow}>
-              <div style={s.legendItem}>
-                <div style={{ ...s.legendDot, background: COLORS.accent }} />
-                Reflections
-              </div>
-              <div style={s.legendItem}>
-                <div style={{ ...s.legendDot, background: COLORS.accentMid }} />
-                App Opens
-              </div>
-            </div>
+      {/* This Week's Sermon (hero card) */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "24px 28px", marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 10, color: C.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
+            This Week's Sermon
           </div>
-
-          {/* Bar chart */}
-          <div style={s.barChart}>
-            {weeklySermonData.map((d, i) => (
-              <div key={i} style={s.barGroup}>
-                <div style={s.barPair}>
-                  <div style={{
-                    flex: 1,
-                    height: (d.opens || 0) > 0 ? `${((d.opens || 0) / maxSermon) * 100}%` : 4,
-                    borderRadius: 5,
-                    background: (d.opens || 0) > 0 ? COLORS.accentMid : COLORS.border,
-                    minHeight: 4,
-                    transition: "height 0.4s ease",
-                  }} />
-                  <div style={{
-                    flex: 1,
-                    height: (d.reflections || 0) > 0 ? `${((d.reflections || 0) / maxSermon) * 100}%` : 4,
-                    borderRadius: 5,
-                    background: (d.reflections || 0) > 0 ? COLORS.accent : COLORS.border,
-                    minHeight: 4,
-                    transition: "height 0.4s ease",
-                  }} />
-                </div>
-                <div style={s.barLabel}>{d.day}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Scripture engagement */}
-          {engagement?.scripture_engagement && engagement.scripture_engagement.length > 0 && (
-            <div style={s.scriptureSection}>
-              <div style={s.scriptureSectionTitle}>Scripture Engagement</div>
-              <div style={s.scriptureRow}>
-                {engagement.scripture_engagement.slice(0, 3).map((sc, i) => (
-                  <div key={i} style={s.scripturePill}>
-                    <div style={s.scriptureCount}>{sc.reads}</div>
-                    <div style={s.scriptureRef}>{sc.ref}</div>
-                    <div style={s.scripturePct}>{sc.pct} of members</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <button
+            onClick={() => navigate("/portal/sermons")}
+            style={{ fontSize: 12, color: C.accent, fontWeight: 700, background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+          >
+            {hasCurrentSermon ? "Edit →" : "Create →"}
+          </button>
         </div>
 
+        {hasCurrentSermon ? (
+          <>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 6 }}>
+              {engagement.current_sermon.title}
+            </div>
+            {engagement.current_sermon.scripture_refs && (
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                {engagement.current_sermon.scripture_refs.split(",").slice(0, 3).map((ref, i) => (
+                  <span key={i} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: `${C.secondary}18`, color: C.secondary, fontWeight: 600 }}>
+                    {ref.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
+            {/* 7-day completion dots */}
+            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+              {sermonDays.map((d, i) => (
+                <div key={i} style={{ textAlign: "center" }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: (d.reflections || 0) > 0 ? C.accent : C.sand,
+                    border: `2px solid ${(d.reflections || 0) > 0 ? C.accent : C.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 700, color: (d.reflections || 0) > 0 ? "#fff" : C.textMuted,
+                  }}>
+                    {(d.reflections || 0) > 0 ? "✓" : ""}
+                  </div>
+                  <div style={{ fontSize: 9, color: C.textMuted, marginTop: 4, fontWeight: 600 }}>{d.day}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <p style={{ fontSize: 14, color: C.textMuted, marginBottom: 12 }}>No sermon set up for this week yet.</p>
+            <button
+              onClick={() => navigate("/portal/sermons")}
+              style={{ padding: "12px 28px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+            >
+              + Add This Week's Sermon
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Two Column: Spiritual Pulse + Needs Attention */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
         {/* Spiritual Pulse */}
-        <div style={s.card}>
-          <div style={s.cardTitle}>Spiritual Pulse</div>
-          <div style={{ ...s.cardSubtitle, marginBottom: 20 }}>Themes from congregation conversations</div>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "22px 24px" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>Spiritual Pulse</div>
+          <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 20 }}>Themes from congregation conversations</div>
 
           {themes.length === 0 ? (
-            <p style={s.noData}>Not enough conversation data yet. Themes will appear as your members chat with Devotion.</p>
+            <p style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic", lineHeight: 1.6 }}>
+              Not enough conversation data yet. Themes will appear as your members use Devotion.
+            </p>
           ) : (
             themes.slice(0, 5).map((t, i) => (
               <div key={i} style={{ marginBottom: 14 }}>
-                <div style={s.themeHeaderRow}>
-                  <span style={s.themeName}>{t.theme}</span>
-                  <div style={s.themeStats}>
-                    <span style={s.themePct}>{t.percentage}%</span>
-                    {t.change != null && (
-                      <span style={{
-                        fontSize: 10,
-                        fontWeight: 600,
-                        color: t.trend === "up" && t.theme === "Anxiety" ? COLORS.red
-                          : t.trend === "up" ? COLORS.green
-                          : COLORS.textMuted,
-                      }}>
-                        {t.trend === "up" ? "+" : t.trend === "down" ? "" : ""}{t.change ?? ""}
-                      </span>
-                    )}
-                  </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.textBody }}>{t.theme}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{t.percentage}%</span>
                 </div>
-                <div style={s.themeBarBg}>
-                  <div style={{
-                    width: `${Math.min(t.percentage, 100)}%`,
-                    height: "100%",
-                    borderRadius: 3,
-                    background: themeColors[i % themeColors.length],
-                    transition: "width 0.5s ease",
-                  }} />
+                <div style={{ height: 6, borderRadius: 3, background: C.sand }}>
+                  <div style={{ width: `${Math.min(t.percentage, 100)}%`, height: "100%", borderRadius: 3, background: i === 0 ? C.accent : C.secondary, opacity: i === 0 ? 1 : 0.7, transition: "width 0.5s ease" }} />
                 </div>
               </div>
             ))
           )}
 
           {/* AI Insight */}
-          {pulse?.insight ? (
-            <div style={s.insightCard}>
-              <div style={s.insightRow}>
-                <span style={{ fontSize: 16 }}>💡</span>
-                <div>
-                  <div style={s.insightTitle}>AI Insight</div>
-                  <div style={s.insightText}>{pulse.insight.text}</div>
+          <div style={{ marginTop: 16, padding: "14px 16px", borderRadius: 12, background: `${C.secondary}10`, border: `1px solid ${C.secondary}25` }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 16 }}>💡</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 3 }}>Pastoral Insight</div>
+                <div style={{ fontSize: 12, color: C.textSec, lineHeight: 1.5 }}>
+                  {pulse?.insight?.text || (generatingInsight ? "Generating insight..." : "Generate an insight based on your congregation's conversations.")}
                 </div>
               </div>
+              {!pulse?.insight && !generatingInsight && (
+                <button onClick={handleGenerateInsight} style={{ padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.card, fontSize: 11, fontWeight: 700, color: C.textBody, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  Generate
+                </button>
+              )}
             </div>
-          ) : (
-            <div style={s.insightCard}>
-              <div style={s.insightRow}>
-                <span style={{ fontSize: 16 }}>💡</span>
-                <div style={{ flex: 1 }}>
-                  <div style={s.insightTitle}>AI Insight</div>
-                  <div style={s.insightText}>
-                    {generatingInsight ? "Generating insight..." : "Click to generate an AI-powered insight based on your congregation's conversations."}
-                  </div>
-                </div>
-                {!generatingInsight && !pulse?.insight && (
-                  <button style={s.insightBtn} onClick={handleGenerateInsight}>Generate</button>
-                )}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
 
-      {/* Two Column: Needs Attention + Active Journeys */}
-      <div style={s.twoCol}>
         {/* Needs Attention */}
-        <div style={s.card}>
-          <div style={s.cardTitle}>Needs Attention</div>
-          <div style={{ height: 16 }} />
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "22px 24px" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 16 }}>Needs Attention</div>
+
           {attentionItems.length === 0 ? (
-            <p style={s.noData}>All members are active! No one needs outreach right now.</p>
+            <p style={{ fontSize: 13, color: C.textMuted, fontStyle: "italic", lineHeight: 1.6 }}>
+              All members are active. No one needs outreach right now.
+            </p>
           ) : (
-            attentionItems.map((a, i) => (
-              <div key={i} style={{
-                ...s.attentionRow,
-                borderBottom: i < attentionItems.length - 1 ? `1px solid ${COLORS.border}` : "none",
-              }}>
-                <div style={{ ...s.attentionIcon, background: `${a.color}12` }}>{a.icon}</div>
+            attentionItems.slice(0, 4).map((a, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: i < attentionItems.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${C.secondary}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>💛</div>
                 <div style={{ flex: 1 }}>
-                  <div style={s.attentionName}>{a.name}</div>
-                  <div style={s.attentionDetail}>{a.detail}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{a.name}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted }}>{a.detail}</div>
                 </div>
-                <button style={s.attentionBtn}>{a.action}</button>
+                <button style={{ padding: "6px 14px", borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.card, fontSize: 11, fontWeight: 700, color: C.textBody, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                  {a.action}
+                </button>
               </div>
             ))
           )}
-        </div>
 
-        {/* Active Journeys / Quick Actions */}
-        <div style={s.card}>
-          <div style={s.cardHeaderRow}>
-            <div style={s.cardTitle}>Quick Actions</div>
-          </div>
-          <div style={{ height: 8 }} />
-          {[
-            { label: "+ Create Sermon Study", path: "/portal/sermons" },
-            { label: "+ Create Event", path: "/portal/events" },
-            { label: "+ Post Announcement", path: "/portal/announcements" },
-            { label: "+ Write Devotional", path: "/portal/devotionals" },
-          ].map((action, i) => (
-            <div key={i} style={{
-              padding: "14px 0",
-              borderBottom: i < 3 ? `1px solid ${COLORS.border}` : "none",
-            }}>
-              <button
-                onClick={() => navigate(action.path)}
-                style={s.quickActionBtn}
-              >
-                {action.label}
-              </button>
+          {/* Quick Actions below attention */}
+          <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 16, paddingTop: 16 }}>
+            <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Quick Actions</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {[
+                { label: "Sermon", path: "/portal/sermons" },
+                { label: "Event", path: "/portal/events" },
+                { label: "Announcement", path: "/portal/announcements" },
+                { label: "Members", path: "/portal/members" },
+              ].map((a, i) => (
+                <button key={i} onClick={() => navigate(a.path)} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.card, fontSize: 12, fontWeight: 600, color: C.accent, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                  + {a.label}
+                </button>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
       {/* Invite Code */}
       {church.invite_code && (
-        <div style={{ ...s.card, marginBottom: 24 }}>
-          <div style={s.cardHeaderRow}>
-            <div>
-              <div style={s.cardTitle}>Invite Code</div>
-              <div style={s.cardSubtitle}>Share this code with your congregation to join in the Devotion app</div>
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "22px 24px", marginBottom: 24 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4 }}>Invite Code</div>
+          <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 16 }}>Share with your congregation to join in the Devotion app</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 18px", borderRadius: 12, background: `${C.accent}10`, border: `1px solid ${C.accent}30` }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 600, color: C.text, letterSpacing: "0.1em", flex: 1 }}>
+              {church.invite_code}
             </div>
-          </div>
-          <div style={s.inviteRow}>
-            <div style={s.inviteCode}>{church.invite_code}</div>
             <button
-              style={s.copyBtn}
               onClick={() => navigator.clipboard.writeText(church.invite_code)}
+              style={{ padding: "8px 18px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
             >
-              Copy Code
+              Copy
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Getting Started Checklist (at bottom for new churches) */}
+      {!checklistDismissed && !allDone && (
+        <div style={{ background: C.card, border: `1px solid ${C.accent}20`, borderRadius: 16, padding: "20px 24px", marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div>
+              <span style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: C.text }}>Getting Started</span>
+              <span style={{ fontSize: 13, color: C.textMuted, marginLeft: 12 }}>{completedCount} of {checklistItems.length}</span>
+            </div>
+            <button onClick={dismissChecklist} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 18, padding: 4 }}>✕</button>
+          </div>
+          <div style={{ height: 3, borderRadius: 2, background: `${C.accent}15`, marginBottom: 16 }}>
+            <div style={{ height: "100%", borderRadius: 2, background: C.accent, width: `${(completedCount / checklistItems.length) * 100}%`, transition: "width 0.4s ease" }} />
+          </div>
+          {checklistItems.map((item, i) => (
+            <div
+              key={i}
+              onClick={() => { if (item.action && !item.done) item.action(); }}
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < checklistItems.length - 1 ? `1px solid ${C.accent}08` : "none", cursor: item.action && !item.done ? "pointer" : "default", opacity: item.done ? 0.6 : 1 }}
+            >
+              <div style={{ width: 22, height: 22, borderRadius: "50%", background: item.done ? C.accent : "transparent", border: item.done ? "none" : `2px solid ${C.accent}40`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {item.done && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
+              </div>
+              <span style={{ fontSize: 14, color: C.text, textDecoration: item.done ? "line-through" : "none" }}>{item.label}</span>
+              {!item.done && item.action && <span style={{ marginLeft: "auto", fontSize: 12, color: C.accent, fontWeight: 600 }}>Do it →</span>}
+            </div>
+          ))}
+        </div>
+      )}
+      {!checklistDismissed && allDone && (
+        <div style={{ background: C.card, border: `1px solid ${C.accent}20`, borderRadius: 16, padding: "16px 24px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 15, color: C.text }}>🎉 You're all set! Your church is live on Devotion.</span>
+          <button onClick={dismissChecklist} style={{ background: "none", border: "none", color: C.textMuted, cursor: "pointer", fontSize: 18, padding: 4 }}>✕</button>
         </div>
       )}
     </div>
   );
 }
-
-
-// ─── Styles ───────────────────────────────────────────────
-
-const s = {
-  page: {
-    padding: "28px 36px",
-    maxWidth: 1200,
-  },
-  checklistCard: {
-    background: COLORS.bgCard,
-    border: `1px solid rgba(201, 168, 76, 0.15)`,
-    borderRadius: 16,
-    padding: "20px 24px",
-    marginBottom: 24,
-  },
-  loading: {
-    padding: 60,
-    display: "flex",
-    justifyContent: "center",
-  },
-  spinner: {
-    width: 28,
-    height: 28,
-    border: `2px solid ${COLORS.accent}`,
-    borderTopColor: "transparent",
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
-  },
-  empty: {
-    padding: 60,
-    textAlign: "center",
-  },
-  emptyText: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 14,
-    color: COLORS.textMuted,
-  },
-
-  // Church branding
-  churchBrand: {
-    display: "flex",
-    alignItems: "center",
-    gap: 14,
-    marginBottom: 24,
-  },
-  churchBrandIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    background: COLORS.accent,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 18,
-    fontWeight: 700,
-    color: "#fff",
-    flexShrink: 0,
-  },
-  churchBrandName: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: 18,
-    fontWeight: 700,
-    color: COLORS.text,
-  },
-  churchBrandPlan: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-
-  // Header
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 28,
-  },
-  greeting: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-    marginBottom: 4,
-  },
-  title: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: 28,
-    fontWeight: 700,
-    color: COLORS.text,
-  },
-  headerActions: {
-    display: "flex",
-    gap: 10,
-  },
-  outlineBtn: {
-    padding: "10px 20px",
-    borderRadius: 10,
-    border: `1.5px solid ${COLORS.border}`,
-    background: COLORS.card,
-    fontSize: 13,
-    fontWeight: 600,
-    color: COLORS.textBody,
-    cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
-  },
-  accentBtn: {
-    padding: "10px 20px",
-    borderRadius: 10,
-    border: "none",
-    background: COLORS.accent,
-    fontSize: 13,
-    fontWeight: 700,
-    color: "#fff",
-    cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
-  },
-
-  // Stats
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: 14,
-    marginBottom: 24,
-  },
-  statCard: {
-    background: COLORS.card,
-    border: `1px solid ${COLORS.border}`,
-    borderRadius: 14,
-    padding: "18px 20px",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    fontWeight: 500,
-    marginBottom: 8,
-  },
-  statValue: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: 30,
-    fontWeight: 700,
-    marginBottom: 4,
-    color: COLORS.text,
-  },
-
-  // Two column layouts
-  twoColWide: {
-    display: "grid",
-    gridTemplateColumns: "1.6fr 1fr",
-    gap: 20,
-    marginBottom: 24,
-  },
-  twoCol: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 20,
-    marginBottom: 24,
-  },
-
-  // Cards
-  card: {
-    background: COLORS.card,
-    border: `1px solid ${COLORS.border}`,
-    borderRadius: 16,
-    padding: "22px 24px",
-  },
-  cardHeaderRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: 700,
-    color: COLORS.text,
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  noData: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-    fontStyle: "italic",
-    lineHeight: 1.6,
-  },
-
-  // Legend
-  legendRow: {
-    display: "flex",
-    gap: 12,
-    fontSize: 12,
-    color: COLORS.textMuted,
-  },
-  legendItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: "50%",
-  },
-
-  // Bar chart
-  barChart: {
-    display: "flex",
-    gap: 12,
-    alignItems: "flex-end",
-    height: 160,
-    marginBottom: 8,
-    marginTop: 20,
-  },
-  barGroup: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    height: "100%",
-  },
-  barPair: {
-    flex: 1,
-    display: "flex",
-    alignItems: "flex-end",
-    gap: 3,
-    width: "100%",
-  },
-  barLabel: {
-    fontSize: 11,
-    fontWeight: 600,
-    color: COLORS.textMuted,
-    marginTop: 8,
-  },
-
-  // Scripture engagement
-  scriptureSection: {
-    borderTop: `1px solid ${COLORS.border}`,
-    paddingTop: 16,
-    marginTop: 8,
-  },
-  scriptureSectionTitle: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: COLORS.textSec,
-    marginBottom: 10,
-  },
-  scriptureRow: {
-    display: "flex",
-    gap: 10,
-  },
-  scripturePill: {
-    flex: 1,
-    padding: "10px 12px",
-    borderRadius: 10,
-    background: COLORS.accentLight,
-    textAlign: "center",
-  },
-  scriptureCount: {
-    fontSize: 18,
-    fontWeight: 700,
-    color: COLORS.accent,
-  },
-  scriptureRef: {
-    fontSize: 10,
-    color: COLORS.textSec,
-    marginTop: 2,
-  },
-  scripturePct: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-
-  // Spiritual Pulse themes
-  themeHeaderRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  themeName: {
-    fontSize: 13,
-    fontWeight: 600,
-    color: COLORS.textBody,
-  },
-  themeStats: {
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-  },
-  themePct: {
-    fontSize: 12,
-    fontWeight: 700,
-    color: COLORS.text,
-  },
-  themeBarBg: {
-    height: 6,
-    borderRadius: 3,
-    background: COLORS.sand,
-  },
-
-  // AI Insight
-  insightCard: {
-    marginTop: 16,
-    padding: "14px 16px",
-    borderRadius: 12,
-    background: `${COLORS.amber}10`,
-    border: `1px solid ${COLORS.amber}25`,
-  },
-  insightRow: {
-    display: "flex",
-    gap: 8,
-    alignItems: "flex-start",
-  },
-  insightTitle: {
-    fontSize: 12,
-    fontWeight: 700,
-    color: COLORS.text,
-    marginBottom: 3,
-  },
-  insightText: {
-    fontSize: 12,
-    color: COLORS.textSec,
-    lineHeight: 1.5,
-  },
-  insightBtn: {
-    padding: "6px 14px",
-    borderRadius: 8,
-    border: `1.5px solid ${COLORS.border}`,
-    background: COLORS.card,
-    fontSize: 11,
-    fontWeight: 700,
-    color: COLORS.textBody,
-    cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
-    whiteSpace: "nowrap",
-    flexShrink: 0,
-  },
-
-  // Attention
-  attentionRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    padding: "12px 0",
-  },
-  attentionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 16,
-    flexShrink: 0,
-  },
-  attentionName: {
-    fontSize: 13,
-    fontWeight: 700,
-    color: COLORS.text,
-  },
-  attentionDetail: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-  },
-  attentionBtn: {
-    padding: "6px 14px",
-    borderRadius: 8,
-    border: `1.5px solid ${COLORS.border}`,
-    background: COLORS.card,
-    fontSize: 11,
-    fontWeight: 700,
-    color: COLORS.textBody,
-    cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
-    whiteSpace: "nowrap",
-  },
-
-  // Quick actions
-  quickActionBtn: {
-    background: "none",
-    border: "none",
-    fontSize: 14,
-    fontWeight: 700,
-    color: COLORS.accent,
-    cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
-    padding: 0,
-  },
-
-  // Invite
-  inviteRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-    marginTop: 16,
-    padding: "14px 18px",
-    borderRadius: 12,
-    background: COLORS.accentLight,
-    border: `1px solid ${COLORS.accentMid}`,
-  },
-  inviteCode: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: 22,
-    fontWeight: 600,
-    color: COLORS.text,
-    letterSpacing: "0.1em",
-    flex: 1,
-  },
-  copyBtn: {
-    padding: "8px 18px",
-    borderRadius: 8,
-    border: "none",
-    background: COLORS.accent,
-    color: "#fff",
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 13,
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-};

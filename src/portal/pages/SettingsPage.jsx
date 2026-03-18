@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, put, del } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -27,6 +27,7 @@ const FIELDS = [
 ];
 
 export default function SettingsPage() {
+  const COLORS = useChurchColors();
   const { church, role, signOutUser } = useAuth();
   const [form, setForm] = useState({});
   const [selectedTheme, setSelectedTheme] = useState("sage_green");

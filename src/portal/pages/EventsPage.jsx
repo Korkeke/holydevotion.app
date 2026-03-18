@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, post, put, del } from "../api";
 import DataTable from "../components/DataTable";
@@ -14,6 +14,7 @@ const EVENT_FIELDS = [
 ];
 
 export default function EventsPage() {
+  const COLORS = useChurchColors();
   const { church } = useAuth();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);

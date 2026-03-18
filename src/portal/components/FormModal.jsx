@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 
 export default function FormModal({ title, fields, initialValues = {}, onSubmit, onClose, submitLabel = "Save" }) {
+  const COLORS = useChurchColors();
   const [values, setValues] = useState(initialValues);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

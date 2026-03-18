@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, put } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function PrayerWallPage() {
+  const COLORS = useChurchColors();
   const { church } = useAuth();
   const [prayers, setPrayers] = useState([]);
   const [loading, setLoading] = useState(true);

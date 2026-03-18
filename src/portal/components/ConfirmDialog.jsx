@@ -1,6 +1,7 @@
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 
 export default function ConfirmDialog({ title, message, onConfirm, onCancel, confirmLabel = "Delete", loading }) {
+  const COLORS = useChurchColors();
   return (
     <div style={s.overlay} onClick={onCancel}>
       <div style={s.dialog} onClick={(e) => e.stopPropagation()}>

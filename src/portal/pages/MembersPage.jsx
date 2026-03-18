@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, post, del } from "../api";
 import DataTable from "../components/DataTable";
@@ -25,6 +25,7 @@ function RoleBadge({ role }) {
 }
 
 export default function MembersPage() {
+  const COLORS = useChurchColors();
   const { church, role: myRole, user } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);

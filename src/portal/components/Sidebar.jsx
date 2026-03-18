@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 
 const NAV_ITEMS = [
@@ -17,6 +17,7 @@ export default function Sidebar({ open, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { church, user, signOut } = useAuth();
+  const COLORS = useChurchColors();
 
   function handleNav(path) {
     navigate(path);

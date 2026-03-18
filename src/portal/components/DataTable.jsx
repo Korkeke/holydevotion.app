@@ -1,6 +1,7 @@
-import { COLORS } from "../../colors";
+import { useChurchColors } from "../useChurchColors";
 
 export default function DataTable({ columns, data, emptyMessage = "Nothing here yet." }) {
+  const COLORS = useChurchColors();
   if (!data || data.length === 0) {
     return (
       <div style={s.empty}>
