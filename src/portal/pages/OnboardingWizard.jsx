@@ -425,40 +425,33 @@ export default function OnboardingWizard() {
               autoFocus
             />
 
-            {!showDetails && (
-              <button style={s.textLink} onClick={() => setShowDetails(true)}>
-                + Add details
-              </button>
-            )}
+            <label style={{ ...s.label, marginTop: 24 }}>
+              Denomination <span style={{ opacity: 0.5 }}>(optional)</span>
+            </label>
+            <p style={{ fontSize: 13, color: "#7A7672", margin: "0 0 8px", lineHeight: 1.5 }}>
+              Helps us tailor sermon reflections and guidance to your tradition.
+            </p>
+            <input
+              type="text"
+              value={denomination}
+              onChange={(e) => setDenomination(e.target.value)}
+              style={s.input}
+              placeholder="e.g. Baptist, Non-denominational, Catholic"
+            />
 
-            {showDetails && (
-              <>
-                <label style={{ ...s.label, marginTop: 20 }}>
-                  Denomination <span style={{ opacity: 0.5 }}>(optional)</span>
-                </label>
-                <select
-                  value={denomination}
-                  onChange={(e) => setDenomination(e.target.value)}
-                  style={s.input}
-                >
-                  <option value="">Select denomination...</option>
-                  {DENOMINATIONS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-
-                <label style={{ ...s.label, marginTop: 16 }}>
-                  City <span style={{ opacity: 0.5 }}>(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  style={s.input}
-                  placeholder="e.g. Dallas, TX"
-                />
-              </>
-            )}
+            <label style={{ ...s.label, marginTop: 20 }}>
+              Location <span style={{ opacity: 0.5 }}>(optional)</span>
+            </label>
+            <p style={{ fontSize: 13, color: "#7A7672", margin: "0 0 8px", lineHeight: 1.5 }}>
+              Helps new members in your area find and join your church.
+            </p>
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              style={s.input}
+              placeholder="e.g. Dallas, TX"
+            />
 
             {error && <p style={s.error}>{error}</p>}
 
