@@ -193,8 +193,9 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Animation variant: ?animation=A, B, or C (default B)
-  const animVariant = (searchParams.get("animation") || "B").toUpperCase();
+  // Animation variant: ?animation=A, B, or C (default B). ?dev=true shows picker.
+  const [animVariant, setAnimVariant] = useState((searchParams.get("animation") || "B").toUpperCase());
+  const isDev = searchParams.get("dev") === "true";
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(null); // null = loading
@@ -443,7 +444,7 @@ export default function OnboardingWizard() {
 
   if (arriving && !arrivalDone) {
     return (
-      <div style={s.arrivalPage}>
+      <div style={s.arrivalPage} key={animVariant}>
         <style>{getArrivalCSS(animVariant)}</style>
         {animVariant === "A" && <>
           <div className="arrival-glow" />
@@ -461,6 +462,32 @@ export default function OnboardingWizard() {
           <div className="arrival-warmth" />
           <div className="arrival-cross-c">✝</div>
         </>}
+
+        {/* Dev-only animation selector */}
+        {isDev && (
+          <div style={{
+            position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+            zIndex: 200, display: "flex", gap: 8,
+          }}>
+            {["A", "B", "C"].map((v) => (
+              <button
+                key={v}
+                onClick={() => {
+                  setArrivalDone(false);
+                  setAnimVariant(v);
+                }}
+                style={{
+                  padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
+                  background: animVariant === v ? GOLD : "rgba(255,255,255,0.15)",
+                  color: animVariant === v ? "#0a0e1a" : "#fff",
+                  fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700,
+                }}
+              >
+                {v === "A" ? "Stained Glass" : v === "B" ? "Unveiling" : "Ember"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

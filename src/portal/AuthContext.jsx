@@ -86,30 +86,56 @@ export function AuthProvider({ children }) {
         }
       }
 
-      // Step 2: Create church via API
-      // Use raw fetch instead of api.js post() helper to avoid the
-      // automatic 401 → /portal/login redirect during signup.
-      const token = await firebaseUser.getIdToken(true); // force refresh
+      // Step 2: Create church via API with timeout + auto-retry.
+      // Uses raw fetch (not api.js) to avoid automatic 401 → /portal/login redirect.
+      // If the first attempt fails with a network error, retry once — the backend
+      // is idempotent (returns existing church if code was already used by this user).
+      const token = await firebaseUser.getIdToken(true);
       const BASE = "https://devotion-backend-production.up.railway.app";
-      const res = await fetch(`${BASE}/api/churches`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(churchData),
-      });
 
-      if (!res.ok) {
-        let detail = `Church creation failed (${res.status})`;
+      async function createChurchRequest() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
         try {
-          const body = await res.json();
-          detail = body?.detail || detail;
-        } catch { /* not JSON */ }
-        throw new Error(detail);
+          const res = await fetch(`${BASE}/api/churches`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(churchData),
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+
+          if (!res.ok) {
+            let detail = `Church creation failed (${res.status})`;
+            try {
+              const body = await res.json();
+              detail = body?.detail || detail;
+            } catch { /* not JSON */ }
+            throw new Error(detail);
+          }
+          return await res.json();
+        } catch (err) {
+          clearTimeout(timeout);
+          throw err;
+        }
       }
 
-      const resp = await res.json();
+      let resp;
+      try {
+        resp = await createChurchRequest();
+      } catch (firstErr) {
+        // Network error or timeout — wait and retry once (backend is idempotent)
+        if (firstErr.name === "AbortError" || firstErr.message === "Failed to fetch") {
+          await new Promise((r) => setTimeout(r, 1500));
+          resp = await createChurchRequest();
+        } else {
+          throw firstErr;
+        }
+      }
+
       setChurch(resp?.church || resp);
       setRole("owner");
       return resp;
@@ -118,6 +144,10 @@ export function AuthProvider({ children }) {
       throw new Error(msg);
     } finally {
       signingUpRef.current = false;
+      // Ensure church data is loaded into context for the dashboard.
+      // The signingUpRef guard blocked loadChurch() during signup,
+      // so we trigger it explicitly now that the guard is lifted.
+      loadChurch();
     }
   }
 
