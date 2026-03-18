@@ -1254,12 +1254,15 @@ function getArrivalCSS(variant) {
       .arrival-line {
         position: fixed; top: 0; left: 50%; width: 2px; height: 0;
         background: ${GOLD}; z-index: 10; transform: translateX(-50%);
-        animation: lineDown 0.5s ease forwards;
+        animation: lineDown 0.5s ease forwards, lineFade 0.3s ease 0.5s forwards;
         box-shadow: 0 0 20px rgba(201,168,76,0.6);
       }
       @keyframes lineDown {
         from { height: 0; top: 0; }
         to { height: 100vh; top: 0; }
+      }
+      @keyframes lineFade {
+        to { opacity: 0; }
       }
       .arrival-curtain-left, .arrival-curtain-right {
         position: fixed; top: 0; width: 50vw; height: 100vh;
