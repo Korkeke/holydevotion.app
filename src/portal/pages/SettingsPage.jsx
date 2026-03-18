@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useChurchColors } from "../useChurchColors";
+import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
 import { get, put, del } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";

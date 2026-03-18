@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useChurchColors } from "../useChurchColors";
+import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
 import { get, post, put, del } from "../api";
 import DataTable from "../components/DataTable";

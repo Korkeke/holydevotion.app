@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useChurchColors } from "../useChurchColors";
+import { COLORS } from "../../colors";
 
 export default function FormModal({ title, fields, initialValues = {}, onSubmit, onClose, submitLabel = "Save" }) {
   const COLORS = useChurchColors();
