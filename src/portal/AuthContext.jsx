@@ -101,8 +101,12 @@ export function AuthProvider({ children }) {
       });
 
       if (!res.ok) {
-        const body = await res.text();
-        throw new Error(body || `Church creation failed: ${res.status}`);
+        let detail = `Church creation failed (${res.status})`;
+        try {
+          const body = await res.json();
+          detail = body?.detail || detail;
+        } catch { /* not JSON */ }
+        throw new Error(detail);
       }
 
       const resp = await res.json();
