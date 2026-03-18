@@ -13,10 +13,27 @@ export async function api(path, options = {}) {
     ...options.headers,
   };
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  const url = `${BASE_URL}${path}`;
+  const res = await fetch(url, { ...options, headers });
 
   if (res.status === 401) {
-    // Token expired or invalid — redirect to login
+    // Token might be stale (common right after signup). Try refreshing once.
+    try {
+      const freshToken = await user.getIdToken(true); // force refresh
+      const retryRes = await fetch(url, {
+        ...options,
+        headers: { ...headers, Authorization: `Bearer ${freshToken}` },
+      });
+      if (retryRes.ok) {
+        if (retryRes.status === 204) return null;
+        return retryRes.json();
+      }
+      // Retry also got 401 — token is genuinely invalid
+    } catch {
+      // Refresh failed entirely
+    }
+
+    // Only hard-redirect if we're sure the session is expired
     window.location.href = "/portal/login";
     throw new Error("Session expired");
   }
