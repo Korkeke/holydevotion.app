@@ -16,4 +16,11 @@ export const COLORS = {
   amber: "#D4A84C",
   green: "#4A8B6F",
   white: "#FFFFFF",
+  gold: "#C9A84C",
+  goldLight: "#E8CC6E",
+  goldDim: "rgba(201, 168, 76, 0.15)",
+  goldGlow: "rgba(201, 168, 76, 0.08)",
+  bgCard: "#FFFFFF",
+  bgDeep: "#060911",
+  textDim: "rgba(232, 228, 220, 0.4)",
 };
