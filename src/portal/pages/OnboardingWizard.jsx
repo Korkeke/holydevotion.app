@@ -1001,7 +1001,7 @@ export default function OnboardingWizard() {
               </button>
               <a
                 href={`mailto:?subject=${encodeURIComponent(`${cn} is now on Devotion`)}&body=${encodeURIComponent(directText)}`}
-                style={{ ...s.shareBtn, textDecoration: "none", display: "block" }}
+                style={s.shareBtn}
               >
                 Send via email
               </a>
@@ -1543,6 +1543,7 @@ const s = {
     transition: "all 0.2s",
   },
   shareBtn: {
+    display: "block",
     width: "100%",
     padding: "12px 16px",
     borderRadius: 10,
@@ -1554,6 +1555,8 @@ const s = {
     fontWeight: 500,
     cursor: "pointer",
     textAlign: "center",
+    boxSizing: "border-box",
+    textDecoration: "none",
     transition: "all 0.2s",
   },
   sermonPreview: {
