@@ -72,92 +72,112 @@ function useTypewriter(lines, speed = 30, pauseBetween = 500) {
 // ─── Phone Mockup Component ──────────────────────────────────
 
 function PhoneMockup({ churchName, accentColor, secondaryColor }) {
+  const pulseThemes = [
+    { label: "Anxiety", pct: 34 },
+    { label: "Purpose", pct: 22 },
+    { label: "Gratitude", pct: 18 },
+  ];
   return (
     <div style={{
-      width: 240, margin: "0 auto",
-      background: "#1a1a2e", borderRadius: 28,
-      padding: "12px 8px 8px", boxShadow: "0 8px 40px rgba(0,0,0,0.15)",
-      border: "3px solid #2a2a3e",
+      width: 320, margin: "0 auto",
+      background: "#1a1a2e", borderRadius: 36,
+      padding: "14px 10px 10px", boxShadow: "0 12px 48px rgba(0,0,0,0.18)",
+      border: "4px solid #2a2a3e",
     }}>
-      {/* Notch */}
-      <div style={{ width: 60, height: 6, background: "#2a2a3e", borderRadius: 3, margin: "0 auto 8px" }} />
+      {/* Dynamic Island / Notch */}
+      <div style={{ width: 80, height: 8, background: "#2a2a3e", borderRadius: 4, margin: "0 auto 10px" }} />
 
       {/* Screen */}
       <div style={{
-        background: "#FAF8F5", borderRadius: 18, overflow: "hidden",
+        background: "#FAF8F5", borderRadius: 24, overflow: "hidden",
         fontFamily: "'DM Sans', sans-serif",
       }}>
         {/* Church Header */}
-        <div style={{ padding: "14px 14px 12px", textAlign: "center", borderBottom: "1px solid #EDE9E3" }}>
-          <div style={{ fontSize: 16, color: secondaryColor, marginBottom: 2 }}>✝</div>
+        <div style={{ padding: "18px 18px 14px", textAlign: "center", borderBottom: "1px solid #EDE9E3" }}>
+          <div style={{ fontSize: 20, color: secondaryColor, marginBottom: 4 }}>✝</div>
           <div style={{
-            fontFamily: "'Playfair Display', serif", fontSize: 13, fontWeight: 700,
+            fontFamily: "'Playfair Display', serif", fontSize: 17, fontWeight: 700,
             color: accentColor,
           }}>{churchName || "Your Church"}</div>
-          <div style={{ fontSize: 9, color: "#A8A29E", marginTop: 2 }}>12 members</div>
+          <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 3 }}>12 members</div>
         </div>
 
         {/* Sermon Card */}
-        <div style={{ padding: "10px 14px" }}>
-          <div style={{ fontSize: 8, color: "#A8A29E", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 6 }}>
+        <div style={{ padding: "14px 18px 10px" }}>
+          <div style={{ fontSize: 10, color: "#A8A29E", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 8 }}>
             This Week's Sermon
           </div>
           <div style={{
-            background: "#fff", borderRadius: 10, padding: "10px 12px",
+            background: "#fff", borderRadius: 14, padding: "14px 16px",
             border: "1px solid #EDE9E3",
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: accentColor, marginBottom: 4 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: accentColor, marginBottom: 6 }}>
               Finding Peace in the Storm
             </div>
-            <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
+            <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
               <span style={{
-                fontSize: 8, padding: "2px 6px", borderRadius: 4,
+                fontSize: 10, padding: "3px 8px", borderRadius: 6,
                 background: `${secondaryColor}18`, color: secondaryColor, fontWeight: 600,
               }}>Mark 4:35-41</span>
               <span style={{
-                fontSize: 8, padding: "2px 6px", borderRadius: 4,
+                fontSize: 10, padding: "3px 8px", borderRadius: 6,
                 background: `${secondaryColor}18`, color: secondaryColor, fontWeight: 600,
               }}>Trust</span>
             </div>
-            <div style={{ fontSize: 9, color: "#7A7672", lineHeight: 1.4 }}>
+            <div style={{ fontSize: 11, color: "#7A7672", lineHeight: 1.5 }}>
               Day 1 of 7 — Settling Into the Passage
             </div>
-            {/* Progress bar */}
-            <div style={{ height: 3, borderRadius: 2, background: "#EDE9E3", marginTop: 6 }}>
+            <div style={{ height: 4, borderRadius: 2, background: "#EDE9E3", marginTop: 8 }}>
               <div style={{ height: "100%", borderRadius: 2, background: accentColor, width: "14%" }} />
             </div>
           </div>
         </div>
 
-        {/* Quick action */}
-        <div style={{ padding: "4px 14px 10px" }}>
+        {/* CTA Button */}
+        <div style={{ padding: "4px 18px 14px" }}>
           <div style={{
-            background: accentColor, borderRadius: 8, padding: "8px 0",
-            textAlign: "center", fontSize: 10, fontWeight: 700, color: "#fff",
+            background: accentColor, borderRadius: 10, padding: "10px 0",
+            textAlign: "center", fontSize: 12, fontWeight: 700, color: "#fff",
           }}>
             Continue Today's Reflection
           </div>
         </div>
 
+        {/* Spiritual Pulse mini */}
+        <div style={{ padding: "0 18px 14px" }}>
+          <div style={{ fontSize: 10, color: "#A8A29E", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 8 }}>
+            Spiritual Pulse
+          </div>
+          {pulseThemes.map((t, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 10, color: "#7A7672", width: 56, flexShrink: 0 }}>{t.label}</span>
+              <div style={{ flex: 1, height: 6, borderRadius: 3, background: "#EDE9E3" }}>
+                <div style={{ height: "100%", borderRadius: 3, background: i === 0 ? accentColor : secondaryColor, width: `${t.pct}%`, opacity: i === 0 ? 1 : 0.6 }} />
+              </div>
+              <span style={{ fontSize: 9, color: "#A8A29E", width: 24, textAlign: "right" }}>{t.pct}%</span>
+            </div>
+          ))}
+        </div>
+
         {/* Bottom Nav */}
         <div style={{
-          display: "flex", justifyContent: "space-around", padding: "8px 0",
-          borderTop: "1px solid #EDE9E3", fontSize: 8, color: "#A8A29E",
+          display: "flex", justifyContent: "space-around", padding: "10px 0",
+          borderTop: "1px solid #EDE9E3", fontSize: 10, color: "#A8A29E",
         }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, marginBottom: 1 }}>🏠</div>
+            <div style={{ fontSize: 16, marginBottom: 2 }}>🏠</div>
             <div style={{ color: accentColor, fontWeight: 600 }}>Home</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, marginBottom: 1 }}>📖</div>
+            <div style={{ fontSize: 16, marginBottom: 2 }}>📖</div>
             <div>Sermons</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, marginBottom: 1 }}>🙏</div>
+            <div style={{ fontSize: 16, marginBottom: 2 }}>🙏</div>
             <div>Prayer</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 12, marginBottom: 1 }}>👥</div>
+            <div style={{ fontSize: 16, marginBottom: 2 }}>👥</div>
             <div>Community</div>
           </div>
         </div>
@@ -196,6 +216,7 @@ export default function OnboardingWizard() {
   // Step 2: Church
   const [churchName, setChurchName] = useState("");
   const [denomination, setDenomination] = useState("");
+  const [denomOther, setDenomOther] = useState("");
   const [city, setCity] = useState("");
 
   // Step 3: Website
@@ -346,7 +367,7 @@ export default function OnboardingWizard() {
     try {
       const resp = await signUp(email, password, {
         name: churchName,
-        denomination: denomination || undefined,
+        denomination: (denomination === "Other" ? denomOther : denomination) || undefined,
         city: city || undefined,
         website: website || undefined,
         theme: isCustom ? "custom" : theme,
@@ -483,13 +504,13 @@ export default function OnboardingWizard() {
 
       {/* Progress bar + step label */}
       {currentStep > 0 && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50 }}>
-          <div style={s.progressTrack}>
-            <div style={{ ...s.progressFill, width: `${(PROGRESS[currentStep] || 0) * 100}%`, background: accent }} />
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: LINEN, borderBottom: "1px solid #D4CFC7" }}>
+          <div style={{ height: 5, background: "#D4CFC7" }}>
+            <div style={{ height: "100%", background: accent, width: `${(PROGRESS[currentStep] || 0) * 100}%`, transition: "width 0.4s ease", borderRadius: "0 2px 2px 0", boxShadow: `0 0 8px ${accent}40` }} />
           </div>
           <div style={{
-            textAlign: "center", padding: "6px 0 4px",
-            fontSize: 11, fontWeight: 600, color: "#A8A29E",
+            textAlign: "center", padding: "8px 0 6px",
+            fontSize: 12, fontWeight: 600, color: "#7A7672",
             fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.03em",
           }}>
             Step {currentStep} of 6 — {STEP_LABELS[currentStep]}
@@ -591,13 +612,38 @@ export default function OnboardingWizard() {
             <p style={{ fontSize: 13, color: "#7A7672", margin: "0 0 8px", lineHeight: 1.5 }}>
               Helps us tailor sermon reflections and guidance to your tradition.
             </p>
-            <input
-              type="text"
+            <select
               value={denomination}
               onChange={(e) => setDenomination(e.target.value)}
-              style={s.input}
-              placeholder="e.g. Baptist, Non-denominational, Catholic"
-            />
+              style={{ ...s.input, appearance: "none", backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A7672' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+            >
+              <option value="">Select denomination...</option>
+              <option value="Non-denominational">Non-denominational</option>
+              <option value="Baptist">Baptist</option>
+              <option value="Catholic">Catholic</option>
+              <option value="Methodist">Methodist</option>
+              <option value="Presbyterian">Presbyterian</option>
+              <option value="Pentecostal">Pentecostal</option>
+              <option value="Anglican / Episcopal">Anglican / Episcopal</option>
+              <option value="Lutheran">Lutheran</option>
+              <option value="Church of Christ">Church of Christ</option>
+              <option value="Assemblies of God">Assemblies of God</option>
+              <option value="Seventh-day Adventist">Seventh-day Adventist</option>
+              <option value="Church of God">Church of God</option>
+              <option value="Reformed">Reformed</option>
+              <option value="Evangelical Free">Evangelical Free</option>
+              <option value="Other">Other</option>
+            </select>
+            {denomination === "Other" && (
+              <input
+                type="text"
+                value={denomOther}
+                onChange={(e) => setDenomOther(e.target.value)}
+                style={{ ...s.input, marginTop: 8 }}
+                placeholder="Enter your denomination"
+                autoFocus
+              />
+            )}
 
             <label style={{ ...s.label, marginTop: 20 }}>
               Location <span style={{ opacity: 0.5 }}>(optional)</span>
