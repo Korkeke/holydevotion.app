@@ -41,13 +41,12 @@ export function AuthProvider({ children }) {
       if (churches.length > 0) {
         setChurch(churches[0].church);
         setRole(churches[0].role);
-      } else {
-        setChurch(null);
-        setRole(null);
       }
+      // Don't null out church on empty response — it may have been
+      // set directly by signUp() and the membership record just hasn't
+      // propagated yet. Only clear on explicit sign-out.
     } catch {
-      setChurch(null);
-      setRole(null);
+      // Network error during load — keep existing church state
     } finally {
       setChurchLoading(false);
     }
@@ -144,10 +143,6 @@ export function AuthProvider({ children }) {
       throw new Error(msg);
     } finally {
       signingUpRef.current = false;
-      // Ensure church data is loaded into context for the dashboard.
-      // The signingUpRef guard blocked loadChurch() during signup,
-      // so we trigger it explicitly now that the guard is lifted.
-      loadChurch();
     }
   }
 

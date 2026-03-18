@@ -193,9 +193,9 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Animation variant: ?animation=A, B, or C (default B). ?dev=true shows picker.
+  // Animation variant: ?animation=A, B, or C (default B).
+  // The animation picker always shows during the arrival screen so you can compare.
   const [animVariant, setAnimVariant] = useState((searchParams.get("animation") || "B").toUpperCase());
-  const isDev = searchParams.get("dev") === "true";
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(null); // null = loading
@@ -463,8 +463,8 @@ export default function OnboardingWizard() {
           <div className="arrival-cross-c">✝</div>
         </>}
 
-        {/* Dev-only animation selector */}
-        {isDev && (
+        {/* Animation selector — pick your favorite, then we'll remove this */}
+        {(
           <div style={{
             position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
             zIndex: 200, display: "flex", gap: 8,
