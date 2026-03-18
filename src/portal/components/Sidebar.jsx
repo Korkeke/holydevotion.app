@@ -45,13 +45,13 @@ export default function Sidebar({ open, onClose }) {
       >
         {/* Devotion branding */}
         <div style={s.brand}>
-          <span style={s.brandCross}>✝</span>
+          <span style={{ ...s.brandCross, color: COLORS.accent }}>✝</span>
           <span style={s.brandName}>Devotion</span>
         </div>
 
         {/* Church branding */}
         <div style={s.header}>
-          <div style={s.churchIcon}>{churchInitial}</div>
+          <div style={{ ...s.churchIcon, background: COLORS.accent }}>{churchInitial}</div>
           <div>
             <div style={s.churchName}>
               {church?.name || "Church Portal"}
