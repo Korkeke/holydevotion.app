@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../AuthContext";
 import { post } from "../api";
 
@@ -443,65 +444,185 @@ export default function OnboardingWizard() {
 
   if (arriving && !arrivalDone) {
     return (
-      <div style={s.arrivalPage} key={animVariant}>
-        <style>{getArrivalCSS(animVariant)}</style>
+      <div style={s.arrivalPage} key={animVariant + "-" + Date.now()}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');`}</style>
+
+        {/* ─── Animation A: Stained Glass ─── */}
         {animVariant === "A" && <>
-          <div className="arrival-glow" />
-          {[...Array(6)].map((_, i) => <div key={i} className={`arrival-ray arrival-ray-${i}`} />)}
-          <div className="arrival-cross-a">✝</div>
-        </>}
-        {animVariant === "B" && <>
-          <div className="arrival-line" />
-          <div className="arrival-curtain-left" />
-          <div className="arrival-curtain-right" />
-          <div className="arrival-cross-b">✝</div>
-        </>}
-        {animVariant === "C" && <>
-          <div className="arrival-spark" />
-          <div className="arrival-warmth" />
-          <div className="arrival-cross-c">✝</div>
+          {/* Warm glow expanding from center */}
+          <motion.div
+            style={{ position: "fixed", inset: 0, zIndex: 1, background: `radial-gradient(circle at center, rgba(201,168,76,0.2) 0%, transparent 60%)` }}
+            initial={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: [0.3, 1, 1.5, 3] }}
+            transition={{ duration: 2.2, times: [0, 0.3, 0.6, 1], ease: "easeOut" }}
+          />
+          {/* Light expanding to linen */}
+          <motion.div
+            style={{ position: "fixed", inset: 0, zIndex: 2, background: LINEN, borderRadius: "50%" }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 3, opacity: 1 }}
+            transition={{ delay: 0.8, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          />
+          {/* Golden rays */}
+          {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+            <motion.div
+              key={i}
+              style={{
+                position: "fixed", top: "50%", left: "50%", width: 2, zIndex: 3,
+                background: `linear-gradient(to bottom, ${GOLD}, transparent)`,
+                transformOrigin: "top center",
+                transform: `translate(-50%, 0) rotate(${deg}deg)`,
+              }}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: [0, 100, 0], opacity: [0, 0.7, 0] }}
+              transition={{ delay: 0.2 + i * 0.05, duration: 1.4, ease: "easeInOut" }}
+            />
+          ))}
+          {/* Cross assembles with spring */}
+          <motion.div
+            style={{
+              position: "fixed", top: "50%", left: "50%", fontSize: 44, zIndex: 10,
+              filter: `drop-shadow(0 0 30px rgba(201,168,76,0.5))`,
+            }}
+            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.3, color: GOLD }}
+            animate={{ opacity: 1, scale: 1, color: SAGE, filter: "drop-shadow(0 0 0px transparent)" }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 120, damping: 12 }}
+          >
+            ✝
+          </motion.div>
         </>}
 
-        {/* Animation selector + continue — visible after animation finishes */}
-        {animFinished && (
-          <div style={{
-            position: "fixed", bottom: 0, left: 0, right: 0,
-            zIndex: 200, padding: "16px 20px 24px",
-            background: "linear-gradient(to top, rgba(10,14,26,0.95) 0%, transparent 100%)",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-          }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["A", "B", "C"].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => {
-                    setAnimFinished(false);
-                    setAnimVariant(v);
-                  }}
-                  style={{
-                    padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-                    background: animVariant === v ? GOLD : "rgba(255,255,255,0.15)",
-                    color: animVariant === v ? "#0a0e1a" : "#fff",
-                    fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700,
-                  }}
-                >
-                  {v === "A" ? "Stained Glass" : v === "B" ? "Unveiling" : "Ember"}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => { setArrivalDone(true); setCurrentStep(0); }}
+        {/* ─── Animation B: The Unveiling ─── */}
+        {animVariant === "B" && <>
+          {/* Gold line draws down center */}
+          <motion.div
+            style={{
+              position: "fixed", top: 0, left: "50%", width: 2, zIndex: 10,
+              background: GOLD, transform: "translateX(-50%)",
+              boxShadow: `0 0 20px rgba(201,168,76,0.6)`,
+            }}
+            initial={{ height: 0 }}
+            animate={{ height: "100vh", opacity: [1, 1, 0] }}
+            transition={{ height: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.3, delay: 0.5 } }}
+          />
+          {/* Left curtain */}
+          <motion.div
+            style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", background: LINEN, zIndex: 5, transformOrigin: "right center" }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 60, damping: 18 }}
+          />
+          {/* Right curtain */}
+          <motion.div
+            style={{ position: "fixed", top: 0, right: 0, width: "50vw", height: "100vh", background: LINEN, zIndex: 5, transformOrigin: "left center" }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 60, damping: 18 }}
+          />
+          {/* Cross enters with satisfying spring bounce */}
+          <motion.div
+            style={{ position: "fixed", top: "50%", left: "50%", fontSize: 44, color: SAGE, zIndex: 20 }}
+            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.1, type: "spring", stiffness: 150, damping: 10 }}
+          >
+            ✝
+          </motion.div>
+        </>}
+
+        {/* ─── Animation C: Ember to Flame ─── */}
+        {animVariant === "C" && <>
+          {/* Spark */}
+          <motion.div
+            style={{
+              position: "fixed", top: "50%", left: "50%", borderRadius: "50%", zIndex: 10,
+              background: GOLD, boxShadow: `0 0 20px ${GOLD}`,
+            }}
+            initial={{ x: "-50%", y: "-50%", width: 4, height: 4, opacity: 0 }}
+            animate={{
+              width: [4, 12, 30, 0], height: [4, 12, 30, 0],
+              opacity: [0, 1, 1, 0],
+              boxShadow: [`0 0 5px ${GOLD}`, `0 0 40px ${GOLD}`, `0 0 80px ${GOLD}`, `0 0 0px transparent`],
+            }}
+            transition={{ duration: 1, ease: "easeOut" }}
+          />
+          {/* Warmth radiating outward */}
+          <motion.div
+            style={{ position: "fixed", inset: 0, zIndex: 5, background: LINEN, borderRadius: "50%" }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 3, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
+          />
+          {/* Cross emerges from the warmth */}
+          <motion.div
+            style={{ position: "fixed", top: "50%", left: "50%", fontSize: 44, zIndex: 20 }}
+            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.4, color: GOLD, filter: `drop-shadow(0 0 40px rgba(201,168,76,0.6))` }}
+            animate={{
+              opacity: 1, scale: [0.4, 1.15, 1],
+              color: SAGE,
+              filter: "drop-shadow(0 0 0px transparent)",
+            }}
+            transition={{
+              delay: 1,
+              scale: { type: "spring", stiffness: 180, damping: 12 },
+              color: { duration: 0.8, ease: "easeOut" },
+              opacity: { duration: 0.4 },
+            }}
+          >
+            ✝
+          </motion.div>
+        </>}
+
+        {/* Animation selector + continue */}
+        <AnimatePresence>
+          {animFinished && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 20 }}
               style={{
-                padding: "12px 48px", borderRadius: 10, border: "none", cursor: "pointer",
-                background: GOLD, color: "#0a0e1a",
-                fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 700,
-                boxShadow: `0 4px 20px rgba(201,168,76,0.3)`,
+                position: "fixed", bottom: 0, left: 0, right: 0,
+                zIndex: 200, padding: "20px 20px 28px",
+                background: "linear-gradient(to top, rgba(10,14,26,0.95) 60%, transparent 100%)",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
               }}
             >
-              Continue →
-            </button>
-          </div>
-        )}
+              <div style={{ display: "flex", gap: 8 }}>
+                {["A", "B", "C"].map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => {
+                      setAnimFinished(false);
+                      setAnimVariant(v);
+                    }}
+                    style={{
+                      padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
+                      background: animVariant === v ? GOLD : "rgba(255,255,255,0.15)",
+                      color: animVariant === v ? "#0a0e1a" : "#fff",
+                      fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {v === "A" ? "Stained Glass" : v === "B" ? "Unveiling" : "Ember"}
+                  </button>
+                ))}
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { setArrivalDone(true); setCurrentStep(0); }}
+                style={{
+                  padding: "12px 48px", borderRadius: 10, border: "none", cursor: "pointer",
+                  background: GOLD, color: "#0a0e1a",
+                  fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 700,
+                  boxShadow: `0 4px 20px rgba(201,168,76,0.3)`,
+                }}
+              >
+                Continue →
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
