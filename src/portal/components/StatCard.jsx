@@ -4,7 +4,7 @@ export default function StatCard({ label, value, icon }) {
   return (
     <div style={s.card}>
       {icon && <div style={s.icon}>{icon}</div>}
-      <div style={s.value}>{value ?? "—"}</div>
+      <div style={s.value}>{value ?? "0"}</div>
       <div style={s.label}>{label}</div>
     </div>
   );
@@ -17,6 +17,7 @@ const s = {
     background: COLORS.card,
     border: `1px solid ${COLORS.border}`,
     textAlign: "center",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
     transition: "border-color 0.2s",
   },
   icon: {
@@ -24,7 +25,7 @@ const s = {
     color: COLORS.accent,
   },
   value: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "var(--heading)",
     fontSize: 36,
     fontWeight: 700,
     color: COLORS.text,
@@ -32,10 +33,10 @@ const s = {
     marginBottom: 6,
   },
   label: {
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--body)",
     fontSize: 12,
     fontWeight: 600,
-    color: COLORS.textMuted,
+    color: COLORS.muted,
     letterSpacing: "0.05em",
     textTransform: "uppercase",
   },

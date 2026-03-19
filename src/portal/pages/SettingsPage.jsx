@@ -312,16 +312,16 @@ export default function SettingsPage() {
 }
 
 const s = {
-  page: { padding: "32px 40px", maxWidth: 720 },
+  page: { padding: "32px 40px", maxWidth: 800 },
   loading: { padding: 60, display: "flex", justifyContent: "center" },
   spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
-  title: { fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: COLORS.text, marginBottom: 24 },
+  title: { fontFamily: "var(--heading)", fontSize: 26, fontWeight: 700, color: COLORS.text, marginBottom: 24 },
   section: {
-    padding: "24px 28px", borderRadius: 14,
+    padding: "24px 28px", borderRadius: 16,
     background: COLORS.card, border: `1px solid ${COLORS.border}`,
-    marginBottom: 20,
+    marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
   },
-  sectionTitle: { fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 4 },
+  sectionTitle: { fontFamily: "var(--heading)", fontSize: 20, fontWeight: 700, color: COLORS.text, marginBottom: 4 },
   sectionDesc: { fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: COLORS.textMuted, marginBottom: 16 },
   codeRow: { display: "flex", alignItems: "center", gap: 12 },
   code: {

@@ -194,9 +194,8 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Animation variant: ?animation=A, B, or C (default B).
-  // The animation picker always shows during the arrival screen so you can compare.
-  const [animVariant, setAnimVariant] = useState((searchParams.get("animation") || "B").toUpperCase());
+  // Arrival animation: "The Unveiling"
+  const animVariant = "B";
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(null); // null = loading
@@ -310,11 +309,10 @@ export default function OnboardingWizard() {
   useEffect(() => {
     if (arriving) {
       setAnimFinished(false);
-      const duration = animVariant === "A" ? 2500 : animVariant === "C" ? 2500 : 2000;
-      const timer = setTimeout(() => setAnimFinished(true), duration);
+      const timer = setTimeout(() => setAnimFinished(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [arriving, animVariant]);
+  }, [arriving]);
 
   // ─── Step navigation ─────────────────────────────────────────
 
@@ -455,136 +453,44 @@ export default function OnboardingWizard() {
 
   if (arriving && !arrivalDone) {
     return (
-      <div style={s.arrivalPage} key={animVariant + "-" + Date.now()}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');`}</style>
+      <div style={s.arrivalPage}>
+        {/* ─── The Unveiling ─── */}
+        {/* Gold line draws down center */}
+        <motion.div
+          style={{
+            position: "fixed", top: 0, left: "50%", width: 2, zIndex: 10,
+            background: GOLD, transform: "translateX(-50%)",
+            boxShadow: `0 0 20px rgba(201,168,76,0.6)`,
+          }}
+          initial={{ height: 0 }}
+          animate={{ height: "100vh", opacity: [1, 1, 0] }}
+          transition={{ height: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.3, delay: 0.5 } }}
+        />
+        {/* Left curtain */}
+        <motion.div
+          style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", background: LINEN, zIndex: 5, transformOrigin: "right center" }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 60, damping: 18 }}
+        />
+        {/* Right curtain */}
+        <motion.div
+          style={{ position: "fixed", top: 0, right: 0, width: "50vw", height: "100vh", background: LINEN, zIndex: 5, transformOrigin: "left center" }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 60, damping: 18 }}
+        />
+        {/* Cross enters with spring bounce */}
+        <motion.div
+          style={{ position: "fixed", top: "50%", left: "50%", fontSize: 44, color: SAGE, zIndex: 20 }}
+          initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.1, type: "spring", stiffness: 150, damping: 10 }}
+        >
+          ✝
+        </motion.div>
 
-        {/* ─── Animation A: Stained Glass ─── */}
-        {animVariant === "A" && <>
-          {/* Warm glow expanding from center */}
-          <motion.div
-            style={{ position: "fixed", inset: 0, zIndex: 1, background: `radial-gradient(circle at center, rgba(201,168,76,0.2) 0%, transparent 60%)` }}
-            initial={{ opacity: 0, scale: 0.3 }}
-            animate={{ opacity: [0, 1, 1, 0], scale: [0.3, 1, 1.5, 3] }}
-            transition={{ duration: 2.2, times: [0, 0.3, 0.6, 1], ease: "easeOut" }}
-          />
-          {/* Light expanding to linen */}
-          <motion.div
-            style={{ position: "fixed", inset: 0, zIndex: 2, background: LINEN, borderRadius: "50%" }}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 3, opacity: 1 }}
-            transition={{ delay: 0.8, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          />
-          {/* Golden rays */}
-          {[0, 60, 120, 180, 240, 300].map((deg, i) => (
-            <motion.div
-              key={i}
-              style={{
-                position: "fixed", top: "50%", left: "50%", width: 2, zIndex: 3,
-                background: `linear-gradient(to bottom, ${GOLD}, transparent)`,
-                transformOrigin: "top center",
-                transform: `translate(-50%, 0) rotate(${deg}deg)`,
-              }}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: [0, 100, 0], opacity: [0, 0.7, 0] }}
-              transition={{ delay: 0.2 + i * 0.05, duration: 1.4, ease: "easeInOut" }}
-            />
-          ))}
-          {/* Cross assembles with spring */}
-          <motion.div
-            style={{
-              position: "fixed", top: "50%", left: "50%", fontSize: 44, zIndex: 10,
-              filter: `drop-shadow(0 0 30px rgba(201,168,76,0.5))`,
-            }}
-            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.3, color: GOLD }}
-            animate={{ opacity: 1, scale: 1, color: SAGE, filter: "drop-shadow(0 0 0px transparent)" }}
-            transition={{ delay: 0.6, type: "spring", stiffness: 120, damping: 12 }}
-          >
-            ✝
-          </motion.div>
-        </>}
-
-        {/* ─── Animation B: The Unveiling ─── */}
-        {animVariant === "B" && <>
-          {/* Gold line draws down center */}
-          <motion.div
-            style={{
-              position: "fixed", top: 0, left: "50%", width: 2, zIndex: 10,
-              background: GOLD, transform: "translateX(-50%)",
-              boxShadow: `0 0 20px rgba(201,168,76,0.6)`,
-            }}
-            initial={{ height: 0 }}
-            animate={{ height: "100vh", opacity: [1, 1, 0] }}
-            transition={{ height: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.3, delay: 0.5 } }}
-          />
-          {/* Left curtain */}
-          <motion.div
-            style={{ position: "fixed", top: 0, left: 0, width: "50vw", height: "100vh", background: LINEN, zIndex: 5, transformOrigin: "right center" }}
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 60, damping: 18 }}
-          />
-          {/* Right curtain */}
-          <motion.div
-            style={{ position: "fixed", top: 0, right: 0, width: "50vw", height: "100vh", background: LINEN, zIndex: 5, transformOrigin: "left center" }}
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 60, damping: 18 }}
-          />
-          {/* Cross enters with satisfying spring bounce */}
-          <motion.div
-            style={{ position: "fixed", top: "50%", left: "50%", fontSize: 44, color: SAGE, zIndex: 20 }}
-            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1.1, type: "spring", stiffness: 150, damping: 10 }}
-          >
-            ✝
-          </motion.div>
-        </>}
-
-        {/* ─── Animation C: Ember to Flame ─── */}
-        {animVariant === "C" && <>
-          {/* Spark */}
-          <motion.div
-            style={{
-              position: "fixed", top: "50%", left: "50%", borderRadius: "50%", zIndex: 10,
-              background: GOLD, boxShadow: `0 0 20px ${GOLD}`,
-            }}
-            initial={{ x: "-50%", y: "-50%", width: 4, height: 4, opacity: 0 }}
-            animate={{
-              width: [4, 12, 30, 0], height: [4, 12, 30, 0],
-              opacity: [0, 1, 1, 0],
-              boxShadow: [`0 0 5px ${GOLD}`, `0 0 40px ${GOLD}`, `0 0 80px ${GOLD}`, `0 0 0px transparent`],
-            }}
-            transition={{ duration: 1, ease: "easeOut" }}
-          />
-          {/* Warmth radiating outward */}
-          <motion.div
-            style={{ position: "fixed", inset: 0, zIndex: 5, background: LINEN, borderRadius: "50%" }}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 3, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
-          />
-          {/* Cross emerges from the warmth */}
-          <motion.div
-            style={{ position: "fixed", top: "50%", left: "50%", fontSize: 44, zIndex: 20 }}
-            initial={{ x: "-50%", y: "-50%", opacity: 0, scale: 0.4, color: GOLD, filter: `drop-shadow(0 0 40px rgba(201,168,76,0.6))` }}
-            animate={{
-              opacity: 1, scale: [0.4, 1.15, 1],
-              color: SAGE,
-              filter: "drop-shadow(0 0 0px transparent)",
-            }}
-            transition={{
-              delay: 1,
-              scale: { type: "spring", stiffness: 180, damping: 12 },
-              color: { duration: 0.8, ease: "easeOut" },
-              opacity: { duration: 0.4 },
-            }}
-          >
-            ✝
-          </motion.div>
-        </>}
-
-        {/* Animation selector + continue */}
+        {/* Continue button */}
         <AnimatePresence>
           {animFinished && (
             <motion.div
@@ -598,26 +504,6 @@ export default function OnboardingWizard() {
                 display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
               }}
             >
-              <div style={{ display: "flex", gap: 8 }}>
-                {["A", "B", "C"].map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => {
-                      setAnimFinished(false);
-                      setAnimVariant(v);
-                    }}
-                    style={{
-                      padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer",
-                      background: animVariant === v ? GOLD : "rgba(255,255,255,0.15)",
-                      color: animVariant === v ? "#0a0e1a" : "#fff",
-                      fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700,
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    {v === "A" ? "Stained Glass" : v === "B" ? "Unveiling" : "Ember"}
-                  </button>
-                ))}
-              </div>
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
@@ -1412,59 +1298,9 @@ function WelcomeStep({ onContinue }) {
 
 // ─── CSS: Arrival Animations ─────────────────────────────────────
 
-function getArrivalCSS(variant) {
-  const fonts = `@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');`;
-
-  if (variant === "A") {
-    // "Light Through Stained Glass"
-    return `${fonts}
-      .arrival-glow {
-        position: fixed; inset: 0; z-index: 1;
-        background: radial-gradient(circle at center, rgba(201,168,76,0.15) 0%, transparent 60%);
-        animation: glowGrow 2s ease forwards;
-      }
-      @keyframes glowGrow {
-        0% { opacity: 0; transform: scale(0.3); }
-        40% { opacity: 1; transform: scale(1); }
-        100% { opacity: 0; background: radial-gradient(circle at center, ${LINEN} 0%, ${LINEN} 100%); transform: scale(3); }
-      }
-      .arrival-ray {
-        position: fixed; top: 50%; left: 50%; width: 2px; height: 0;
-        background: linear-gradient(to bottom, ${GOLD}, transparent);
-        transform-origin: top center; z-index: 2; opacity: 0;
-        animation: rayGrow 1.5s ease 0.3s forwards;
-      }
-      .arrival-ray-0 { transform: translate(-50%, 0) rotate(0deg); }
-      .arrival-ray-1 { transform: translate(-50%, 0) rotate(60deg); }
-      .arrival-ray-2 { transform: translate(-50%, 0) rotate(120deg); }
-      .arrival-ray-3 { transform: translate(-50%, 0) rotate(180deg); }
-      .arrival-ray-4 { transform: translate(-50%, 0) rotate(240deg); }
-      .arrival-ray-5 { transform: translate(-50%, 0) rotate(300deg); }
-      @keyframes rayGrow {
-        0% { height: 0; opacity: 0; }
-        50% { height: 120px; opacity: 0.6; }
-        100% { height: 0; opacity: 0; }
-      }
-      .arrival-cross-a {
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        font-size: 40px; color: ${GOLD}; z-index: 10; opacity: 0;
-        filter: drop-shadow(0 0 30px rgba(201,168,76,0.5));
-        animation: crossAssemble 1s ease 0.5s forwards, crossSettle 1s ease 1.5s forwards;
-      }
-      @keyframes crossAssemble {
-        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); filter: drop-shadow(0 0 60px rgba(201,168,76,0.8)); }
-        100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); filter: drop-shadow(0 0 30px rgba(201,168,76,0.5)); }
-      }
-      @keyframes crossSettle {
-        0% { color: ${GOLD}; transform: translate(-50%, -50%) scale(1.1); filter: drop-shadow(0 0 30px rgba(201,168,76,0.5)); }
-        100% { color: ${SAGE}; transform: translate(-50%, -50%) scale(1); filter: drop-shadow(0 0 0px transparent); }
-      }
-    `;
-  }
-
-  if (variant === "B") {
-    // "The Unveiling"
-    return `${fonts}
+function getArrivalCSS() {
+  // "The Unveiling"
+  return `
       .arrival-line {
         position: fixed; top: 0; left: 50%; width: 2px; height: 0;
         background: ${GOLD}; z-index: 10; transform: translateX(-50%);
@@ -1505,55 +1341,12 @@ function getArrivalCSS(variant) {
         100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
       }
     `;
-  }
-
-  // variant === "C" — "Ember to Flame"
-  return `${fonts}
-    .arrival-spark {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 4px; height: 4px; border-radius: 50%;
-      background: ${GOLD}; z-index: 10; opacity: 0;
-      box-shadow: 0 0 10px ${GOLD}, 0 0 20px rgba(201,168,76,0.5);
-      animation: sparkIgnite 0.8s ease forwards;
-    }
-    @keyframes sparkIgnite {
-      0% { opacity: 0; width: 4px; height: 4px; box-shadow: 0 0 5px ${GOLD}; }
-      30% { opacity: 1; width: 8px; height: 8px; box-shadow: 0 0 30px ${GOLD}, 0 0 60px rgba(201,168,76,0.3); }
-      60% { opacity: 1; width: 20px; height: 20px; box-shadow: 0 0 60px ${GOLD}, 0 0 120px rgba(201,168,76,0.2); }
-      100% { opacity: 0; width: 40px; height: 40px; }
-    }
-    .arrival-warmth {
-      position: fixed; inset: 0; z-index: 5;
-      background: radial-gradient(circle at center, ${LINEN} 0%, ${LINEN} 100%);
-      transform: scale(0); border-radius: 50%; opacity: 0;
-      animation: warmthSpread 1.2s ease 0.3s forwards;
-    }
-    @keyframes warmthSpread {
-      0% { transform: scale(0); opacity: 0; }
-      40% { opacity: 0.8; }
-      100% { transform: scale(3); opacity: 1; }
-    }
-    .arrival-cross-c {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      font-size: 40px; color: ${GOLD}; z-index: 20; opacity: 0;
-      filter: drop-shadow(0 0 40px rgba(201,168,76,0.6));
-      animation: flameToCross 1.2s ease 1s forwards;
-    }
-    @keyframes flameToCross {
-      0% { opacity: 0; color: ${GOLD}; filter: drop-shadow(0 0 40px rgba(201,168,76,0.6)); transform: translate(-50%, -50%) scale(0.6); }
-      40% { opacity: 1; color: ${GOLD}; filter: drop-shadow(0 0 20px rgba(201,168,76,0.4)); transform: translate(-50%, -50%) scale(1.1); }
-      70% { filter: drop-shadow(0 0 10px rgba(201,168,76,0.2)); transform: translate(-50%, -50%) scale(1.05); }
-      100% { opacity: 1; color: ${SAGE}; filter: drop-shadow(0 0 0px transparent); transform: translate(-50%, -50%) scale(1); }
-    }
-  `;
 }
 
 
 // ─── CSS: Base + Celebration ────────────────────────────────────
 
 const baseCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
-
   @keyframes spin {
     to { transform: rotate(360deg); }
   }

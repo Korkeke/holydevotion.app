@@ -42,21 +42,22 @@ export default function DataTable({ columns, data, emptyMessage = "Nothing here 
 const s = {
   wrapper: {
     overflowX: "auto",
-    borderRadius: 12,
+    borderRadius: 14,
     border: `1px solid ${COLORS.border}`,
     background: COLORS.card,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
   },
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--body)",
     fontSize: 14,
   },
   th: {
     textAlign: "left",
     padding: "12px 16px",
-    background: COLORS.sand,
-    color: COLORS.textMuted,
+    background: COLORS.bgDeep,
+    color: COLORS.muted,
     fontSize: 11,
     fontWeight: 700,
     letterSpacing: "0.05em",
@@ -65,7 +66,7 @@ const s = {
     whiteSpace: "nowrap",
   },
   tr: {
-    borderBottom: `1px solid ${COLORS.border}`,
+    borderBottom: `1px solid ${COLORS.borderLight}`,
   },
   td: {
     padding: "12px 16px",
@@ -75,13 +76,13 @@ const s = {
   empty: {
     padding: "48px 20px",
     textAlign: "center",
-    borderRadius: 12,
+    borderRadius: 14,
     border: `1px solid ${COLORS.border}`,
     background: COLORS.card,
   },
   emptyText: {
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--body)",
     fontSize: 14,
-    color: COLORS.textMuted,
+    color: COLORS.muted,
   },
 };

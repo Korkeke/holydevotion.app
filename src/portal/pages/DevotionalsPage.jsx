@@ -138,20 +138,20 @@ export default function DevotionalsPage() {
 }
 
 const s = {
-  page: { padding: "32px 40px", maxWidth: 960 },
+  page: { padding: "32px 40px", maxWidth: 1280 },
   loading: { padding: 60, display: "flex", justifyContent: "center" },
   spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
   header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 },
-  title: { fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: COLORS.text },
-  createBtn: { padding: "10px 20px", borderRadius: 10, border: "none", background: COLORS.accent, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer" },
+  title: { fontFamily: "var(--heading)", fontSize: 26, fontWeight: 700, color: COLORS.text },
+  createBtn: { padding: "10px 20px", borderRadius: 10, border: "none", background: COLORS.accent, color: "#fff", fontFamily: "var(--body)", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 12px ${COLORS.accent}25` },
   tabs: { display: "flex", gap: 4, marginBottom: 20 },
   tab: {
     padding: "7px 16px", borderRadius: 8, border: `1px solid ${COLORS.border}`,
-    background: "transparent", color: COLORS.textMuted,
-    fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer",
+    background: "transparent", color: COLORS.muted,
+    fontFamily: "var(--body)", fontSize: 12, fontWeight: 600, cursor: "pointer",
   },
   tabActive: { background: COLORS.accentLight, color: COLORS.accent, borderColor: COLORS.border },
-  publishBtn: { padding: "6px 14px", borderRadius: 6, border: "none", background: COLORS.accentLight, color: COLORS.accent, fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
-  editBtn: { padding: "6px 14px", borderRadius: 6, border: `1px solid ${COLORS.border}`, background: "transparent", color: COLORS.accent, fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
-  deleteBtn: { padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(192,57,43,0.3)", background: "transparent", color: "#e57373", fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer" },
+  publishBtn: { padding: "5px 12px", borderRadius: 8, border: "none", background: COLORS.accentLight, color: COLORS.accent, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" },
+  editBtn: { padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${COLORS.border}`, background: COLORS.card, color: COLORS.body, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" },
+  deleteBtn: { padding: "5px 12px", borderRadius: 8, border: `1px solid ${COLORS.red}30`, background: COLORS.redBg, color: COLORS.red, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" },
 };

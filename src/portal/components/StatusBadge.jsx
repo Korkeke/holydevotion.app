@@ -1,9 +1,9 @@
 import { COLORS } from "../../colors";
 
 const STATUS_COLORS = {
-  draft: { bg: COLORS.sand, text: COLORS.textSec },
-  scheduled: { bg: "rgba(52,152,219,0.12)", text: "#5dade2" },
-  published: { bg: COLORS.accentLight, text: COLORS.accent },
+  draft: { bg: COLORS.bgDeep, text: COLORS.sec },
+  scheduled: { bg: COLORS.blueBg, text: COLORS.blue },
+  published: { bg: COLORS.greenBg, text: COLORS.green },
 };
 
 export default function StatusBadge({ status }) {
@@ -15,7 +15,7 @@ export default function StatusBadge({ status }) {
       borderRadius: 6,
       background: c.bg,
       color: c.text,
-      fontFamily: "'DM Sans', sans-serif",
+      fontFamily: "var(--body)",
       fontSize: 11,
       fontWeight: 700,
       letterSpacing: "0.04em",

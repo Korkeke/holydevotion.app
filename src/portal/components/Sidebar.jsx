@@ -2,23 +2,27 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { COLORS } from "../../colors";
 import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
+import { icons } from "./NavIcons";
 
 const NAV_ITEMS = [
-  { label: "Overview", path: "/portal" },
-  { label: "Sermon", path: "/portal/sermons" },
-  { label: "Events", path: "/portal/events" },
-  { label: "Announcements", path: "/portal/announcements" },
-  { label: "Devotionals", path: "/portal/devotionals" },
-  { label: "Prayer Wall", path: "/portal/prayers" },
-  { label: "Members", path: "/portal/members" },
-  { label: "Settings", path: "/portal/settings" },
+  { id: "overview", iconKey: "overview", label: "Overview", path: "/portal" },
+  { type: "divider", label: "CONTENT" },
+  { id: "sermons", iconKey: "sermon", label: "Sermons", path: "/portal/sermons" },
+  { id: "events", iconKey: "events", label: "Events", path: "/portal/events" },
+  { id: "announcements", iconKey: "announcements", label: "Announcements", path: "/portal/announcements", isNew: true },
+  { id: "devotionals", iconKey: "devotionals", label: "Devotionals", path: "/portal/devotionals" },
+  { type: "divider", label: "COMMUNITY" },
+  { id: "prayer", iconKey: "prayer", label: "Prayer Wall", path: "/portal/prayers", badgeKey: "prayerCount" },
+  { id: "members", iconKey: "members", label: "Members", path: "/portal/members", badgeKey: "memberCount" },
+  { type: "divider", label: "ADMIN" },
+  { id: "settings", iconKey: "settings", label: "Settings", path: "/portal/settings" },
 ];
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar({ open, onClose, badges = {} }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { church, user, signOut } = useAuth();
-  const COLORS = useChurchColors();
+  const C = useChurchColors();
 
   function handleNav(path) {
     navigate(path);
@@ -31,68 +35,89 @@ export default function Sidebar({ open, onClose }) {
   }
 
   const churchInitial = (church?.name || "C")[0].toUpperCase();
+  const userName = user?.email?.split("@")[0] || "Pastor";
+  const userInitials = userName.slice(0, 2).toUpperCase();
 
   return (
     <>
-      {/* Mobile overlay */}
-      {open && (
-        <div onClick={onClose} style={s.overlay} />
-      )}
+      {open && <div onClick={onClose} style={s.overlay} />}
 
-      <aside
-        className={`portal-sidebar ${open ? "open" : ""}`}
-        style={s.sidebar}
-      >
+      <aside className={`portal-sidebar ${open ? "open" : ""}`} style={{ ...s.sidebar, borderRight: `1px solid ${C.border}` }}>
         {/* Devotion branding */}
-        <div style={s.brand}>
-          <span style={{ ...s.brandCross, color: COLORS.accent }}>✝</span>
-          <span style={s.brandName}>Devotion</span>
+        <div style={{ ...s.brand, borderBottom: `1px solid ${C.borderLight}` }}>
+          <span style={{ fontSize: 18, color: C.accent }}>✝</span>
+          <span style={{ fontSize: 17, fontWeight: 700, color: C.accent, fontFamily: "var(--heading)" }}>Devotion</span>
         </div>
 
         {/* Church branding */}
-        <div style={s.header}>
-          <div style={{ ...s.churchIcon, background: COLORS.accent }}>{churchInitial}</div>
-          <div>
-            <div style={s.churchName}>
-              {church?.name || "Church Portal"}
+        <div style={{ ...s.churchSection, borderBottom: `1px solid ${C.borderLight}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>{churchInitial}</div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{church?.name || "Church Portal"}</div>
+              <div style={{ fontSize: 11, color: C.muted }}>Shepherd Plan</div>
             </div>
-            <div style={s.planLabel}>Shepherd Plan</div>
           </div>
         </div>
 
         {/* Nav items */}
         <nav style={s.nav}>
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.map((item, i) => {
+            if (item.type === "divider") {
+              return (
+                <div key={`div-${i}`} style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 1.5, padding: "16px 8px 6px" }}>
+                  {item.label}
+                </div>
+              );
+            }
+
             const active = location.pathname === item.path;
+            const badgeValue = item.badgeKey ? badges[item.badgeKey] : null;
+            const iconFn = icons[item.iconKey];
+
             return (
               <button
                 key={item.path}
                 onClick={() => handleNav(item.path)}
                 style={{
                   ...s.navItem,
-                  background: active ? COLORS.accentLight : "transparent",
-                  color: active ? COLORS.accentDark : COLORS.textSec,
+                  background: active ? C.accentLight : "transparent",
+                  color: active ? C.accent : C.body,
                   fontWeight: active ? 700 : 500,
                 }}
               >
-                <span>{item.label}</span>
+                <span style={{ width: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {iconFn ? iconFn(active ? C.accent : C.sec) : null}
+                </span>
+                {item.label}
+                {badgeValue > 0 && (
+                  <span style={{
+                    marginLeft: "auto", padding: "1px 7px", borderRadius: 10,
+                    background: C.red, color: "#fff", fontSize: 10, fontWeight: 700,
+                    minWidth: 18, textAlign: "center",
+                  }}>{badgeValue}</span>
+                )}
+                {item.isNew && (
+                  <span style={{
+                    marginLeft: "auto", padding: "1px 6px", borderRadius: 6,
+                    background: C.accent, color: "#fff", fontSize: 9, fontWeight: 700,
+                  }}>NEW</span>
+                )}
               </button>
             );
           })}
         </nav>
 
         {/* Pastor info + Sign out */}
-        <div style={s.bottom}>
-          <div style={s.pastorInfo}>
-            <div style={s.pastorAvatar}>👤</div>
+        <div style={{ borderTop: `1px solid ${C.borderLight}`, padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: C.bgDeep, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: C.sec }}>{userInitials}</div>
             <div>
-              <div style={s.pastorName}>{user?.email?.split("@")[0] || "Pastor"}</div>
-              <div style={s.pastorRole}>Admin</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{userName}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>Admin</div>
             </div>
           </div>
-          <button onClick={handleSignOut} style={s.signOut}>
-            Sign Out
-          </button>
+          <button onClick={handleSignOut} style={s.signOut}>Sign Out</button>
         </div>
       </aside>
     </>
@@ -110,134 +135,55 @@ const s = {
     position: "fixed",
     top: 0,
     left: 0,
-    width: 240,
+    width: 220,
     height: "100vh",
-    background: COLORS.bgSidebar,
-    borderRight: `1px solid ${COLORS.border}`,
+    background: COLORS.card,
     display: "flex",
     flexDirection: "column",
     zIndex: 100,
     transition: "transform 0.3s cubic-bezier(0.16,1,0.3,1)",
-    padding: "24px 16px",
+    padding: "20px 0",
     overflowY: "auto",
   },
   brand: {
     display: "flex",
     alignItems: "center",
     gap: 8,
-    padding: "0 8px",
-    marginBottom: 24,
+    padding: "0 20px 20px",
+    marginBottom: 8,
   },
-  brandCross: {
-    fontSize: 20,
-    color: COLORS.accent,
-  },
-  brandName: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: 18,
-    fontWeight: 700,
-    color: COLORS.text,
-    letterSpacing: "-0.01em",
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 32,
-    padding: "0 8px",
-  },
-  churchIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    background: COLORS.accent,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 15,
-    fontWeight: 700,
-    color: "#fff",
-    flexShrink: 0,
-  },
-  churchName: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 14,
-    fontWeight: 700,
-    color: COLORS.text,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
-  planLabel: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 11,
-    color: COLORS.textMuted,
+  churchSection: {
+    padding: "12px 20px 16px",
+    marginBottom: 8,
   },
   nav: {
     flex: 1,
+    padding: "0 12px",
     display: "flex",
     flexDirection: "column",
-    gap: 2,
   },
   navItem: {
     display: "flex",
     alignItems: "center",
     gap: 10,
-    padding: "10px 12px",
+    padding: "9px 12px",
     borderRadius: 10,
     border: "none",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--body)",
     fontSize: 13,
     cursor: "pointer",
     textAlign: "left",
     width: "100%",
     transition: "all 0.15s ease",
-  },
-  bottom: {
-    borderTop: `1px solid ${COLORS.border}`,
-    paddingTop: 16,
-  },
-  pastorInfo: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    padding: "0 8px",
-    marginBottom: 12,
-  },
-  pastorAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: "50%",
-    background: COLORS.sand,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 14,
-  },
-  pastorName: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 12,
-    fontWeight: 600,
-    color: COLORS.text,
-  },
-  pastorRole: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 11,
-    color: COLORS.textMuted,
+    marginBottom: 2,
   },
   signOut: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    padding: "8px 12px",
-    borderRadius: 8,
+    marginTop: 10,
+    fontSize: 11,
+    color: COLORS.muted,
+    background: "none",
     border: "none",
-    background: "transparent",
-    color: COLORS.textMuted,
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 12,
     cursor: "pointer",
-    width: "100%",
-    textAlign: "left",
+    fontFamily: "var(--body)",
   },
 };

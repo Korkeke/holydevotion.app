@@ -36,14 +36,13 @@ export default function LoginPage() {
   return (
     <div style={s.page}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
         input:focus { outline: none; border-color: ${SAGE} !important; }
       `}</style>
 
       <div style={{ textAlign: "center", marginBottom: 28 }}>
         <div style={{ fontSize: 36, color: SAGE, lineHeight: 1 }}>✝</div>
         <div style={{
-          fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 600,
+          fontFamily: "var(--heading)", fontSize: 18, fontWeight: 600,
           color: SAGE, marginTop: 6, letterSpacing: "0.02em",
         }}>Devotion</div>
       </div>
@@ -120,7 +119,7 @@ const s = {
     boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
   },
   title: {
-    fontFamily: "'Playfair Display', serif",
+    fontFamily: "var(--heading)",
     fontSize: 24,
     fontWeight: 700,
     color: "#2C2C2C",

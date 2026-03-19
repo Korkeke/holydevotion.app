@@ -1,29 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import { COLORS } from "../colors";
 import { useAuth } from "./AuthContext";
+import { get } from "./api";
 
 export default function PortalLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { church } = useAuth();
+  const [badges, setBadges] = useState({});
+
+  // Fetch sidebar badge counts
+  useEffect(() => {
+    if (!church?.id) return;
+    async function fetchBadges() {
+      try {
+        const [prayers, members] = await Promise.all([
+          get(`/api/churches/${church.id}/prayer-wall`).catch(() => null),
+          get(`/api/churches/${church.id}/members`).catch(() => null),
+        ]);
+        const prayerCount = (prayers?.prayers || []).filter(p => !p.hidden).length;
+        const memberCount = (members?.members || []).filter(m => {
+          if (!m.joined_at) return false;
+          const joined = new Date(m.joined_at);
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return joined > weekAgo;
+        }).length;
+        setBadges({ prayerCount, memberCount });
+      } catch {}
+    }
+    fetchBadges();
+  }, [church?.id]);
 
   return (
     <div style={s.wrapper}>
       <style>{portalCSS}</style>
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} badges={badges} />
 
       <div style={s.main} className="portal-main">
-        {/* Top bar */}
-        <header style={s.topBar}>
+        {/* Mobile hamburger only */}
+        <header style={s.topBar} className="portal-hamburger-bar">
           <button onClick={() => setMenuOpen(!menuOpen)} style={s.hamburger} className="portal-hamburger">
             <div style={s.hamLine} />
             <div style={s.hamLine} />
             <div style={s.hamLine} />
           </button>
-          <div style={s.topRight}>
-            <span style={s.email}>{user?.email}</span>
-          </div>
         </header>
 
         {/* Page content */}
@@ -36,16 +58,20 @@ export default function PortalLayout() {
 }
 
 const portalCSS = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&family=DM+Sans:wght@400;500;600;700&display=swap');
+  :root { --heading: 'Newsreader', serif; --body: 'DM Sans', sans-serif; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { -webkit-font-smoothing: antialiased; }
   @keyframes spin { to { transform: rotate(360deg); } }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: #E8E2D9; border-radius: 3px; }
+  body { background: #F7F4EF; }
+  input::placeholder, textarea::placeholder { color: #A8A29E; }
 
   @media (min-width: 769px) {
     .portal-hamburger { display: none !important; }
+    .portal-hamburger-bar { display: none !important; }
   }
   @media (max-width: 768px) {
     .portal-sidebar { transform: translateX(-100%); }
@@ -59,10 +85,10 @@ const s = {
     minHeight: "100vh",
     background: COLORS.bg,
     color: COLORS.text,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--body)",
   },
   main: {
-    marginLeft: 240,
+    marginLeft: 220,
     minHeight: "100vh",
     display: "flex",
     flexDirection: "column",
@@ -70,14 +96,9 @@ const s = {
   topBar: {
     height: 56,
     padding: "0 24px",
-    borderBottom: `1px solid ${COLORS.border}`,
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
     background: COLORS.bg,
-    position: "sticky",
-    top: 0,
-    zIndex: 50,
   },
   hamburger: {
     display: "none",
@@ -91,19 +112,8 @@ const s = {
   hamLine: {
     width: 20,
     height: 2,
-    background: COLORS.textMuted,
+    background: COLORS.muted,
     borderRadius: 1,
-  },
-  topRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-    marginLeft: "auto",
-  },
-  email: {
-    fontFamily: "'DM Sans', sans-serif",
-    fontSize: 13,
-    color: COLORS.textSec,
   },
   content: {
     flex: 1,

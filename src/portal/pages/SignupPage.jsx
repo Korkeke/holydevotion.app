@@ -113,7 +113,6 @@ export default function SignupPage() {
     return (
       <div style={s.page}>
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
         <div style={s.spinner} />
@@ -126,9 +125,7 @@ export default function SignupPage() {
 
   return (
     <div style={s.page}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
-      `}</style>
+      <style>{``}</style>
 
       <div style={s.card}>
         <div style={s.cross}>✝</div>
