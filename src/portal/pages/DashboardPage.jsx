@@ -137,16 +137,16 @@ export default function DashboardPage() {
   const statusBg = (s) => s === "thriving" ? C.greenBg : s === "active" ? C.accentLight : s === "declining" ? C.amberBg : s === "new" ? C.purpleBg : C.bg;
 
   return (
-    <div style={{ padding: "32px 40px", maxWidth: 1280 }}>
+    <div style={{ padding: "32px 40px" }}>
       {/* ─── Church Hero Banner ─── */}
       <div style={{
         margin: "-32px -40px 28px", borderRadius: "0 0 20px 20px", overflow: "hidden",
         position: "relative", height: 180,
         background: `linear-gradient(135deg, ${C.accent}18 0%, rgba(201,168,76,0.12) 40%, ${C.bgDeep} 100%)`,
       }}>
-        <div style={{ position: "absolute", top: -40, right: 60, width: 300, height: 300, background: `radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 60%)`, borderRadius: "50%" }} />
-        <div style={{ position: "absolute", bottom: -60, left: 100, width: 250, height: 250, background: `radial-gradient(circle, ${C.accent}12 0%, transparent 60%)`, borderRadius: "50%" }} />
-        <div style={{ position: "absolute", top: 20, right: 30, fontSize: 200, opacity: 0.025, color: C.gold, fontFamily: "serif" }}>✝</div>
+        <div style={{ position: "absolute", top: -40, right: 60, width: 300, height: 300, background: `radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 60%)`, borderRadius: "50%" }} />
+        <div style={{ position: "absolute", bottom: -60, left: 100, width: 250, height: 250, background: `radial-gradient(circle, ${C.accent}18 0%, transparent 60%)`, borderRadius: "50%" }} />
+        <div style={{ position: "absolute", top: 20, right: 30, fontSize: 200, opacity: 0.035, color: C.gold, fontFamily: "serif" }}>✝</div>
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "24px 40px", background: "linear-gradient(transparent 0%, rgba(247,244,239,0.8) 60%, rgba(247,244,239,0.95) 100%)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
       {/* ─── Three-Column: Sermon + Attention + Events ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginBottom: 28 }}>
         {/* Sermon Progress */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>THIS WEEK'S SERMON</div>
             <span onClick={() => navigate("/portal/sermons")} style={{ fontSize: 12, color: C.accent, fontWeight: 600, cursor: "pointer" }}>Manage →</span>
@@ -311,7 +311,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Needs Attention */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>NEEDS ATTENTION</div>
           {attentionItems.length === 0 ? (
             <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>Everyone is active</div>
@@ -330,7 +330,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upcoming Events */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>UPCOMING</div>
             <span onClick={() => navigate("/portal/events")} style={{ fontSize: 12, color: C.accent, fontWeight: 600, cursor: "pointer" }}>View All →</span>
@@ -354,7 +354,7 @@ export default function DashboardPage() {
       {/* ─── Two-Column: Spiritual Pulse + Recent Prayers ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
         {/* Spiritual Pulse */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
           <div style={{ marginBottom: 4 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>SPIRITUAL PULSE</div>
             <div style={{ fontSize: 12, color: C.sec, marginTop: 2 }}>Themes from congregation conversations</div>
@@ -377,7 +377,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Prayers */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>RECENT PRAYERS</div>
             <span onClick={() => navigate("/portal/prayers")} style={{ fontSize: 12, color: C.accent, fontWeight: 600, cursor: "pointer" }}>View All →</span>
@@ -400,7 +400,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Activity Log ─── */}
-      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 28 }}>
+      <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 28 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>RECENT ACTIVITY</div>
         {(() => {
           const log = [];

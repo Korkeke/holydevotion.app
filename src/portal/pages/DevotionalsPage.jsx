@@ -138,7 +138,7 @@ export default function DevotionalsPage() {
 }
 
 const s = {
-  page: { padding: "32px 40px", maxWidth: 1280 },
+  page: { padding: "32px 40px" },
   loading: { padding: 60, display: "flex", justifyContent: "center" },
   spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
   header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 },

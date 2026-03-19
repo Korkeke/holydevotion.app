@@ -90,7 +90,7 @@ export default function EventsPage() {
   if (loading) return <div style={{ padding: 60, display: "flex", justifyContent: "center" }}><div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>;
 
   return (
-    <div style={{ padding: "32px 40px", maxWidth: 1280 }}>
+    <div style={{ padding: "32px 40px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>Events</div>
         <div style={{ display: "flex", gap: 10 }}>
@@ -134,13 +134,15 @@ export default function EventsPage() {
                   const isValid = dayNum >= 1 && dayNum <= daysInMonth;
                   const hasEvent = isValid && eventDayMap[dayNum];
                   const selected = dayNum === calendarDate;
+                  const isToday = isValid && dayNum === now.getDate() && viewMonth === now.getMonth() && viewYear === now.getFullYear();
                   return (
                     <div key={d} onClick={() => isValid && hasEvent && setCalendarDate(selected ? null : dayNum)} style={{
                       textAlign: "center", padding: "10px 0", borderRadius: 10,
                       background: selected ? C.accent : hasEvent ? C.accentLight : "transparent",
                       cursor: hasEvent ? "pointer" : "default", transition: "all 0.2s ease",
+                      border: isToday && !selected ? `2px solid ${C.accent}40` : "2px solid transparent",
                     }}>
-                      <div style={{ fontSize: 13, fontWeight: hasEvent ? 700 : 400, color: isValid ? (selected ? "#fff" : hasEvent ? C.accent : C.text) : "transparent" }}>{isValid ? dayNum : "."}</div>
+                      <div style={{ fontSize: 13, fontWeight: hasEvent || isToday ? 700 : 400, color: isValid ? (selected ? "#fff" : hasEvent ? C.accent : isToday ? C.accent : C.text) : "transparent" }}>{isValid ? dayNum : "."}</div>
                       {hasEvent && !selected && <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.accent, margin: "3px auto 0" }} />}
                     </div>
                   );

@@ -39,7 +39,7 @@ export default function PrayerWallPage() {
   if (loading) return <div style={{ padding: 60, display: "flex", justifyContent: "center" }}><div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>;
 
   return (
-    <div style={{ padding: "32px 40px", maxWidth: 1280 }}>
+    <div style={{ padding: "32px 40px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>Prayer Wall</div>
         <span style={{ padding: "6px 14px", borderRadius: 8, background: C.accentLight, fontSize: 12, fontWeight: 700, color: C.accent }}>🙏 {totalPrayers} prayers this week</span>

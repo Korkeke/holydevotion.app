@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import { COLORS } from "../colors";
 import { useAuth } from "./AuthContext";
@@ -7,8 +7,13 @@ import { get } from "./api";
 
 export default function PortalLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { church } = useAuth();
+  const { church, user } = useAuth();
+  const location = useLocation();
   const [badges, setBadges] = useState({});
+  const isOverview = location.pathname === "/portal" || location.pathname === "/portal/";
+  const userName = user?.email?.split("@")[0] || "Pastor";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   // Fetch sidebar badge counts
   useEffect(() => {
@@ -50,6 +55,9 @@ export default function PortalLayout() {
 
         {/* Page content */}
         <div style={s.content}>
+          {!isOverview && (
+            <div style={{ padding: "16px 40px 0", fontSize: 13, color: COLORS.sec }}>{greeting}, {userName}</div>
+          )}
           <Outlet />
         </div>
       </div>
