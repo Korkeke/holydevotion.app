@@ -52,7 +52,11 @@ export default function Sidebar({ open, onClose, badges = {} }) {
         {/* Church branding */}
         <div style={{ ...s.churchSection, borderBottom: `1px solid ${C.borderLight}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>{churchInitial}</div>
+            {church?.logo_url ? (
+              <img src={church.logo_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>{churchInitial}</div>
+            )}
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{church?.name || "Church Portal"}</div>
               <div style={{ fontSize: 11, color: C.muted }}>Shepherd Plan</div>

@@ -15,7 +15,11 @@ export default function PhonePreviewModal({ onClose, currentSermon, recentPrayer
           <div style={{ padding: "14px 16px", background: `${C.bg}ee`, borderBottom: `1px solid ${C.border}` }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 24, height: 24, borderRadius: 6, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>{churchInitial}</div>
+                {church?.logo_url ? (
+                  <img src={church.logo_url} alt="" style={{ width: 24, height: 24, borderRadius: 6, objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: 24, height: 24, borderRadius: 6, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>{churchInitial}</div>
+                )}
                 <span style={{ fontSize: 13, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{church?.name || "Church"}</span>
               </div>
             </div>

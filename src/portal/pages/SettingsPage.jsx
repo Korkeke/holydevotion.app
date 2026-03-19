@@ -4,6 +4,7 @@ import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
 import { get, put, del } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ImageUpload from "../components/ImageUpload";
 
 const THEMES = {
   devotion:       { label: "Devotion",              accent: "#0A0E1A", secondary: "#C9A84C" },
@@ -23,8 +24,6 @@ const FIELDS = [
   { key: "city", label: "City" },
   { key: "website", label: "Website" },
   { key: "welcome_message", label: "Welcome Message", textarea: true },
-  { key: "logo_url", label: "Logo URL" },
-  { key: "banner_url", label: "Banner URL" },
 ];
 
 export default function SettingsPage() {
@@ -139,6 +138,27 @@ export default function SettingsPage() {
               )}
             </div>
           ))}
+
+          {/* Image uploads */}
+          <div style={{ display: "flex", gap: 24, marginBottom: 16 }}>
+            <ImageUpload
+              value={form.logo_url || ""}
+              onChange={(url) => setForm({ ...form, logo_url: url })}
+              aspect="square"
+              label="Church Logo"
+              accentColor={COLORS.accent}
+            />
+            <div style={{ flex: 1 }}>
+              <ImageUpload
+                value={form.banner_url || ""}
+                onChange={(url) => setForm({ ...form, banner_url: url })}
+                aspect="banner"
+                label="Header Image"
+                accentColor={COLORS.accent}
+              />
+            </div>
+          </div>
+
           <div style={s.saveRow}>
             <button type="submit" style={{ ...s.saveBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25` }} disabled={saving}>
               {saving ? "Saving..." : "Save Changes"}

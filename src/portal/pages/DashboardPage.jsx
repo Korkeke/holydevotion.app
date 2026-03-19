@@ -142,7 +142,9 @@ export default function DashboardPage() {
       <div style={{
         margin: "-32px -40px 28px", borderRadius: "0 0 20px 20px", overflow: "hidden",
         position: "relative", height: 180,
-        background: `linear-gradient(135deg, ${C.accent}18 0%, rgba(201,168,76,0.12) 40%, ${C.bgDeep} 100%)`,
+        background: church?.banner_url
+          ? `url(${church.banner_url}) center/cover`
+          : `linear-gradient(135deg, ${C.accent}18 0%, rgba(201,168,76,0.12) 40%, ${C.bgDeep} 100%)`,
       }}>
         <div style={{ position: "absolute", top: -40, right: 60, width: 300, height: 300, background: `radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 60%)`, borderRadius: "50%" }} />
         <div style={{ position: "absolute", bottom: -60, left: 100, width: 250, height: 250, background: `radial-gradient(circle, ${C.accent}18 0%, transparent 60%)`, borderRadius: "50%" }} />
@@ -150,7 +152,11 @@ export default function DashboardPage() {
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "24px 40px", background: "linear-gradient(transparent 0%, rgba(247,244,239,0.8) 60%, rgba(247,244,239,0.95) 100%)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "#fff", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }}>{churchInitial}</div>
+              {church?.logo_url ? (
+                <img src={church.logo_url} alt="" style={{ width: 56, height: 56, borderRadius: 16, objectFit: "cover", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }} />
+              ) : (
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "#fff", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }}>{churchInitial}</div>
+              )}
               <div>
                 <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{church?.name || "Dashboard"}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
