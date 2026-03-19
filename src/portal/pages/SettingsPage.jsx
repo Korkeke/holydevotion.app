@@ -50,6 +50,8 @@ export default function SettingsPage() {
         const c = data?.church || data || {};
         const vals = {};
         FIELDS.forEach((f) => { vals[f.key] = c[f.key] || ""; });
+        vals.logo_url = c.logo_url || "";
+        vals.banner_url = c.banner_url || "";
         setForm(vals);
         const th = c.theme || "sage_green";
         setSelectedTheme(th);
