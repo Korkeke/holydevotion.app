@@ -81,7 +81,7 @@ export default function DevotionalsPage() {
       render: (row) => (
         <div style={{ display: "flex", gap: 8 }}>
           {row.status !== "published" && (
-            <button style={s.publishBtn} onClick={() => quickPublish(row)}>Publish</button>
+            <button style={{ ...s.publishBtn, background: COLORS.accentLight, color: COLORS.accent }} onClick={() => quickPublish(row)}>Publish</button>
           )}
           <button style={s.editBtn} onClick={() => setEditing(row)}>Edit</button>
           <button style={s.deleteBtn} onClick={() => setDeleting(row)}>Delete</button>
@@ -96,7 +96,7 @@ export default function DevotionalsPage() {
     <div style={s.page}>
       <div style={s.header}>
         <h1 style={s.title}>Devotionals</h1>
-        <button style={s.createBtn} onClick={() => setShowForm(true)}>+ Write Devotional</button>
+        <button style={{ ...s.createBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25` }} onClick={() => setShowForm(true)}>+ Write Devotional</button>
       </div>
 
       {/* Filter tabs */}

@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { type: "divider", label: "CONTENT" },
   { id: "sermons", iconKey: "sermon", label: "Sermons", path: "/portal/sermons" },
   { id: "events", iconKey: "events", label: "Events", path: "/portal/events" },
-  { id: "announcements", iconKey: "announcements", label: "Announcements", path: "/portal/announcements", isNew: true },
+  { id: "announcements", iconKey: "announcements", label: "Announcements", path: "/portal/announcements" },
   { id: "devotionals", iconKey: "devotionals", label: "Devotionals", path: "/portal/devotionals" },
   { type: "divider", label: "COMMUNITY" },
   { id: "prayer", iconKey: "prayer", label: "Prayer Wall", path: "/portal/prayers", badgeKey: "prayerCount" },

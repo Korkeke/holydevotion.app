@@ -100,7 +100,7 @@ export default function AnnouncementsPage() {
     <div style={s.page}>
       <div style={s.header}>
         <h1 style={s.title}>Announcements</h1>
-        <button style={s.createBtn} onClick={() => setShowForm(true)}>+ Post Announcement</button>
+        <button style={{ ...s.createBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25` }} onClick={() => setShowForm(true)}>+ Post Announcement</button>
       </div>
 
       <DataTable columns={columns} data={items} emptyMessage="No announcements yet." />

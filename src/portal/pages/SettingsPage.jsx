@@ -105,8 +105,8 @@ export default function SettingsPage() {
         <h2 style={s.sectionTitle}>Invite Code</h2>
         <p style={s.sectionDesc}>Share this code with members so they can join your church in the app.</p>
         <div style={s.codeRow}>
-          <span style={s.code}>{church?.invite_code || "—"}</span>
-          <button style={s.copyBtn} onClick={copyCode}>
+          <span style={{ ...s.code, color: COLORS.accent, background: COLORS.accentLight }}>{church?.invite_code || "—"}</span>
+          <button style={{ ...s.copyBtn, color: COLORS.accent }} onClick={copyCode}>
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
@@ -140,10 +140,10 @@ export default function SettingsPage() {
             </div>
           ))}
           <div style={s.saveRow}>
-            <button type="submit" style={s.saveBtn} disabled={saving}>
+            <button type="submit" style={{ ...s.saveBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25` }} disabled={saving}>
               {saving ? "Saving..." : "Save Changes"}
             </button>
-            {saved && <span style={s.savedText}>Saved!</span>}
+            {saved && <span style={{ ...s.savedText, color: COLORS.accent }}>Saved!</span>}
           </div>
         </form>
       </div>
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                   });
                   reloadChurch();
                 }}
-                style={{ ...s.saveBtn, alignSelf: "flex-end", padding: "8px 16px", fontSize: 12 }}
+                style={{ ...s.saveBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25`, alignSelf: "flex-end", padding: "8px 16px", fontSize: 12 }}
               >
                 Apply
               </button>
