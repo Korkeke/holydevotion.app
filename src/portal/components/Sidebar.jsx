@@ -3,6 +3,7 @@ import { COLORS } from "../../colors";
 import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { icons } from "./NavIcons";
+import { cloudinaryUrl } from "./ImageUpload";
 
 const NAV_ITEMS = [
   { id: "overview", iconKey: "overview", label: "Overview", path: "/portal" },
@@ -53,7 +54,7 @@ export default function Sidebar({ open, onClose, badges = {} }) {
         <div style={{ ...s.churchSection, borderBottom: `1px solid ${C.borderLight}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {church?.logo_url ? (
-              <img src={church.logo_url} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+              <img src={cloudinaryUrl(church.logo_url, { width: 64, height: 64 })} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
             ) : (
               <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>{churchInitial}</div>
             )}

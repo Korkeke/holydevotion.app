@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, post } from "../api";
+import { cloudinaryUrl } from "../components/ImageUpload";
 
 export default function DashboardPage() {
   const { church, churchLoading, user } = useAuth();
@@ -143,7 +144,7 @@ export default function DashboardPage() {
         margin: "-32px -40px 28px", borderRadius: "0 0 20px 20px", overflow: "hidden",
         position: "relative", height: 180,
         background: church?.banner_url
-          ? `url(${church.banner_url}) center/cover`
+          ? `url(${cloudinaryUrl(church.banner_url, { width: 1600, height: 400 })}) center/cover`
           : `linear-gradient(135deg, ${C.accent}18 0%, rgba(201,168,76,0.12) 40%, ${C.bgDeep} 100%)`,
       }}>
         <div style={{ position: "absolute", top: -40, right: 60, width: 300, height: 300, background: `radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 60%)`, borderRadius: "50%" }} />
@@ -153,7 +154,7 @@ export default function DashboardPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               {church?.logo_url ? (
-                <img src={church.logo_url} alt="" style={{ width: 56, height: 56, borderRadius: 16, objectFit: "cover", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }} />
+                <img src={cloudinaryUrl(church.logo_url, { width: 112, height: 112 })} alt="" style={{ width: 56, height: 56, borderRadius: 16, objectFit: "cover", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }} />
               ) : (
                 <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "#fff", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }}>{churchInitial}</div>
               )}

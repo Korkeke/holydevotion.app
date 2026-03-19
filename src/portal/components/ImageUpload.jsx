@@ -5,6 +5,21 @@ const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD || "dltsekfui";
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_PRESET || "devotion_upload";
 
 /**
+ * Add Cloudinary transforms to a URL for auto-quality and sizing.
+ * Only applies to Cloudinary URLs. Returns the original URL for others.
+ */
+export function cloudinaryUrl(url, { width, height, quality = "auto", format = "auto" } = {}) {
+  if (!url || !url.includes("res.cloudinary.com")) return url;
+  const transforms = [`f_${format}`, `q_${quality}`];
+  if (width) transforms.push(`w_${width}`);
+  if (height) transforms.push(`h_${height}`);
+  transforms.push("c_fill");
+  const parts = url.split("/upload/");
+  if (parts.length !== 2) return url;
+  return `${parts[0]}/upload/${transforms.join(",")}/${parts[1]}`;
+}
+
+/**
  * Reusable image upload component that uploads directly to Cloudinary.
  *
  * Props:
@@ -86,7 +101,8 @@ export default function ImageUpload({ value, onChange, aspect = "square", label,
 
   return (
     <div style={{ marginBottom: 20 }}>
-      {label && <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.muted, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 8 }}>{label}</div>}
+      {label && <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.muted, letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>}
+      {!value && <div style={{ fontSize: 11, color: COLORS.muted, marginBottom: 8 }}>{isSquare ? "Recommended: 400x400px or larger" : "Recommended: 1600x400px or wider"}</div>}
 
       <div
         onClick={() => !uploading && fileRef.current?.click()}
