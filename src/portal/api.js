@@ -62,3 +62,24 @@ export function put(path, body) {
 export function del(path) {
   return api(path, { method: "DELETE" });
 }
+
+export async function postFile(path, file) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Not authenticated");
+  const token = await user.getIdToken();
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(body || `Request failed: ${res.status}`);
+  }
+  return res.json();
+}

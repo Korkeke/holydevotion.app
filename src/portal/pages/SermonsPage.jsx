@@ -1,12 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useChurchColors } from "../useChurchColors";
 import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
-import { get, post, put, del } from "../api";
+import { get, post, put, del, postFile } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const STATUS_COLORS = {
+  published: { bg: "greenBg", color: "green" },
+  scheduled: { bg: "amberBg", color: "amber" },
+  draft: { bg: "blueBg", color: "blue" },
+  archived: { bg: "card", color: "muted" },
+};
 
 export default function SermonsPage() {
   const C = useChurchColors();
@@ -25,16 +32,23 @@ export default function SermonsPage() {
     week_start_date: "",
   });
 
-  // Video transcription UI state (UI only for now)
+  // Video transcription state
   const [videoUrl, setVideoUrl] = useState("");
   const [transcribing, setTranscribing] = useState(false);
   const [transcribed, setTranscribed] = useState(false);
+  const [transcriptionMeta, setTranscriptionMeta] = useState(null);
+  const fileInputRef = useRef(null);
 
-  // Reflection generation state
+  // Reflection preview state
   const [genReflections, setGenReflections] = useState(false);
-  const [generatedReflections, setGeneratedReflections] = useState(false);
+  const [previewReflections, setPreviewReflections] = useState([]);
+  const [editingPreviewIdx, setEditingPreviewIdx] = useState(null);
 
-  // Editing reflection state
+  // Scheduling state
+  const [publishMode, setPublishMode] = useState("now"); // "now" or "schedule"
+  const [scheduledDate, setScheduledDate] = useState("");
+
+  // Editing reflection state (for published sermons)
   const [editingRef, setEditingRef] = useState(null);
   const [refForm, setRefForm] = useState({ title: "", prompt: "", scripture_focus: "" });
 
@@ -55,15 +69,104 @@ export default function SermonsPage() {
 
   useEffect(() => { loadSermons(); }, [church?.id]);
 
+  function resetCreateForm() {
+    setForm({ title: "", scripture_refs: "", theme: "", summary: "", pastor_notes: "", week_start_date: "" });
+    setVideoUrl(""); setTranscribed(false); setTranscriptionMeta(null);
+    setPreviewReflections([]); setEditingPreviewIdx(null);
+    setPublishMode("now"); setScheduledDate("");
+  }
+
+  // ─── Transcription (real API) ─────────────────────────────
+
+  async function handleTranscribe() {
+    if (!videoUrl) return;
+    setTranscribing(true);
+    try {
+      const data = await post(`/api/churches/${church.id}/sermons/transcribe`, { video_url: videoUrl });
+      setTranscribed(true);
+      setTranscriptionMeta(data);
+      setForm(f => ({
+        ...f,
+        title: f.title || data.title || "",
+        scripture_refs: f.scripture_refs || data.scripture_refs || "",
+        theme: f.theme || data.theme || "",
+        summary: f.summary || data.summary || "",
+      }));
+    } catch (e) {
+      alert("Transcription failed: " + (e.message || "Unknown error"));
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
+  async function handleFileUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setTranscribing(true);
+    try {
+      const data = await postFile(`/api/churches/${church.id}/sermons/transcribe-upload`, file);
+      setTranscribed(true);
+      setTranscriptionMeta(data);
+      setForm(f => ({
+        ...f,
+        title: f.title || data.title || "",
+        scripture_refs: f.scripture_refs || data.scripture_refs || "",
+        theme: f.theme || data.theme || "",
+        summary: f.summary || data.summary || "",
+      }));
+    } catch (e) {
+      alert("Transcription failed: " + (e.message || "Unknown error"));
+    } finally {
+      setTranscribing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  // ─── Generate reflections (preview only, no sermon created) ─
+
+  async function handleGenerateReflections() {
+    if (!form.title) return;
+    setGenReflections(true);
+    try {
+      const data = await post(`/api/churches/${church.id}/sermons/preview-reflections`, {
+        title: form.title,
+        scripture_refs: form.scripture_refs,
+        theme: form.theme,
+        summary: form.summary,
+        pastor_notes: form.pastor_notes,
+      });
+      setPreviewReflections(data.reflections || []);
+    } catch (e) {
+      alert("Failed to generate reflections: " + (e.message || "Unknown error"));
+    }
+    setGenReflections(false);
+  }
+
+  function updatePreviewReflection(idx, field, value) {
+    setPreviewReflections(prev => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
+  }
+
+  // ─── Create sermon (publish or schedule) ──────────────────
+
   async function handleCreate(e) {
     e.preventDefault();
     if (!form.title || !form.week_start_date) return;
+    if (publishMode === "schedule" && !scheduledDate) {
+      alert("Please select a scheduled date.");
+      return;
+    }
     setGenerating(true);
     try {
-      const data = await post(`/api/churches/${church.id}/sermons`, form);
+      const payload = { ...form };
+      if (previewReflections.length > 0) {
+        payload.reflections = previewReflections;
+      }
+      if (publishMode === "schedule" && scheduledDate) {
+        payload.scheduled_date = scheduledDate;
+      }
+      const data = await post(`/api/churches/${church.id}/sermons`, payload);
       setCreating(false);
-      setForm({ title: "", scripture_refs: "", theme: "", summary: "", pastor_notes: "", week_start_date: "" });
-      setVideoUrl(""); setTranscribed(false); setGeneratedReflections(false);
+      resetCreateForm();
       await loadSermons();
       if (data?.sermon?.id) {
         await loadSermonDetail(data.sermon.id);
@@ -103,40 +206,12 @@ export default function SermonsPage() {
     }
   }
 
-  // TODO: Backend endpoint needed for video transcription
-  function handleTranscribe() {
-    if (!videoUrl) return;
-    setTranscribing(true);
-    setTimeout(() => {
-      setTranscribing(false);
-      setTranscribed(true);
-      setForm(f => ({
-        ...f,
-        title: f.title || "The Rising of Jesus Christ",
-        scripture_refs: f.scripture_refs || "1 Cor 15:3-8, Romans 6:9-10, Luke 24:36-49",
-      }));
-    }, 2500);
-  }
-
-  // Generate reflections via existing quick endpoint
-  async function handleGenerateReflections() {
-    if (!form.title) return;
-    setGenReflections(true);
-    try {
-      await post(`/api/churches/${church.id}/sermons/quick`, {
-        title: form.title,
-        scripture_refs: form.scripture_refs,
-        theme: form.theme,
-        summary: form.summary,
-        pastor_notes: form.pastor_notes,
-        week_start_date: form.week_start_date,
-      });
-      setGeneratedReflections(true);
-    } catch {}
-    setGenReflections(false);
-  }
-
   if (loading) return <div style={{ padding: 60, display: "flex", justifyContent: "center" }}><div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>;
+
+  const inputStyle = {
+    width: "100%", padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.bg,
+    fontSize: 13, fontFamily: "var(--body)", color: C.text, outline: "none",
+  };
 
   return (
     <div style={{ padding: "32px 40px" }}>
@@ -150,28 +225,39 @@ export default function SermonsPage() {
         <div style={{ background: C.card, border: `2px solid ${C.accent}30`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 24 }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: "var(--heading)", marginBottom: 16 }}>Create This Week's Sermon Study</div>
 
-          {/* Video Transcription - TODO: needs backend endpoint */}
+          {/* Video Transcription */}
           <div style={{ padding: 20, borderRadius: 14, background: `linear-gradient(135deg, ${C.blueBg} 0%, ${C.card} 100%)`, border: `1px solid ${C.blue}20`, marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 20 }}>🎬</span>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Import from Video</div>
-                <div style={{ fontSize: 12, color: C.sec }}>Paste a YouTube or Vimeo link to transcribe your sermon and generate a study</div>
+                <div style={{ fontSize: 12, color: C.sec }}>Paste a YouTube/Vimeo link or upload a file to transcribe your sermon</div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." style={{
+            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+              <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." disabled={transcribing} style={{
                 flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card,
                 fontSize: 13, fontFamily: "var(--body)", color: C.text, outline: "none",
               }} />
-              <button onClick={handleTranscribe} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>
+              <button onClick={handleTranscribe} disabled={transcribing || !videoUrl} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25`, opacity: (!videoUrl || transcribing) ? 0.5 : 1 }}>
                 {transcribing ? "Transcribing..." : "Transcribe"}
               </button>
             </div>
-            {transcribed && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input ref={fileInputRef} type="file" accept=".mp3,.mp4,.m4a,.wav,.webm,.ogg" onChange={handleFileUpload} disabled={transcribing} style={{ display: "none" }} />
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={transcribing} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.body, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--body)", opacity: transcribing ? 0.5 : 1 }}>
+                Upload Audio/Video File
+              </button>
+              <span style={{ fontSize: 11, color: C.muted }}>MP3, MP4, M4A, WAV (max 25MB)</span>
+            </div>
+            {transcribed && transcriptionMeta && (
               <div style={{ marginTop: 12, padding: "12px 16px", borderRadius: 10, background: C.greenBg, border: `1px solid ${C.green}20` }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.green }}>✓ Transcription complete. 4,230 words extracted.</div>
-                <div style={{ fontSize: 11, color: C.sec, marginTop: 4 }}>Detected topics: Resurrection, Hope, New Life, Forgiveness</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.green }}>
+                  Transcription complete. {transcriptionMeta.word_count?.toLocaleString() || "?"} words extracted.
+                </div>
+                {transcriptionMeta.theme && (
+                  <div style={{ fontSize: 11, color: C.sec, marginTop: 4 }}>Theme: {transcriptionMeta.theme}</div>
+                )}
               </div>
             )}
           </div>
@@ -182,26 +268,38 @@ export default function SermonsPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.body, display: "block", marginBottom: 6 }}>Sermon Title *</label>
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g., Finding Peace in the Storm" required style={{
-                  width: "100%", padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.bg,
-                  fontSize: 13, fontFamily: "var(--body)", color: C.text, outline: "none",
-                }} />
+                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g., Finding Peace in the Storm" required style={inputStyle} />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: C.body, display: "block", marginBottom: 6 }}>Scripture References</label>
-                <input value={form.scripture_refs} onChange={e => setForm({ ...form, scripture_refs: e.target.value })} placeholder="e.g., Mark 4:35-41, Psalm 46:10" style={{
-                  width: "100%", padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.bg,
-                  fontSize: 13, fontFamily: "var(--body)", color: C.text, outline: "none",
-                }} />
+                <input value={form.scripture_refs} onChange={e => setForm({ ...form, scripture_refs: e.target.value })} placeholder="e.g., Mark 4:35-41, Psalm 46:10" style={inputStyle} />
               </div>
             </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 600, color: C.body, display: "block", marginBottom: 6 }}>Week Start Date (Monday) *</label>
-              <input type="date" value={form.week_start_date} onChange={e => setForm({ ...form, week_start_date: e.target.value })} required style={{
-                padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.bg,
-                fontSize: 13, fontFamily: "var(--body)", color: C.text, outline: "none",
-              }} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.body, display: "block", marginBottom: 6 }}>Week Start Date (Monday) *</label>
+                <input type="date" value={form.week_start_date} onChange={e => setForm({ ...form, week_start_date: e.target.value })} required style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.body, display: "block", marginBottom: 6 }}>Publication</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[
+                    { key: "now", label: "Publish Now" },
+                    { key: "schedule", label: "Schedule" },
+                  ].map(opt => (
+                    <button key={opt.key} type="button" onClick={() => setPublishMode(opt.key)} style={{
+                      flex: 1, padding: "10px 12px", borderRadius: 10, border: `1.5px solid ${publishMode === opt.key ? C.accent : C.border}`,
+                      background: publishMode === opt.key ? C.accentLight : "transparent",
+                      color: publishMode === opt.key ? C.accent : C.body,
+                      fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)",
+                    }}>{opt.label}</button>
+                  ))}
+                </div>
+                {publishMode === "schedule" && (
+                  <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} min={new Date().toISOString().split("T")[0]} style={{ ...inputStyle, marginTop: 8 }} placeholder="Select date" />
+                )}
+              </div>
             </div>
 
             {/* Generate Reflections */}
@@ -215,31 +313,43 @@ export default function SermonsPage() {
                   </div>
                 </div>
                 <button type="button" onClick={handleGenerateReflections} disabled={genReflections || !form.title} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25`, opacity: !form.title ? 0.5 : 1 }}>
-                  {genReflections ? "Generating..." : "Generate"}
+                  {genReflections ? "Generating..." : previewReflections.length > 0 ? "Regenerate" : "Generate"}
                 </button>
               </div>
             </div>
 
-            {generatedReflections && (
+            {/* Preview Reflections */}
+            {previewReflections.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>GENERATED REFLECTIONS (edit before publishing)</div>
-                {["The Empty Tomb", "Witnesses of the Risen Lord", "Death Has Lost Its Sting", "What Resurrection Means for You", "Living as Resurrection People", "When Doubt Meets the Risen Christ", "Carrying Hope Into the World"].map((title, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, marginBottom: 6 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: C.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>{i + 1}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{title}</div>
-                      <div style={{ fontSize: 11, color: C.muted }}>{DAY_SHORT[i]}</div>
-                    </div>
-                    <span style={{ fontSize: 11, color: C.accent, fontWeight: 600, cursor: "pointer" }}>Edit</span>
+                {previewReflections.map((ref, i) => (
+                  <div key={i} style={{ padding: "12px 14px", background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, marginBottom: 6 }}>
+                    {editingPreviewIdx === i ? (
+                      <div>
+                        <input value={ref.title} onChange={e => updatePreviewReflection(i, "title", e.target.value)} placeholder="Reflection title" style={{ ...inputStyle, marginBottom: 6 }} />
+                        <textarea value={ref.prompt} onChange={e => updatePreviewReflection(i, "prompt", e.target.value)} placeholder="Reflection prompt" style={{ ...inputStyle, resize: "vertical", minHeight: 60, marginBottom: 6 }} />
+                        <input value={ref.scripture_focus || ""} onChange={e => updatePreviewReflection(i, "scripture_focus", e.target.value)} placeholder="Scripture focus" style={{ ...inputStyle, marginBottom: 6 }} />
+                        <button type="button" onClick={() => setEditingPreviewIdx(null)} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: C.accentLight, color: C.accent, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Done</button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: C.accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{ref.day_number}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{ref.title}</div>
+                          <div style={{ fontSize: 11, color: C.muted }}>{DAY_SHORT[i]}{ref.scripture_focus ? ` · ${ref.scripture_focus}` : ""}</div>
+                        </div>
+                        <span onClick={() => setEditingPreviewIdx(i)} style={{ fontSize: 11, color: C.accent, fontWeight: 600, cursor: "pointer" }}>Edit</span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             )}
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button type="button" onClick={() => { setCreating(false); setTranscribed(false); setGeneratedReflections(false); setVideoUrl(""); }} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>Cancel</button>
+              <button type="button" onClick={() => { setCreating(false); resetCreateForm(); }} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>Cancel</button>
               <button type="submit" disabled={generating} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>
-                {generating ? "Creating..." : "Publish Sermon Study"}
+                {generating ? "Creating..." : publishMode === "schedule" ? "Schedule Sermon Study" : "Publish Sermon Study"}
               </button>
             </div>
           </form>
@@ -257,30 +367,36 @@ export default function SermonsPage() {
               </div>
             </div>
           )}
-          {sermons.map((sermon) => (
-            <div
-              key={sermon.id}
-              onClick={() => { loadSermonDetail(sermon.id); setCreating(false); }}
-              style={{
-                padding: 16, borderRadius: 14, marginBottom: 10, cursor: "pointer",
-                background: selected?.sermon?.id === sermon.id ? C.accentLight : C.card,
-                border: `1px solid ${selected?.sermon?.id === sermon.id ? C.accent + "30" : C.border}`,
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{sermon.title}</div>
-              <div style={{ fontSize: 12, color: C.sec, marginTop: 4 }}>Week of {sermon.week_start_date}</div>
-              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                <span style={{ padding: "2px 8px", borderRadius: 6, background: C.greenBg, fontSize: 10, fontWeight: 700, color: C.green }}>{sermon.status}</span>
+          {sermons.map((sermon) => {
+            const sc = STATUS_COLORS[sermon.status] || STATUS_COLORS.draft;
+            return (
+              <div
+                key={sermon.id}
+                onClick={() => { loadSermonDetail(sermon.id); setCreating(false); }}
+                style={{
+                  padding: 16, borderRadius: 14, marginBottom: 10, cursor: "pointer",
+                  background: selected?.sermon?.id === sermon.id ? C.accentLight : C.card,
+                  border: `1px solid ${selected?.sermon?.id === sermon.id ? C.accent + "30" : C.border}`,
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{sermon.title}</div>
+                <div style={{ fontSize: 12, color: C.sec, marginTop: 4 }}>Week of {sermon.week_start_date}</div>
+                <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+                  <span style={{ padding: "2px 8px", borderRadius: 6, background: C[sc.bg], fontSize: 10, fontWeight: 700, color: C[sc.color] }}>{sermon.status}</span>
+                  {sermon.status === "scheduled" && sermon.scheduled_date && (
+                    <span style={{ fontSize: 10, color: C.muted }}>Publishes {sermon.scheduled_date}</span>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                  {sermon.status === "published" && (
+                    <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); handleArchive(sermon); }}>Archive</button>
+                  )}
+                  <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.red}30`, background: "transparent", color: C.red, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); setDeleting(sermon); }}>Delete</button>
+                </div>
               </div>
-              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                {sermon.status === "published" && (
-                  <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); handleArchive(sermon); }}>Archive</button>
-                )}
-                <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.red}30`, background: "transparent", color: C.red, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); setDeleting(sermon); }}>Delete</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Detail Panel */}
@@ -291,6 +407,9 @@ export default function SermonsPage() {
                 <div>
                   <div style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{selected.sermon.title}</div>
                   <div style={{ fontSize: 13, color: C.sec, marginTop: 4 }}>{selected.sermon.scripture_refs || ""}</div>
+                  {selected.sermon.status === "scheduled" && selected.sermon.scheduled_date && (
+                    <div style={{ fontSize: 12, color: C.amber, marginTop: 4 }}>Scheduled to publish: {selected.sermon.scheduled_date}</div>
+                  )}
                 </div>
                 <button style={{ padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>Edit</button>
               </div>
