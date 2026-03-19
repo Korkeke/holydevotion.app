@@ -32,8 +32,7 @@ export default function SermonsPage() {
     week_start_date: "",
   });
 
-  // Video transcription state
-  const [videoUrl, setVideoUrl] = useState("");
+  // File transcription state
   const [transcribing, setTranscribing] = useState(false);
   const [transcribed, setTranscribed] = useState(false);
   const [transcriptionMeta, setTranscriptionMeta] = useState(null);
@@ -71,33 +70,12 @@ export default function SermonsPage() {
 
   function resetCreateForm() {
     setForm({ title: "", scripture_refs: "", theme: "", summary: "", pastor_notes: "", week_start_date: "" });
-    setVideoUrl(""); setTranscribed(false); setTranscriptionMeta(null);
+    setTranscribed(false); setTranscriptionMeta(null);
     setPreviewReflections([]); setEditingPreviewIdx(null);
     setPublishMode("now"); setScheduledDate("");
   }
 
-  // ─── Transcription (real API) ─────────────────────────────
-
-  async function handleTranscribe() {
-    if (!videoUrl) return;
-    setTranscribing(true);
-    try {
-      const data = await post(`/api/churches/${church.id}/sermons/transcribe`, { video_url: videoUrl });
-      setTranscribed(true);
-      setTranscriptionMeta(data);
-      setForm(f => ({
-        ...f,
-        title: f.title || data.title || "",
-        scripture_refs: f.scripture_refs || data.scripture_refs || "",
-        theme: f.theme || data.theme || "",
-        summary: f.summary || data.summary || "",
-      }));
-    } catch (e) {
-      alert("Transcription failed: " + (e.message || "Unknown error"));
-    } finally {
-      setTranscribing(false);
-    }
-  }
+  // ─── Transcription (file upload) ────────────────────────────
 
   async function handleFileUpload(e) {
     const file = e.target.files?.[0];
@@ -225,28 +203,19 @@ export default function SermonsPage() {
         <div style={{ background: C.card, border: `2px solid ${C.accent}30`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 24 }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: "var(--heading)", marginBottom: 16 }}>Create This Week's Sermon Study</div>
 
-          {/* Video Transcription */}
+          {/* Transcribe from File */}
           <div style={{ padding: 20, borderRadius: 14, background: `linear-gradient(135deg, ${C.blueBg} 0%, ${C.card} 100%)`, border: `1px solid ${C.blue}20`, marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 20 }}>🎬</span>
+              <span style={{ fontSize: 20 }}>🎙️</span>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Import from Video</div>
-                <div style={{ fontSize: 12, color: C.sec }}>Paste a YouTube/Vimeo link or upload a file to transcribe your sermon</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Transcribe Sermon Recording</div>
+                <div style={{ fontSize: 12, color: C.sec }}>Upload your sermon audio or video to auto-extract title, scripture, and summary</div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-              <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." disabled={transcribing} style={{
-                flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.border}`, background: C.card,
-                fontSize: 13, fontFamily: "var(--body)", color: C.text, outline: "none",
-              }} />
-              <button onClick={handleTranscribe} disabled={transcribing || !videoUrl} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25`, opacity: (!videoUrl || transcribing) ? 0.5 : 1 }}>
-                {transcribing ? "Transcribing..." : "Transcribe"}
-              </button>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <input ref={fileInputRef} type="file" accept=".mp3,.mp4,.m4a,.wav,.webm,.ogg" onChange={handleFileUpload} disabled={transcribing} style={{ display: "none" }} />
-              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={transcribing} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.body, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "var(--body)", opacity: transcribing ? 0.5 : 1 }}>
-                Upload Audio/Video File
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={transcribing} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25`, opacity: transcribing ? 0.5 : 1 }}>
+                {transcribing ? "Transcribing..." : "Upload & Transcribe"}
               </button>
               <span style={{ fontSize: 11, color: C.muted }}>MP3, MP4, M4A, WAV (max 25MB)</span>
             </div>
