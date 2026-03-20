@@ -4,6 +4,10 @@ import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, post } from "../api";
 import { cloudinaryUrl } from "../components/ImageUpload";
+import EmailDigestModal from "../components/EmailDigestModal";
+import PhonePreviewModal from "../components/PhonePreviewModal";
+
+const PLAN_LABELS = { church: "Church", church_plus: "Church Plus", church_pro: "Church Pro" };
 
 export default function DashboardPage() {
   const { church, churchLoading, user } = useAuth();
@@ -161,7 +165,7 @@ export default function DashboardPage() {
               <div>
                 <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{church?.name || "Dashboard"}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
-                  <span style={{ padding: "2px 10px", borderRadius: 6, background: C.accent, color: "#fff", fontSize: 10, fontWeight: 700 }}>Shepherd Plan</span>
+                  <span style={{ padding: "2px 10px", borderRadius: 6, background: C.accent, color: "#fff", fontSize: 10, fontWeight: 700 }}>{PLAN_LABELS[church?.plan] || "Church"}</span>
                   <span style={{ fontSize: 12, color: C.sec }}>{totalMembers} members{church?.city ? ` · ${church.city}` : ""}</span>
                 </div>
               </div>
@@ -227,7 +231,7 @@ export default function DashboardPage() {
 
       {/* ─── Quick Actions ─── */}
       <div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
-        <button onClick={() => navigate("/portal/sermons")} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>📖 + This Week's Sermon</button>
+        <button onClick={() => navigate("/portal/sermons")} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>Add This Week's Sermon</button>
         <button onClick={() => navigate("/portal/announcements")} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>📢 Post Announcement</button>
         <button style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.amber}40`, background: C.amberBg, color: C.amber, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>📣 Send Broadcast</button>
       </div>
@@ -436,6 +440,26 @@ export default function DashboardPage() {
           </div>
           <button onClick={() => navigator.clipboard.writeText(church.invite_code)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>Copy Code</button>
         </div>
+      )}
+
+      {showEmailPreview && (
+        <EmailDigestModal
+          onClose={() => setShowEmailPreview(false)}
+          stats={{
+            active: activeCount,
+            completed: engagement?.sermon_finished_count || 0,
+            newMembers: stats?.new_members_this_month ?? 0,
+            prayers: prayers.length,
+          }}
+        />
+      )}
+
+      {showPhonePreview && (
+        <PhonePreviewModal
+          onClose={() => setShowPhonePreview(false)}
+          currentSermon={hasCurrentSermon ? engagement.current_sermon.title : null}
+          recentPrayer={prayers.length > 0 ? (prayers[0].text || prayers[0].content || "") : null}
+        />
       )}
     </div>
   );
