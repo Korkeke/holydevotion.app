@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useChurchColors } from "../useChurchColors";
 import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
-import { get, put, del } from "../api";
+import { get, post, put, del } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ImageUpload from "../components/ImageUpload";
 
@@ -41,6 +41,10 @@ export default function SettingsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pastorCode, setPastorCode] = useState(null);
+  const [pastorCodeUsed, setPastorCodeUsed] = useState(false);
+  const [generatingPastorCode, setGeneratingPastorCode] = useState(false);
+  const [pastorCopied, setPastorCopied] = useState(false);
 
   useEffect(() => {
     if (!church?.id) return;
@@ -58,6 +62,8 @@ export default function SettingsPage() {
         setAccentColor(c.accent_color || "#3D6B5E");
         setSecondaryColor(c.secondary_color || "#D4A853");
         setIsCustom(th === "custom" || !THEMES[th]);
+        setPastorCode(c.pastor_code || null);
+        setPastorCodeUsed(!!c.pastor_code_used);
       } catch {} finally { setLoading(false); }
     })();
   }, [church?.id]);
@@ -93,6 +99,21 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function generatePastorCode() {
+    setGeneratingPastorCode(true);
+    try {
+      const data = await post(`/api/churches/${church.id}/pastor-code`);
+      setPastorCode(data?.pastor_code || data?.code || null);
+      setPastorCodeUsed(false);
+    } finally { setGeneratingPastorCode(false); }
+  }
+
+  function copyPastorCode() {
+    navigator.clipboard.writeText(pastorCode || "");
+    setPastorCopied(true);
+    setTimeout(() => setPastorCopied(false), 2000);
+  }
+
   const isOwner = role === "owner";
 
   if (loading) return <div style={s.loading}><div style={s.spinner} /></div>;
@@ -112,6 +133,47 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Pastor Invite Code — owner only */}
+      {isOwner && (
+        <div style={s.section}>
+          <h2 style={s.sectionTitle}>Pastor Invite Code</h2>
+          <p style={s.sectionDesc}>Single-use code that grants admin access. Share privately with your pastor.</p>
+
+          {pastorCode && !pastorCodeUsed ? (
+            <>
+              <div style={s.codeRow}>
+                <span style={{ ...s.code, color: COLORS.accent, background: COLORS.accentLight }}>{pastorCode}</span>
+                <button style={{ ...s.copyBtn, color: COLORS.accent }} onClick={copyPastorCode}>
+                  {pastorCopied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "#FFF3CD", border: "1px solid #FFCC02", display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span style={{ fontSize: 15, lineHeight: 1 }}>&#9888;</span>
+                <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "#664D03", lineHeight: 1.4 }}>
+                  Share this privately. Anyone with this code gets admin access to your church.
+                </span>
+              </div>
+            </>
+          ) : pastorCode && pastorCodeUsed ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ ...s.code, color: COLORS.textMuted, background: COLORS.bg, opacity: 0.6 }}>{pastorCode}</span>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 600, color: COLORS.textMuted, padding: "4px 10px", borderRadius: 6, background: COLORS.bg, border: `1px solid ${COLORS.border}` }}>Used</span>
+              <button style={{ ...s.copyBtn, color: COLORS.accent }} onClick={generatePastorCode} disabled={generatingPastorCode}>
+                {generatingPastorCode ? "Generating..." : "Generate New"}
+              </button>
+            </div>
+          ) : (
+            <button
+              style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: COLORS.accent, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 12px ${COLORS.accent}25` }}
+              onClick={generatePastorCode}
+              disabled={generatingPastorCode}
+            >
+              {generatingPastorCode ? "Generating..." : "Generate Pastor Code"}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Church Profile */}
       <div style={s.section}>

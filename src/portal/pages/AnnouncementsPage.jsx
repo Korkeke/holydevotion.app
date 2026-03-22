@@ -13,35 +13,58 @@ const FIELDS = [
   { name: "pinned", label: "Pinned", type: "checkbox", checkLabel: "Pin to top of announcements" },
 ];
 
+const BROADCAST_FIELDS = [
+  { name: "title", label: "Title", required: true, placeholder: "Important Update" },
+  { name: "body", label: "Message", type: "textarea", required: true, rows: 6, placeholder: "Write your broadcast message..." },
+];
+
 export default function AnnouncementsPage() {
   const COLORS = useChurchColors();
   const { church } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showBroadcast, setShowBroadcast] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  function showError(msg) {
+    setError(msg);
+    setTimeout(() => setError(null), 5000);
+  }
 
   async function load() {
     if (!church?.id) return;
     try {
       const data = await get(`/api/churches/${church.id}/announcements`);
       setItems(data?.announcements || []);
-    } catch {} finally { setLoading(false); }
+    } catch (e) { showError(e.message || "Failed to load announcements"); } finally { setLoading(false); }
   }
 
   useEffect(() => { load(); }, [church?.id]);
 
   async function handleCreate(values) {
-    await post(`/api/churches/${church.id}/announcements`, values);
-    await load();
+    try {
+      await post(`/api/churches/${church.id}/announcements`, values);
+      await load();
+    } catch (e) { showError(e.message || "Failed to post announcement"); throw e; }
+  }
+
+  async function handleBroadcast(values) {
+    try {
+      await post(`/api/churches/${church.id}/announcements`, { ...values, pinned: true });
+      await load();
+    } catch (e) { showError(e.message || "Failed to send broadcast"); throw e; }
   }
 
   async function handleEdit(values) {
-    await put(`/api/churches/${church.id}/announcements/${editing.id}`, values);
-    setEditing(null);
-    await load();
+    try {
+      await put(`/api/churches/${church.id}/announcements/${editing.id}`, values);
+      setEditing(null);
+      await load();
+    } catch (e) { showError(e.message || "Failed to update announcement"); throw e; }
   }
 
   async function handleDelete() {
@@ -50,12 +73,14 @@ export default function AnnouncementsPage() {
       await del(`/api/churches/${church.id}/announcements/${deleting.id}`);
       setDeleting(null);
       await load();
-    } finally { setDeleteLoading(false); }
+    } catch (e) { showError(e.message || "Failed to delete announcement"); } finally { setDeleteLoading(false); }
   }
 
   async function togglePin(ann) {
-    await put(`/api/churches/${church.id}/announcements/${ann.id}`, { pinned: !ann.pinned });
-    await load();
+    try {
+      await put(`/api/churches/${church.id}/announcements/${ann.id}`, { pinned: !ann.pinned });
+      await load();
+    } catch (e) { showError(e.message || "Failed to toggle pin"); }
   }
 
   function formatDate(iso) {
@@ -73,7 +98,21 @@ export default function AnnouncementsPage() {
         }}>📌</button>
       ),
     },
-    { key: "title", label: "Title" },
+    {
+      key: "title", label: "Title",
+      render: (row) => (
+        <span>
+          {row.pinned && (
+            <span style={{
+              fontSize: 10, fontWeight: 700, color: "#fff", background: COLORS.accent,
+              padding: "2px 6px", borderRadius: 4, marginRight: 8, letterSpacing: "0.04em",
+              fontFamily: "var(--body)", textTransform: "uppercase",
+            }}>BROADCAST</span>
+          )}
+          {row.title}
+        </span>
+      ),
+    },
     {
       key: "body", label: "Preview",
       render: (row) => (
@@ -100,14 +139,33 @@ export default function AnnouncementsPage() {
     <div style={s.page}>
       <div style={s.header}>
         <h1 style={s.title}>Announcements</h1>
-        <button style={{ ...s.createBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25` }} onClick={() => setShowForm(true)}>+ Post Announcement</button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${COLORS.accent}`, background: "transparent", color: COLORS.accent, fontFamily: "var(--body)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+            onClick={() => setShowBroadcast(true)}
+          >
+            Send Broadcast
+          </button>
+          <button style={{ ...s.createBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25` }} onClick={() => setShowForm(true)}>+ Post Announcement</button>
+        </div>
       </div>
+
+      {error && (
+        <div style={{ padding: "10px 16px", borderRadius: 10, background: "#FEE2E2", border: "1px solid #FCA5A5", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontFamily: "var(--body)", fontSize: 13, color: "#991B1B" }}>{error}</span>
+          <button onClick={() => setError(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#991B1B", fontSize: 16 }}>&times;</button>
+        </div>
+      )}
 
       <DataTable columns={columns} data={items} emptyMessage="No announcements yet." />
 
       {showForm && (
         <FormModal title="Post Announcement" fields={FIELDS}
           onSubmit={handleCreate} onClose={() => setShowForm(false)} submitLabel="Post" />
+      )}
+      {showBroadcast && (
+        <FormModal title="Send Broadcast" fields={BROADCAST_FIELDS}
+          onSubmit={handleBroadcast} onClose={() => setShowBroadcast(false)} submitLabel="Send Broadcast" />
       )}
       {editing && (
         <FormModal title="Edit Announcement" fields={FIELDS}

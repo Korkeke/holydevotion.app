@@ -23,10 +23,6 @@ export default function EventsPage() {
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [calendarDate, setCalendarDate] = useState(null);
-  // TODO: Google Calendar import needs a backend integration
-  const [calendarImporting, setCalendarImporting] = useState(false);
-  const [calendarImported, setCalendarImported] = useState(false);
-
   // Calendar state
   const now = new Date();
   const [viewMonth, setViewMonth] = useState(now.getMonth());
@@ -93,22 +89,8 @@ export default function EventsPage() {
     <div style={{ padding: "32px 40px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>Events</div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => { setCalendarImporting(true); setTimeout(() => { setCalendarImporting(false); setCalendarImported(true); }, 2000); }} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", display: "flex", alignItems: "center", gap: 6 }}>
-            {calendarImporting ? "Importing..." : calendarImported ? "✓ Connected" : "📅 Import from Google Calendar"}
-          </button>
-          <button onClick={() => setShowForm(true)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>+ Create Event</button>
-        </div>
+        <button onClick={() => setShowForm(true)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>+ Create Event</button>
       </div>
-
-      {calendarImported && (
-        <div style={{ padding: "12px 16px", borderRadius: 12, background: C.greenBg, border: `1px solid ${C.green}20`, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 16 }}>✓</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: C.green }}>Google Calendar connected. Choose which events to publish to your congregation.</div>
-          </div>
-        </div>
-      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         {/* Calendar */}
