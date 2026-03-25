@@ -1,10 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { useChurchColors } from "../useChurchColors";
-import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
 import { get, put } from "../api";
 import ConfirmDialog from "../components/ConfirmDialog";
 import PastoralMessageModal from "../components/PastoralMessageModal";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
+import FilterButton from "../components/ui/FilterButton";
+import Avatar from "../components/ui/Avatar";
+import EmptyState from "../components/ui/EmptyState";
+import InlinePrayerResponse from "../components/ui/InlinePrayerResponse";
 
 const TYPE_FILTERS = [
   { key: "all", label: "All" },
@@ -18,12 +24,6 @@ const STATUS_FILTERS = [
   { key: "answered", label: "Answered" },
 ];
 
-const STATUS_DOT = {
-  active: "#22c55e",
-  still_praying: "#f59e0b",
-  answered: "#C9A84C",
-};
-
 export default function PrayerWallPage() {
   const C = useChurchColors();
   const { church } = useAuth();
@@ -34,6 +34,7 @@ export default function PrayerWallPage() {
   const [messageTo, setMessageTo] = useState(null);
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [replyTo, setReplyTo] = useState(null);
 
   async function load() {
     if (!church?.id) return;
@@ -61,113 +62,160 @@ export default function PrayerWallPage() {
 
   const visible = useMemo(() => prayers.filter(p => !p.hidden), [prayers]);
 
-  const stats = useMemo(() => {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    let prayerCount = 0;
-    let praiseCount = 0;
-    for (const p of prayers) {
-      const created = p.created_at ? new Date(p.created_at) : null;
-      if (created && created >= weekAgo) {
-        if ((p.type || "prayer") === "praise") praiseCount++;
-        else prayerCount++;
-      }
-    }
-    return { prayerCount, praiseCount };
-  }, [prayers]);
+  const activeCount = useMemo(
+    () => prayers.filter(p => !p.hidden && (p.status || "active") === "active").length,
+    [prayers],
+  );
 
   const totalPrayers = prayers.reduce((sum, p) => sum + (p.prayer_count || 0), 0);
 
-  const filterBtnStyle = (active) => ({
-    padding: "5px 14px",
-    borderRadius: 8,
-    border: `1px solid ${active ? C.accent : C.border}`,
-    background: active ? C.accentLight : "transparent",
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: "pointer",
-    color: active ? C.accent : C.sec,
-    fontFamily: "var(--body)",
-    transition: "all 0.15s ease",
-  });
-
-  if (loading) return <div style={{ padding: 60, display: "flex", justifyContent: "center" }}><div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>;
+  if (loading) {
+    return (
+      <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
+        <div style={{
+          width: 28, height: 28,
+          border: `2px solid ${C.accent}`,
+          borderTopColor: "transparent",
+          borderRadius: "50%",
+          animation: "spin 0.8s linear infinite",
+        }} />
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: "32px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>Prayer Wall</div>
-        <span style={{ padding: "6px 14px", borderRadius: 8, background: C.accentLight, fontSize: 12, fontWeight: 700, color: C.accent }}>🙏 {totalPrayers} praying</span>
-      </div>
-      <div style={{ fontSize: 13, color: C.sec, marginBottom: 16 }}>Pin important requests or hide inappropriate content.</div>
-
-      {/* Stats row */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <span style={{ padding: "6px 14px", borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 600, color: C.body }}>
-          🙏 {stats.prayerCount} prayer{stats.prayerCount !== 1 ? "s" : ""}, {stats.praiseCount} praise{stats.praiseCount !== 1 ? "s" : ""} this week
-        </span>
+    <div style={{ padding: "24px 32px 48px" }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{
+          fontSize: 22, fontWeight: 700, color: "#2c2a25",
+          fontFamily: "'DM Serif Display', serif", marginBottom: 4,
+        }}>
+          Prayer Wall
+        </div>
+        <div style={{ fontSize: 13, color: "#9e9888" }}>
+          Pin important requests or hide inappropriate content.
+        </div>
       </div>
 
       {/* Filter row */}
-      <div style={{ display: "flex", gap: 24, marginBottom: 24, flexWrap: "wrap" }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 24, marginBottom: 24, flexWrap: "wrap",
+      }}>
+        {/* Type filters */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Type</span>
+          <span style={{
+            fontSize: 11, color: "#9e9888", fontWeight: 600,
+            textTransform: "uppercase", letterSpacing: 1, marginRight: 2,
+          }}>Type</span>
           {TYPE_FILTERS.map(f => (
-            <button key={f.key} onClick={() => setTypeFilter(f.key)} style={filterBtnStyle(typeFilter === f.key)}>{f.label}</button>
+            <FilterButton
+              key={f.key}
+              active={typeFilter === f.key}
+              onClick={() => setTypeFilter(f.key)}
+            >
+              {f.label}
+            </FilterButton>
           ))}
         </div>
+
+        {/* Status filters */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginRight: 4 }}>Status</span>
+          <span style={{
+            fontSize: 11, color: "#9e9888", fontWeight: 600,
+            textTransform: "uppercase", letterSpacing: 1, marginRight: 2,
+          }}>Status</span>
           {STATUS_FILTERS.map(f => (
-            <button key={f.key} onClick={() => setStatusFilter(f.key)} style={filterBtnStyle(statusFilter === f.key)}>{f.label}</button>
+            <FilterButton
+              key={f.key}
+              active={statusFilter === f.key}
+              onClick={() => setStatusFilter(f.key)}
+            >
+              {f.label}
+            </FilterButton>
           ))}
+        </div>
+
+        {/* Active count badge */}
+        <div style={{ marginLeft: "auto" }}>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "6px 14px", borderRadius: 8, background: "#faf3e0",
+            fontSize: 12, fontWeight: 700, color: "#8b6914",
+          }}>
+            🙏 {activeCount} active
+          </span>
         </div>
       </div>
 
+      {/* Grid or Empty state */}
       {visible.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 48, color: C.muted, fontSize: 14 }}>No prayer requests yet.</div>
+        <EmptyState
+          emoji="🙏"
+          title="No prayer requests yet"
+          desc="When members share prayers or praise, they'll appear here for you to support and respond."
+        />
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-          {visible.map((p) => {
+          {visible.map((p, idx) => {
             const name = p.is_anonymous ? "Anonymous" : (p.display_name || "Member");
-            const initials = name === "Anonymous" ? "A" : name.split(" ").map(n => n[0]).join("").slice(0, 2);
+            const initials = name === "Anonymous"
+              ? "A"
+              : name.split(" ").map(n => n[0]).join("").slice(0, 2);
             const pType = p.type || "prayer";
             const pStatus = p.status || "active";
-            const dotColor = STATUS_DOT[pStatus] || STATUS_DOT.active;
+
             return (
-              <div key={p.id} style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+              <div
+                key={p.id}
+                style={{ transition: "transform 0.2s, box-shadow 0.2s" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+              <Card>
+                {/* Top row: avatar, name, time */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg, ${C.accent}22 0%, ${C.accent}0A 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: C.accent }}>{initials}</div>
+                  <Avatar
+                    initials={initials}
+                    size={36}
+                    bg={C.accent + "18"}
+                    color={C.accent}
+                  />
                   <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</span>
-                    <span style={{ fontSize: 11, color: C.muted, marginLeft: 8 }}>{p.created_at ? new Date(p.created_at).toLocaleDateString() : ""}</span>
-                  </div>
-                  {/* Status dot */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, flexShrink: 0 }} />
-                    <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: "capitalize" }}>{pStatus.replace("_", " ")}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#2c2a25" }}>
+                      {name}
+                    </span>
+                    <span style={{ fontSize: 11, color: "#9e9888", marginLeft: 8 }}>
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : ""}
+                    </span>
                   </div>
                 </div>
 
-                {/* Type badge */}
-                <div style={{ marginBottom: 10 }}>
-                  <span style={{
-                    display: "inline-block",
-                    padding: "2px 8px",
-                    borderRadius: 6,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: 0.5,
-                    background: pType === "praise" ? `${C.accent}18` : `${C.accent}10`,
-                    color: pType === "praise" ? C.accent : C.sec,
-                    border: `1px solid ${pType === "praise" ? C.accent + "30" : C.border}`,
-                  }}>
+                {/* Type + Status badges */}
+                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                  <Badge
+                    color={pType === "praise" ? "#8b6914" : "#5a5647"}
+                    bg={pType === "praise" ? "#faf3e0" : "#f0ebe3"}
+                  >
                     {pType === "praise" ? "✨ Praise" : "🙏 Prayer"}
-                  </span>
+                  </Badge>
+                  <Badge variant={pStatus}>
+                    {pStatus.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase())}
+                  </Badge>
                 </div>
 
-                <div style={{ fontSize: 13.5, color: C.body, lineHeight: 1.65, marginBottom: 14 }}>{p.text || p.content}</div>
+                {/* Body text */}
+                <div style={{
+                  fontSize: 13.5, color: "#5a5647", lineHeight: 1.65, marginBottom: 14,
+                }}>
+                  {p.text || p.content}
+                </div>
 
                 {/* Follow-up text for answered prayers */}
                 {p.follow_up_text && pStatus === "answered" && (
@@ -177,22 +225,59 @@ export default function PrayerWallPage() {
                     marginBottom: 14,
                     fontStyle: "italic",
                     fontSize: 12.5,
-                    color: C.sec,
+                    color: "#7a7568",
                     lineHeight: 1.6,
                   }}>
                     {p.follow_up_text}
                   </div>
                 )}
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: C.accent, fontWeight: 600 }}>🙏 {p.prayer_count || 0} praying</span>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {!p.is_anonymous && name !== "Anonymous" && (
-                      <button onClick={() => setMessageTo(name)} style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${C.accent}25`, background: C.accentLight, fontSize: 11, fontWeight: 600, cursor: "pointer", color: C.accent, fontFamily: "var(--body)" }}>✉️ Note</button>
+                {/* Footer: praying count, responses, actions */}
+                <div style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 12, color: "#8b6914", fontWeight: 600 }}>
+                      🙏 {p.prayer_count || 0} praying
+                    </span>
+                    {(p.response_count > 0) && (
+                      <span style={{ fontSize: 12, color: "#9e9888", fontWeight: 500 }}>
+                        💬 {p.response_count} response{p.response_count !== 1 ? "s" : ""}
+                      </span>
                     )}
-                    <button onClick={() => setHiding(p)} style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${C.red}30`, background: C.redBg, fontSize: 11, fontWeight: 600, cursor: "pointer", color: C.red, fontFamily: "var(--body)" }}>Hide</button>
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <Button
+                      small
+                      ghost
+                      onClick={() => setReplyTo(replyTo === idx ? null : idx)}
+                    >
+                      {replyTo === idx ? "Close" : "Respond"}
+                    </Button>
+                    {!p.is_anonymous && name !== "Anonymous" && (
+                      <Button small ghost onClick={() => setMessageTo(name)}>
+                        ✉️ Note
+                      </Button>
+                    )}
+                    <Button
+                      small
+                      ghost
+                      onClick={() => {
+                        // Pin / Unpin toggle — placeholder until backend wired
+                      }}
+                      style={{ color: p.pinned ? "#8b6914" : "#9e9888" }}
+                    >
+                      {p.pinned ? "📌 Unpin" : "📌 Pin"}
+                    </Button>
+                    <Button small danger onClick={() => setHiding(p)}>Hide</Button>
                   </div>
                 </div>
+
+                {/* Inline reply expansion */}
+                {replyTo === idx && (
+                  <InlinePrayerResponse onClose={() => setReplyTo(null)} />
+                )}
+              </Card>
               </div>
             );
           })}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
+import { get } from "../api";
 
 const SAGE = "#3D6B5E";
 const LINEN = "#FAF8F5";
@@ -20,6 +21,18 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signIn(email, password);
+      // Check if user has a church — if not, send to onboarding
+      try {
+        const data = await get("/api/churches/me");
+        const churches = data?.churches || [];
+        if (churches.length === 0) {
+          navigate("/portal/signup");
+          return;
+        }
+      } catch {
+        // Network error checking churches — proceed to portal anyway,
+        // it will handle the no-church state
+      }
       navigate("/portal");
     } catch (err) {
       const code = err?.code || "";

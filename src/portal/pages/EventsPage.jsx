@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useChurchColors } from "../useChurchColors";
-import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
 import { get, post, put, del } from "../api";
 import FormModal from "../components/FormModal";
 import ConfirmDialog from "../components/ConfirmDialog";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import SectionLabel from "../components/ui/SectionLabel";
 
 const EVENT_FIELDS = [
   { name: "title", label: "Title", required: true, placeholder: "Sunday Worship Service" },
@@ -83,30 +85,79 @@ export default function EventsPage() {
   // Filtered events
   const filteredEvents = calendarDate ? (eventDayMap[calendarDate] || []) : events;
 
-  if (loading) return <div style={{ padding: 60, display: "flex", justifyContent: "center" }}><div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /></div>;
+  // Event color palette for accent bars
+  const eventColors = ["#3d6b44", "#8b6914", "#c26a4a", "#5b7a9d", "#8b5e83"];
+
+  if (loading) return (
+    <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
+      <div style={{
+        width: 28, height: 28,
+        border: "2px solid #3d6b44",
+        borderTopColor: "transparent",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }} />
+    </div>
+  );
 
   return (
-    <div style={{ padding: "32px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>Events</div>
-        <button onClick={() => setShowForm(true)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>+ Create Event</button>
+    <div style={{ padding: "24px 32px 48px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+        <div style={{ fontSize: 26, fontWeight: 700, color: "#2c2a25", fontFamily: "'DM Serif Display', serif" }}>Events</div>
+        <Button primary onClick={() => setShowForm(true)}>+ New Event</Button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-        {/* Calendar */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{monthNames[viewMonth]} {viewYear}</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); } else setViewMonth(viewMonth - 1); setCalendarDate(null); }} style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.card, color: C.sec, fontSize: 12, cursor: "pointer", fontFamily: "var(--body)" }}>←</button>
-              <button onClick={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); } else setViewMonth(viewMonth + 1); setCalendarDate(null); }} style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${C.border}`, background: C.card, color: C.sec, fontSize: 12, cursor: "pointer", fontFamily: "var(--body)" }}>→</button>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 24, alignItems: "start" }}>
+        {/* Calendar Card */}
+        <Card style={{ padding: 24 }}>
+          {/* Month navigation */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#2c2a25", fontFamily: "'DM Serif Display', serif" }}>
+              {monthNames[viewMonth]} {viewYear}
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); } else setViewMonth(viewMonth - 1); setCalendarDate(null); }}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: "1px solid #e0dbd1", background: "#fff",
+                  color: "#5a5647", fontSize: 14, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s",
+                }}
+              >
+                &#8592;
+              </button>
+              <button
+                onClick={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); } else setViewMonth(viewMonth + 1); setCalendarDate(null); }}
+                style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  border: "1px solid #e0dbd1", background: "#fff",
+                  color: "#5a5647", fontSize: 14, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.15s",
+                }}
+              >
+                &#8594;
+              </button>
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
+
+          {/* Day headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 6 }}>
             {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((d, i) => (
-              <div key={i} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, color: C.muted, padding: "6px 0" }}>{d}</div>
+              <div key={i} style={{
+                textAlign: "center", fontSize: 11, fontWeight: 600,
+                color: "#9e9888", padding: "6px 0", textTransform: "uppercase",
+                letterSpacing: "0.03em",
+              }}>
+                {d}
+              </div>
             ))}
           </div>
+
+          {/* Calendar grid */}
           {(() => {
             const weeks = Math.ceil((firstDayOfWeek + daysInMonth) / 7);
             return [...Array(weeks)].map((_, w) => (
@@ -118,56 +169,121 @@ export default function EventsPage() {
                   const selected = dayNum === calendarDate;
                   const isToday = isValid && dayNum === now.getDate() && viewMonth === now.getMonth() && viewYear === now.getFullYear();
                   return (
-                    <div key={d} onClick={() => isValid && hasEvent && setCalendarDate(selected ? null : dayNum)} style={{
-                      textAlign: "center", padding: "10px 0", borderRadius: 10,
-                      background: selected ? C.accent : hasEvent ? C.accentLight : "transparent",
-                      cursor: hasEvent ? "pointer" : "default", transition: "all 0.2s ease",
-                      border: isToday && !selected ? `2px solid ${C.accent}40` : "2px solid transparent",
-                    }}>
-                      <div style={{ fontSize: 13, fontWeight: hasEvent || isToday ? 700 : 400, color: isValid ? (selected ? "#fff" : hasEvent ? C.accent : isToday ? C.accent : C.text) : "transparent" }}>{isValid ? dayNum : "."}</div>
-                      {hasEvent && !selected && <div style={{ width: 5, height: 5, borderRadius: "50%", background: C.accent, margin: "3px auto 0" }} />}
+                    <div
+                      key={d}
+                      onClick={() => isValid && hasEvent && setCalendarDate(selected ? null : dayNum)}
+                      style={{
+                        textAlign: "center", padding: "8px 0", borderRadius: 10,
+                        background: selected ? C.accent : "transparent",
+                        cursor: hasEvent ? "pointer" : "default",
+                        transition: "all 0.2s ease",
+                        position: "relative",
+                      }}
+                    >
+                      <div style={{
+                        width: isToday && !selected ? 30 : "auto",
+                        height: isToday && !selected ? 30 : "auto",
+                        borderRadius: "50%",
+                        background: isToday && !selected ? "#3d6b44" : "transparent",
+                        color: isValid
+                          ? (selected ? "#fff" : isToday ? "#fff" : hasEvent ? "#2c2a25" : "#5a5647")
+                          : "transparent",
+                        fontSize: 13,
+                        fontWeight: hasEvent || isToday ? 700 : 400,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        margin: "0 auto",
+                        lineHeight: isToday && !selected ? "30px" : "normal",
+                      }}>
+                        {isValid ? dayNum : "."}
+                      </div>
+                      {hasEvent && !selected && (
+                        <div style={{ display: "flex", gap: 3, justifyContent: "center", marginTop: 3 }}>
+                          {eventDayMap[dayNum].slice(0, 3).map((_, idx) => (
+                            <div key={idx} style={{
+                              width: 5, height: 5, borderRadius: "50%",
+                              background: eventColors[idx % eventColors.length],
+                            }} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
             ));
           })()}
-        </div>
+        </Card>
 
-        {/* Event List */}
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-            {calendarDate ? `${monthNames[viewMonth].toUpperCase()} ${calendarDate}` : "ALL EVENTS"}
-          </div>
+        {/* Event List Sidebar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <SectionLabel
+            right={calendarDate ? "Show All" : undefined}
+            onRightClick={calendarDate ? () => setCalendarDate(null) : undefined}
+          >
+            {calendarDate ? `${monthNames[viewMonth]} ${calendarDate}` : "Upcoming Events"}
+          </SectionLabel>
+
           {filteredEvents.length === 0 ? (
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "40px 20px", textAlign: "center" }}>
-              <div style={{ fontSize: 14, color: C.sec }}>No events{calendarDate ? " on this date" : " yet"}. Create your first one.</div>
-            </div>
+            <Card style={{ padding: "36px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>📅</div>
+              <div style={{ fontSize: 14, color: "#7a7668", lineHeight: 1.5 }}>
+                No events{calendarDate ? " on this date" : " yet"}.
+              </div>
+              <div style={{ fontSize: 13, color: "#9e9888", marginTop: 4 }}>
+                Create your first event to get started.
+              </div>
+            </Card>
           ) : (
             filteredEvents.map((e, i) => {
               const d = e.event_date ? new Date(e.event_date) : null;
+              const accentColor = eventColors[i % eventColors.length];
               return (
-                <div key={e.id || i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 16, marginBottom: 10, boxShadow: "0 2px 6px rgba(0,0,0,0.03)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: C.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📅</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{e.title}</div>
-                      <div style={{ fontSize: 12, color: C.muted }}>
-                        {d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}{d ? " · " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : ""}
+                <Card key={e.id || i} style={{ padding: 0, overflow: "hidden" }}>
+                  <div style={{ display: "flex" }}>
+                    {/* Color accent bar */}
+                    <div style={{ width: 4, background: accentColor, flexShrink: 0 }} />
+                    <div style={{ flex: 1, padding: 16 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#2c2a25", marginBottom: 6 }}>
+                        {e.title}
                       </div>
-                      {e.location && <div style={{ fontSize: 11, color: C.sec }}>{e.location}</div>}
+                      {d && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "#7a7668", marginBottom: 4 }}>
+                          <span style={{ fontSize: 13 }}>&#128339;</span>
+                          {d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          {" \u00B7 "}
+                          {d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                        </div>
+                      )}
+                      {e.location && (
+                        <div style={{ fontSize: 12, color: "#9e9888" }}>{e.location}</div>
+                      )}
+                      <div style={{ display: "flex", gap: 6, marginTop: 10, paddingTop: 10, borderTop: "1px solid #f0ece4" }}>
+                        <Button small onClick={() => setEditing(e)}>Edit</Button>
+                        <Button small danger onClick={() => setDeleting(e)}>Delete</Button>
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginTop: 10, paddingTop: 8, borderTop: `1px solid ${C.borderLight}` }}>
-                    <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => setEditing(e)} style={{ padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>Edit</button>
-                      <button onClick={() => setDeleting(e)} style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${C.red}30`, background: C.redBg, color: C.red, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>Delete</button>
-                    </div>
-                  </div>
-                </div>
+                </Card>
               );
             })
           )}
+
+          {/* Tip card */}
+          <Card style={{ padding: 16, background: "#f9f7f2", border: "1px solid #ece7dd" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <div style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>&#128276;</div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#5a5647", marginBottom: 3 }}>
+                  Push Notifications
+                </div>
+                <div style={{ fontSize: 12, color: "#9e9888", lineHeight: 1.5 }}>
+                  Members who enable notifications will receive reminders before events start.
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 

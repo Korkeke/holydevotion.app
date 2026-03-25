@@ -2,7 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../AuthContext";
-import { post } from "../api";
+import { post, get } from "../api";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { auth as fbAuth } from "../../firebase";
 
 const API_BASE = "https://devotion-backend-production.up.railway.app";
 
@@ -190,7 +195,7 @@ function PhoneMockup({ churchName, accentColor, secondaryColor }) {
 // ─── Main Component ──────────────────────────────────────────
 
 export default function OnboardingWizard() {
-  const { signUp } = useAuth();
+  const { signUp, reloadChurch } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -333,12 +338,16 @@ export default function OnboardingWizard() {
     }
   }, []);
 
-  // Arrival animation timing — show continue button after animation finishes
+  // Arrival animation timing — auto-advance after animation finishes
   const [animFinished, setAnimFinished] = useState(false);
   useEffect(() => {
     if (arriving) {
       setAnimFinished(false);
-      const timer = setTimeout(() => setAnimFinished(true), 2000);
+      const timer = setTimeout(() => {
+        setAnimFinished(true);
+        setArrivalDone(true);
+        setCurrentStep(0);
+      }, 2500);
       return () => clearTimeout(timer);
     }
   }, [arriving]);
@@ -390,43 +399,82 @@ export default function OnboardingWizard() {
     goTo(4);
   }
 
-  // ─── Step 4 → signUp (between 4 and 5) ──────────────────────
+  // ─── Step 4 → Create church (account already exists from step 1) ──
 
   async function handleCreateChurch() {
     setError("");
     setLoading(true);
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      setLoading(false);
-      goTo(1);
-      return;
-    }
-
     try {
-      const resp = await signUp(email, password, {
-        name: churchName,
-        denomination: (denomination === "Other" ? denomOther : denomination) || undefined,
-        city: city || undefined,
-        website: website || undefined,
-        theme: isCustom ? "custom" : theme,
-        accent_color: accentColor,
-        secondary_color: secondaryColor,
-        registration_code: regCode.trim(),
-      });
+      // User is already authenticated from step 1. Just create the church.
+      let token;
+      try {
+        token = await fbAuth.currentUser?.getIdToken(true);
+      } catch (tokenErr) {
+        console.error("Token refresh failed:", tokenErr);
+      }
+      if (!token) {
+        // Session lost -- re-authenticate silently
+        try {
+          await signInWithEmailAndPassword(fbAuth, email, password);
+          token = await fbAuth.currentUser?.getIdToken(true);
+        } catch (reAuthErr) {
+          console.error("Re-auth failed:", reAuthErr);
+          setError("Your session expired. Please go back and sign in again.");
+          setLoading(false);
+          goTo(1);
+          return;
+        }
+      }
 
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+
+      const res = await fetch(`${API_BASE}/api/churches`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: churchName,
+          denomination: (denomination === "Other" ? denomOther : denomination) || undefined,
+          city: city || undefined,
+          website: website || undefined,
+          theme: isCustom ? "custom" : theme,
+          accent_color: accentColor,
+          secondary_color: secondaryColor,
+          registration_code: regCode.trim(),
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        let detail = `Church creation failed (${res.status})`;
+        try { const body = await res.json(); detail = body?.detail || detail; } catch {}
+        throw new Error(detail);
+      }
+
+      const resp = await res.json();
       const church = resp?.church || resp;
       setChurchId(church?.id || "");
       setInviteCode(church?.invite_code || "");
+      // Reload church in AuthContext so the portal works after onboarding
+      await reloadChurch();
       setLoading(false);
       goTo(5);
     } catch (err) {
-      const msg = err?.code || err?.message || "";
+      const msg = err?.message || "";
       if (msg.includes("Invalid registration code") || msg.includes("already used")) {
         setError(msg);
         setLoading(false);
+      } else if (err.name === "AbortError" || msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+        console.error("Church creation network error:", err, "Name:", err.name, "Message:", err.message);
+        setError("Unable to reach the server. Please check your connection and try again.");
+        setLoading(false);
       } else {
-        setError(err.message || "Something went wrong. Please try again.");
+        setError(msg || "Something went wrong. Please try again.");
         setLoading(false);
       }
     }
@@ -519,36 +567,7 @@ export default function OnboardingWizard() {
           ✝
         </motion.div>
 
-        {/* Continue button */}
-        <AnimatePresence>
-          {animFinished && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 120, damping: 20 }}
-              style={{
-                position: "fixed", bottom: 0, left: 0, right: 0,
-                zIndex: 200, padding: "20px 20px 28px",
-                background: "linear-gradient(to top, rgba(10,14,26,0.95) 60%, transparent 100%)",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
-              }}
-            >
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { setArrivalDone(true); setCurrentStep(0); }}
-                style={{
-                  padding: "12px 48px", borderRadius: 10, border: "none", cursor: "pointer",
-                  background: GOLD, color: "#0a0e1a",
-                  fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 700,
-                  boxShadow: `0 4px 20px rgba(201,168,76,0.3)`,
-                }}
-              >
-                Continue →
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Auto-advances after animation - no button needed */}
       </div>
     );
   }
@@ -729,34 +748,49 @@ export default function OnboardingWizard() {
 
             <button
               style={{ ...s.btn, background: accent }}
+              disabled={loading}
               onClick={async () => {
                 setError("");
                 if (!email.trim()) { setError("Email is required."); return; }
                 if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
                 if (password !== confirmPassword) { setError("Passwords don't match."); return; }
 
-                // Quick email-in-use check by attempting to create and immediately catching
+                setLoading(true);
                 try {
-                  const { createUserWithEmailAndPassword: create, deleteUser: del } = await import("firebase/auth");
-                  const { auth: fbAuth } = await import("../../firebase");
-                  const cred = await create(fbAuth, email, password);
-                  // Success — account is new. Delete it so signUp() can recreate it later
-                  // with proper error handling and church creation in one flow.
-                  await del(cred.user);
-                } catch (err) {
-                  if (err?.code === "auth/email-already-in-use") {
-                    setError("An account with this email already exists. If this is yours, your password must match the one you used before.");
-                  } else if (err?.code === "auth/invalid-email") {
-                    setError("Please enter a valid email address.");
-                    return;
+                  // Create Firebase account for real (or sign in if it exists with same password)
+                  try {
+                    await createUserWithEmailAndPassword(fbAuth, email, password);
+                  } catch (fbErr) {
+                    if (fbErr?.code === "auth/email-already-in-use") {
+                      // Try signing in — if password matches, they can continue
+                      try {
+                        await signInWithEmailAndPassword(fbAuth, email, password);
+                      } catch (signInErr) {
+                        if (signInErr?.code === "auth/invalid-credential" || signInErr?.code === "auth/wrong-password") {
+                          setError("An account with this email already exists but the password doesn't match.");
+                          setLoading(false);
+                          return;
+                        }
+                        throw signInErr;
+                      }
+                    } else if (fbErr?.code === "auth/invalid-email") {
+                      setError("Please enter a valid email address.");
+                      setLoading(false);
+                      return;
+                    } else {
+                      throw fbErr;
+                    }
                   }
-                  // For other errors (network, etc), let them proceed — signUp() will handle it
+                  // Account created or signed in successfully
+                  setLoading(false);
+                  goTo(2);
+                } catch (err) {
+                  setError(err.message || "Unable to create account. Please try again.");
+                  setLoading(false);
                 }
-
-                goTo(2);
               }}
             >
-              Continue →
+              {loading ? "Creating account..." : "Continue →"}
             </button>
 
             <p style={{ fontSize: 12, color: "#A8A29E", textAlign: "center", marginTop: 16 }}>
@@ -905,7 +939,7 @@ export default function OnboardingWizard() {
                   <span style={s.miniSpinner} /> Scanning your website...
                 </span>
               ) : (
-                "Detect My Branding ✨"
+                "Detect My Branding"
               )}
             </button>
 

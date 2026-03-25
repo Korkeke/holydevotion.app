@@ -1,11 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useChurchColors } from "../useChurchColors";
-import { COLORS } from "../../colors";
 import { useAuth } from "../AuthContext";
 import { get, post, put, del } from "../api";
-import DataTable from "../components/DataTable";
 import FormModal from "../components/FormModal";
 import ConfirmDialog from "../components/ConfirmDialog";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
+import FilterButton from "../components/ui/FilterButton";
+import Checkbox from "../components/ui/Checkbox";
+import EmptyState from "../components/ui/EmptyState";
 
 const FIELDS = [
   { name: "title", label: "Title", required: true, placeholder: "Weekly Update" },
@@ -19,7 +23,7 @@ const BROADCAST_FIELDS = [
 ];
 
 export default function AnnouncementsPage() {
-  const COLORS = useChurchColors();
+  const C = useChurchColors();
   const { church } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +33,10 @@ export default function AnnouncementsPage() {
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selected, setSelected] = useState(new Set());
+  const [filter, setFilter] = useState("all");
+  const [sortKey, setSortKey] = useState("created_at");
+  const [sortDir, setSortDir] = useState("desc");
 
   function showError(msg) {
     setError(msg);
@@ -83,73 +91,109 @@ export default function AnnouncementsPage() {
     } catch (e) { showError(e.message || "Failed to toggle pin"); }
   }
 
+  async function handleBulkDelete() {
+    if (selected.size === 0) return;
+    setDeleteLoading(true);
+    try {
+      for (const id of selected) {
+        await del(`/api/churches/${church.id}/announcements/${id}`);
+      }
+      setSelected(new Set());
+      await load();
+    } catch (e) { showError(e.message || "Failed to delete selected"); } finally { setDeleteLoading(false); }
+  }
+
   function formatDate(iso) {
-    if (!iso) return "—";
+    if (!iso) return "\u2014";
     return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
-  const columns = [
-    {
-      key: "pinned", label: "📌", width: 50,
-      render: (row) => (
-        <button onClick={() => togglePin(row)} style={{
-          background: "none", border: "none", cursor: "pointer", fontSize: 14,
-          opacity: row.pinned ? 1 : 0.25,
-        }}>📌</button>
-      ),
-    },
-    {
-      key: "title", label: "Title",
-      render: (row) => (
-        <span>
-          {row.pinned && (
-            <span style={{
-              fontSize: 10, fontWeight: 700, color: "#fff", background: COLORS.accent,
-              padding: "2px 6px", borderRadius: 4, marginRight: 8, letterSpacing: "0.04em",
-              fontFamily: "var(--body)", textTransform: "uppercase",
-            }}>BROADCAST</span>
-          )}
-          {row.title}
-        </span>
-      ),
-    },
-    {
-      key: "body", label: "Preview",
-      render: (row) => (
-        <span style={{ color: COLORS.textMuted, fontSize: 13 }}>
-          {row.body?.slice(0, 80)}{row.body?.length > 80 ? "..." : ""}
-        </span>
-      ),
-    },
-    { key: "created_at", label: "Created", render: (row) => formatDate(row.created_at) },
-    {
-      key: "actions", label: "", width: 140,
-      render: (row) => (
-        <div style={{ display: "flex", gap: 8 }}>
-          <button style={s.editBtn} onClick={() => setEditing(row)}>Edit</button>
-          <button style={s.deleteBtn} onClick={() => setDeleting(row)}>Delete</button>
-        </div>
-      ),
-    },
-  ];
+  // Filter
+  const filtered = useMemo(() => {
+    if (filter === "announcement") return items.filter(i => !i.pinned);
+    if (filter === "broadcast") return items.filter(i => i.pinned);
+    return items;
+  }, [items, filter]);
 
-  if (loading) return <div style={s.loading}><div style={s.spinner} /></div>;
+  // Sort
+  const sorted = useMemo(() => {
+    const copy = [...filtered];
+    copy.sort((a, b) => {
+      let va, vb;
+      if (sortKey === "title") { va = (a.title || "").toLowerCase(); vb = (b.title || "").toLowerCase(); }
+      else if (sortKey === "created_at") { va = a.created_at || ""; vb = b.created_at || ""; }
+      else if (sortKey === "pinned") { va = a.pinned ? 1 : 0; vb = b.pinned ? 1 : 0; }
+      else { va = a[sortKey] || ""; vb = b[sortKey] || ""; }
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return copy;
+  }, [filtered, sortKey, sortDir]);
+
+  // Counts
+  const counts = useMemo(() => ({
+    all: items.length,
+    announcement: items.filter(i => !i.pinned).length,
+    broadcast: items.filter(i => i.pinned).length,
+  }), [items]);
+
+  // Selection helpers
+  const allSelected = sorted.length > 0 && sorted.every(i => selected.has(i.id));
+  const someSelected = selected.size > 0 && !allSelected;
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(sorted.map(i => i.id)));
+    }
+  }
+
+  function toggleOne(id) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function handleSort(key) {
+    if (sortKey === key) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  }
+
+  const SortIcon = ({ col }) => (
+    <span style={{ marginLeft: 4, fontSize: 10, opacity: sortKey === col ? 0.9 : 0.3 }}>
+      {sortKey === col && sortDir === "asc" ? "\u25B2" : "\u25BC"}
+    </span>
+  );
+
+  if (loading) return (
+    <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
+      <div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+    </div>
+  );
 
   return (
-    <div style={s.page}>
-      <div style={s.header}>
-        <h1 style={s.title}>Announcements</h1>
+    <div style={{ padding: "24px 32px 48px" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div>
+          <h1 style={{ fontFamily: "var(--heading)", fontSize: 26, fontWeight: 700, color: C.text, margin: 0 }}>Announcements</h1>
+          <div style={{ fontSize: 13, color: C.sec, marginTop: 4 }}>{items.length} total</div>
+        </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button
-            style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${COLORS.accent}`, background: "transparent", color: COLORS.accent, fontFamily: "var(--body)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
-            onClick={() => setShowBroadcast(true)}
-          >
-            Send Broadcast
-          </button>
-          <button style={{ ...s.createBtn, background: COLORS.accent, boxShadow: `0 4px 12px ${COLORS.accent}25` }} onClick={() => setShowForm(true)}>+ Post Announcement</button>
+          <Button onClick={() => setShowBroadcast(true)}>Send Broadcast</Button>
+          <Button primary onClick={() => setShowForm(true)}>+ Post Announcement</Button>
         </div>
       </div>
 
+      {/* Error banner */}
       {error && (
         <div style={{ padding: "10px 16px", borderRadius: 10, background: "#FEE2E2", border: "1px solid #FCA5A5", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontFamily: "var(--body)", fontSize: 13, color: "#991B1B" }}>{error}</span>
@@ -157,8 +201,104 @@ export default function AnnouncementsPage() {
         </div>
       )}
 
-      <DataTable columns={columns} data={items} emptyMessage="No announcements yet." />
+      {/* Filter bar */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        <FilterButton active={filter === "all"} onClick={() => setFilter("all")} count={counts.all}>All</FilterButton>
+        <FilterButton active={filter === "announcement"} onClick={() => setFilter("announcement")} count={counts.announcement}>Announcements</FilterButton>
+        <FilterButton active={filter === "broadcast"} onClick={() => setFilter("broadcast")} count={counts.broadcast}>Broadcasts</FilterButton>
+      </div>
 
+      {/* Floating action bar for bulk selection */}
+      {selected.size > 0 && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 14,
+          padding: "10px 18px", borderRadius: 10,
+          background: "#2d6a4f", color: "#fff",
+          marginBottom: 16, fontSize: 13, fontWeight: 600,
+        }}>
+          <span>{selected.size} selected</span>
+          <Button danger small onClick={handleBulkDelete} style={{ marginLeft: 8 }}>Delete Selected</Button>
+          <button onClick={() => setSelected(new Set())} style={{ marginLeft: "auto", background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 500, fontFamily: "inherit" }}>Clear</button>
+        </div>
+      )}
+
+      {/* Table */}
+      {sorted.length === 0 ? (
+        <Card>
+          <EmptyState
+            emoji="\uD83D\uDCE2"
+            title="No announcements yet"
+            desc="Post an announcement or send a broadcast to your church community."
+            action="+ Post Announcement"
+            onAction={() => setShowForm(true)}
+          />
+        </Card>
+      ) : (
+        <Card noPad>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                <th style={{ ...thStyle, width: 44, paddingLeft: 16 }}>
+                  <Checkbox checked={allSelected} onChange={toggleAll} />
+                </th>
+                <th style={{ ...thStyle, width: 44 }}>
+                  <span onClick={() => handleSort("pinned")} style={sortHeader}>\uD83D\uDCCC<SortIcon col="pinned" /></span>
+                </th>
+                <th style={thStyle}>
+                  <span onClick={() => handleSort("title")} style={sortHeader}>Title<SortIcon col="title" /></span>
+                </th>
+                <th style={thStyle}>
+                  <span style={{ ...sortHeader, cursor: "default" }}>Preview</span>
+                </th>
+                <th style={{ ...thStyle, width: 110 }}>
+                  <span onClick={() => handleSort("created_at")} style={sortHeader}>Created<SortIcon col="created_at" /></span>
+                </th>
+                <th style={{ ...thStyle, width: 140 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((row) => {
+                const isSelected = selected.has(row.id);
+                return (
+                  <tr key={row.id} style={{ borderBottom: `1px solid ${C.borderLight}`, background: isSelected ? `${C.accent}08` : "transparent", transition: "background 0.15s" }}>
+                    <td style={{ ...tdStyle, paddingLeft: 16, width: 44 }}>
+                      <Checkbox checked={isSelected} onChange={() => toggleOne(row.id)} />
+                    </td>
+                    <td style={{ ...tdStyle, width: 44, textAlign: "center" }}>
+                      <button onClick={() => togglePin(row)} style={{
+                        background: "none", border: "none", cursor: "pointer", fontSize: 14,
+                        opacity: row.pinned ? 1 : 0.25,
+                      }}>\uD83D\uDCCC</button>
+                    </td>
+                    <td style={tdStyle}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {row.pinned && <Badge variant="broadcast">BROADCAST</Badge>}
+                        <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{row.title}</span>
+                      </div>
+                    </td>
+                    <td style={tdStyle}>
+                      <span style={{ color: C.muted, fontSize: 13 }}>
+                        {row.body?.slice(0, 80)}{row.body?.length > 80 ? "..." : ""}
+                      </span>
+                    </td>
+                    <td style={{ ...tdStyle, width: 110 }}>
+                      <span style={{ fontSize: 12, color: C.sec }}>{formatDate(row.created_at)}</span>
+                    </td>
+                    <td style={{ ...tdStyle, width: 140 }}>
+                      <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                        <Button small onClick={() => setEditing(row)}>Edit</Button>
+                        <Button small danger onClick={() => setDeleting(row)}>Delete</Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      )}
+
+      {/* Modals */}
       {showForm && (
         <FormModal title="Post Announcement" fields={FIELDS}
           onSubmit={handleCreate} onClose={() => setShowForm(false)} submitLabel="Post" />
@@ -181,13 +321,25 @@ export default function AnnouncementsPage() {
   );
 }
 
-const s = {
-  page: { padding: "32px 40px" },
-  loading: { padding: 60, display: "flex", justifyContent: "center" },
-  spinner: { width: 28, height: 28, border: `2px solid ${COLORS.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
-  header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
-  title: { fontFamily: "var(--heading)", fontSize: 26, fontWeight: 700, color: COLORS.text },
-  createBtn: { padding: "10px 20px", borderRadius: 10, border: "none", background: COLORS.accent, color: "#fff", fontFamily: "var(--body)", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 12px ${COLORS.accent}25` },
-  editBtn: { padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${COLORS.border}`, background: COLORS.card, color: COLORS.body, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" },
-  deleteBtn: { padding: "5px 12px", borderRadius: 8, border: `1px solid ${COLORS.red}30`, background: COLORS.redBg, color: COLORS.red, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" },
+const thStyle = {
+  padding: "12px 14px",
+  textAlign: "left",
+  fontSize: 11,
+  fontWeight: 600,
+  color: "#9e9888",
+  textTransform: "uppercase",
+  letterSpacing: 0.5,
+  whiteSpace: "nowrap",
+};
+
+const tdStyle = {
+  padding: "14px 14px",
+  verticalAlign: "middle",
+};
+
+const sortHeader = {
+  cursor: "pointer",
+  userSelect: "none",
+  display: "inline-flex",
+  alignItems: "center",
 };

@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, post } from "../api";
-import { cloudinaryUrl } from "../components/ImageUpload";
-import EmailDigestModal from "../components/EmailDigestModal";
-import PhonePreviewModal from "../components/PhonePreviewModal";
-
-const PLAN_LABELS = { church: "Church", church_plus: "Church Plus", church_pro: "Church Pro" };
+import StatCard from "../components/dashboard/StatCard";
+import PastoralInsight from "../components/dashboard/PastoralInsight";
+import SpiritualPulse from "../components/dashboard/SpiritualPulse";
+import MemberHealth from "../components/dashboard/MemberHealth";
+import Card from "../components/ui/Card";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import SectionLabel from "../components/ui/SectionLabel";
+import Avatar from "../components/ui/Avatar";
 
 export default function DashboardPage() {
   const { church, churchLoading, user } = useAuth();
   const navigate = useNavigate();
-  const C = useChurchColors();
   const [stats, setStats] = useState(null);
   const [pulse, setPulse] = useState(null);
   const [engagement, setEngagement] = useState(null);
@@ -21,13 +23,7 @@ export default function DashboardPage() {
   const [prayers, setPrayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generatingInsight, setGeneratingInsight] = useState(false);
-  const [checklistDismissed, setChecklistDismissed] = useState(
-    () => localStorage.getItem("onboarding_checklist_dismissed") === "true"
-  );
   const [memberCount, setMemberCount] = useState(0);
-  const [showPhonePreview, setShowPhonePreview] = useState(false);
-  const [showEmailPreview, setShowEmailPreview] = useState(false);
-  const [showMessageModal, setShowMessageModal] = useState(null);
   const [milestones, setMilestones] = useState([]);
 
   useEffect(() => {
@@ -79,7 +75,7 @@ export default function DashboardPage() {
   if (churchLoading) {
     return (
       <div style={{ padding: 60, display: "flex", justifyContent: "center" }}>
-        <div style={{ width: 28, height: 28, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <div style={{ width: 28, height: 28, border: "2px solid #3d6b44", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       </div>
     );
   }
@@ -87,400 +83,265 @@ export default function DashboardPage() {
   if (!church) {
     return (
       <div style={{ padding: 60, textAlign: "center" }}>
-        <p style={{ fontSize: 14, color: C.muted }}>No church found. Please complete signup.</p>
+        <p style={{ fontSize: 14, color: "#9e9888" }}>No church found. Please complete signup.</p>
       </div>
     );
   }
 
-  const userName = user?.email?.split("@")[0] || "Pastor";
-  const churchInitial = (church?.name || "C")[0].toUpperCase();
-  const hasCurrentSermon = engagement?.current_sermon?.title && engagement.current_sermon.title !== "Weekly Sermon";
-
-  // Checklist logic
-  const hasSermons = hasCurrentSermon || (stats?.total_sermons > 0);
-  const hasAnnouncements = stats?.total_announcements > 0;
-  const hasBranding = church?.accent_color && church.accent_color !== "#c9a84c" && church.accent_color !== "#3D6B5E";
-  const hasMembers = memberCount >= 2;
-  const checklistItems = [
-    { label: "Create your church", sub: "Done!", done: true },
-    { label: "Set up branding", sub: hasBranding ? `${church.theme || "Custom"} theme active` : "Choose your church colors", done: !!hasBranding },
-    { label: "Create your first sermon study", sub: "Paste a video link or enter manually", done: !!hasSermons, action: "Create Sermon", nav: "/portal/sermons" },
-    { label: "Share your invite code", sub: church?.invite_code || "Generate in settings", done: hasMembers, action: "Copy Code" },
-    { label: "Welcome your first 5 members", sub: `${memberCount} of 5 members joined`, done: memberCount >= 5, action: "Share Invite" },
-  ];
-  const completedCount = checklistItems.filter(i => i.done).length;
-  const allDone = completedCount === checklistItems.length;
-  function dismissChecklist() {
-    localStorage.setItem("onboarding_checklist_dismissed", "true");
-    setChecklistDismissed(true);
-  }
-
-  // Attention items
-  const attentionItems = [];
-  if (attention?.declining?.length > 0) {
-    attention.declining.slice(0, 2).forEach(m => {
-      attentionItems.push({ name: m.display_name || "Member", issue: "Engagement declining", status: "declining" });
-    });
-  }
-  if (attention?.inactive?.length > 0) {
-    attention.inactive.slice(0, 2).forEach(m => {
-      attentionItems.push({ name: m.display_name || "Member", issue: `Inactive ${m.days_inactive || "?"} days`, status: "new" });
-    });
-  }
-
-  // Themes
-  const themes = pulse?.themes || [];
-
-  // Stat values
+  // Computed values
   const activeCount = stats?.active_this_week ?? engagement?.active_this_week ?? 0;
   const completionRate = engagement?.sermon_completion_rate != null ? `${engagement.sermon_completion_rate}%` : "0%";
   const totalMembers = stats?.member_count ?? memberCount;
   const avgStreak = engagement?.avg_session_length || "0";
+  const hasCurrentSermon = engagement?.current_sermon?.title && engagement.current_sermon.title !== "Weekly Sermon";
+  const themes = pulse?.themes || [];
 
-  // Sermon days
-  const sermonDays = engagement?.sermon_daily || [];
+  // Attention items for "Needs Attention"
+  const attentionDots = [];
+  if (attention?.declining?.length > 0) {
+    attentionDots.push({ color: "#d4a03c", text: `${attention.declining.length} members inactive 7+ days` });
+  }
+  if (prayers.filter(p => p.prayer_count === 0).length > 0) {
+    attentionDots.push({ color: "#c26a4a", text: `${prayers.filter(p => p.prayer_count === 0).length} unanswered prayer${prayers.filter(p => p.prayer_count === 0).length > 1 ? "s" : ""}` });
+  }
 
-  const statusColor = (s) => s === "thriving" ? C.green : s === "active" ? C.accent : s === "declining" ? C.amber : s === "new" ? C.purple : C.muted;
-  const statusBg = (s) => s === "thriving" ? C.greenBg : s === "active" ? C.accentLight : s === "declining" ? C.amberBg : s === "new" ? C.purpleBg : C.bg;
+  // Member health counts
+  const healthCounts = {
+    thriving: attention?.milestones?.length || 0,
+    active: Math.max(0, activeCount - (attention?.milestones?.length || 0)),
+    declining: attention?.declining?.length || 0,
+    new: attention?.new_members?.length || 0,
+  };
+
+  // Week date range
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  const weekRange = `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 
   return (
-    <div style={{ padding: "32px 40px" }}>
-      {/* ─── Church Hero Banner ─── */}
-      <div style={{
-        margin: "-32px -40px 28px", borderRadius: "0 0 20px 20px", overflow: "hidden",
-        position: "relative", height: 180,
-        background: church?.banner_url
-          ? `url(${cloudinaryUrl(church.banner_url, { width: 1600, height: 400 })}) center/cover`
-          : `linear-gradient(135deg, ${C.accent}18 0%, rgba(201,168,76,0.12) 40%, ${C.bgDeep} 100%)`,
-      }}>
-        <div style={{ position: "absolute", top: -40, right: 60, width: 300, height: 300, background: `radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 60%)`, borderRadius: "50%" }} />
-        <div style={{ position: "absolute", bottom: -60, left: 100, width: 250, height: 250, background: `radial-gradient(circle, ${C.accent}18 0%, transparent 60%)`, borderRadius: "50%" }} />
-        <div style={{ position: "absolute", top: 20, right: 30, fontSize: 200, opacity: 0.035, color: C.gold, fontFamily: "serif" }}>✝</div>
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "24px 40px", background: "linear-gradient(transparent 0%, rgba(247,244,239,0.8) 60%, rgba(247,244,239,0.95) 100%)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              {church?.logo_url ? (
-                <img src={cloudinaryUrl(church.logo_url, { width: 112, height: 112 })} alt="" style={{ width: 56, height: 56, borderRadius: 16, objectFit: "cover", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }} />
-              ) : (
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, color: "#fff", boxShadow: `0 4px 16px ${C.accent}30`, border: "3px solid #fff" }}>{churchInitial}</div>
-              )}
-              <div>
-                <div style={{ fontSize: 26, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{church?.name || "Dashboard"}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
-                  <span style={{ padding: "2px 10px", borderRadius: 6, background: C.accent, color: "#fff", fontSize: 10, fontWeight: 700 }}>{PLAN_LABELS[church?.plan] || "Church"}</span>
-                  <span style={{ fontSize: 12, color: C.sec }}>{totalMembers} members{church?.city ? ` · ${church.city}` : ""}</span>
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setShowEmailPreview(true)} style={{
-                padding: "8px 14px", borderRadius: 10, border: `1.5px solid ${C.accent}30`,
-                background: `${C.card}ee`, color: C.accent, fontSize: 12, fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--body)", display: "flex", alignItems: "center", gap: 6,
-              }}>📧 Email Digest</button>
-              <button onClick={() => setShowPhonePreview(true)} style={{
-                padding: "8px 14px", borderRadius: 10, border: `1.5px solid ${C.accent}30`,
-                background: `${C.card}ee`, color: C.accent, fontSize: 12, fontWeight: 700,
-                cursor: "pointer", fontFamily: "var(--body)", display: "flex", alignItems: "center", gap: 6,
-              }}>📱 Preview as Member</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Welcome Message ─── */}
-      {!checklistDismissed && (
-        <div style={{ padding: "16px 20px", borderRadius: 14, marginBottom: 16, background: `linear-gradient(135deg, ${C.accentLight} 0%, ${C.goldBg} 100%)`, border: `1px solid ${C.accent}15`, display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ fontSize: 28 }}>👋</div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Welcome to Devotion, Pastor</div>
-            <div style={{ fontSize: 13, color: C.sec, lineHeight: 1.5, marginTop: 2 }}>We're honored to help you care for your congregation. Complete the steps below to get started.</div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Getting Started Checklist ─── */}
-      {!checklistDismissed && !allDone && (
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 28, position: "relative" }}>
-          <button onClick={dismissChecklist} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 18, color: C.muted, cursor: "pointer" }}>✕</button>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>Getting Started</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 120, height: 8, borderRadius: 4, background: C.bgDeep }}><div style={{ width: `${(completedCount / checklistItems.length) * 100}%`, height: "100%", borderRadius: 4, background: C.accent }} /></div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.accent }}>{completedCount}/{checklistItems.length}</span>
-            </div>
-          </div>
-          {checklistItems.map((step, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderTop: i > 0 ? `1px solid ${C.borderLight}` : "none", opacity: step.done ? 0.55 : 1 }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", flexShrink: 0, background: step.done ? C.accent : C.card, border: step.done ? "none" : `2px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: step.done ? "#fff" : C.muted, fontSize: 12, fontWeight: 700 }}>{step.done ? "✓" : i + 1}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.text, textDecoration: step.done ? "line-through" : "none" }}>{step.label}</div>
-                <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{step.sub}</div>
-              </div>
-              {step.action && !step.done && (
-                <button onClick={() => { if (step.nav) navigate(step.nav); else if (step.action === "Copy Code" && church?.invite_code) navigator.clipboard.writeText(church.invite_code); }} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>{step.action}</button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-      {!checklistDismissed && allDone && (
-        <div style={{ background: C.card, border: `1px solid ${C.accent}20`, borderRadius: 16, padding: "16px 24px", marginBottom: 28, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 15, color: C.text }}>🎉 You're all set! Your church is live on Devotion.</span>
-          <button onClick={dismissChecklist} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 18, padding: 4 }}>✕</button>
-        </div>
-      )}
-
-      {/* ─── Quick Actions ─── */}
+    <div style={{ padding: "24px 32px 48px" }}>
+      {/* Quick Actions */}
       <div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
-        <button onClick={() => navigate("/portal/sermons")} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>Add This Week's Sermon</button>
-        <button onClick={() => navigate("/portal/announcements")} style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>📢 Post Announcement</button>
-        <button style={{ padding: "10px 20px", borderRadius: 10, border: `1.5px solid ${C.amber}40`, background: C.amberBg, color: C.amber, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>📣 Send Broadcast</button>
+        <Button primary onClick={() => navigate("/portal/sermons")}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+          Add Sermon
+        </Button>
+        <Button onClick={() => navigate("/portal/announcements")}>Post Announcement</Button>
+        <Button onClick={() => navigate("/portal/devotionals")}>Write Devotional</Button>
+        <Button style={{ color: "#b05a3a", borderColor: "#e0c4b8" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+          Send Broadcast
+        </Button>
       </div>
 
-      {/* ─── Stats Grid ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 28 }}>
-        {[
-          { label: "Active This Week", value: activeCount, sub: `${stats?.active_pct ?? "—"}% of members`, trend: stats?.active_change || "", color: C.green },
-          { label: "Sermon Completion", value: completionRate, sub: engagement?.sermon_change || "", trend: engagement?.completion_change || "", color: C.accent },
-          { label: "Total Members", value: totalMembers, sub: `${stats?.new_members_this_month ?? 0} new this month`, trend: stats?.member_change || "", color: C.purple },
-          { label: "Avg. Streak", value: avgStreak, sub: "days", trend: "", color: C.gold },
-        ].map((stat, i) => (
-          <div key={i} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>{stat.label}</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontSize: 32, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{stat.value}</span>
-              {stat.trend && <span style={{ fontSize: 12, fontWeight: 700, color: stat.color, background: stat.color + "15", padding: "2px 8px", borderRadius: 6 }}>↑ {stat.trend}</span>}
+      {/* Stat Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        <StatCard label="Active This Week" value={activeCount} change={stats?.active_change} up={true} sub={`${stats?.active_pct ?? 0}% of members`} color="#3d6b44" />
+        <StatCard label="Sermon Completion" value={completionRate} change={engagement?.completion_change} up={true} sub="vs. last week" color="#8b6914" />
+        <StatCard label="Total Members" value={totalMembers} change={stats?.member_change} up={true} sub={`${stats?.new_members_this_month ?? 0} new this month`} color="#5a7d9a" />
+        <StatCard label="Avg. Streak" value={avgStreak} sub="days" color="#b05a3a" />
+      </div>
+
+      {/* Main two-column layout */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20 }}>
+        {/* Left column */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Pastoral Insight */}
+          <PastoralInsight
+            insightText={pulse?.insight?.text}
+            generating={generatingInsight}
+            onGenerate={handleGenerateInsight}
+          />
+
+          {/* This Week Panel */}
+          <Card noPad>
+            <div style={{ padding: "16px 20px", borderBottom: "1px solid #ece7dd", display: "flex", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#9e9888", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                This Week at {church?.name || "Church"}
+              </span>
+              <span style={{ fontSize: 12, color: "#b0a998" }}>{weekRange}</span>
             </div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{stat.sub}</div>
-          </div>
-        ))}
-      </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid #ece7dd" }}>
+              {/* Sermon */}
+              <div style={{ padding: 20, borderRight: "1px solid #ece7dd" }}>
+                <SectionLabel>This Week's Sermon</SectionLabel>
+                {hasCurrentSermon ? (
+                  <>
+                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{engagement.current_sermon.title}</div>
+                    {engagement.current_sermon.scripture_refs && (
+                      <div style={{ fontSize: 12, color: "#9e9888", marginBottom: 10 }}>{engagement.current_sermon.scripture_refs}</div>
+                    )}
+                    <Badge variant="published">Published</Badge>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 13, color: "#9e9888" }}>No sermon this week</div>
+                )}
+              </div>
 
-      {/* ─── Milestones This Month ─── */}
-      <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>MILESTONES THIS MONTH</div>
-        {milestones.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>No member milestones this month</div>
-        ) : (
-          milestones.map((m, i) => (
-            <div key={m.member_id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < milestones.length - 1 ? `1px solid ${C.borderLight}` : "none" }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: C.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🏅</div>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{m.display_name || "Member"}</span>
-                <span style={{ marginLeft: 8, padding: "2px 10px", borderRadius: 6, background: C.accentLight, fontSize: 11, fontWeight: 700, color: C.accent }}>{m.milestone_type}</span>
+              {/* Needs Attention */}
+              <div style={{ padding: 20, borderRight: "1px solid #ece7dd" }}>
+                <SectionLabel>Needs Attention</SectionLabel>
+                {attentionDots.length === 0 ? (
+                  <div style={{ fontSize: 13, color: "#9e9888" }}>Everyone is active</div>
+                ) : (
+                  attentionDots.map((n, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: n.color, boxShadow: `0 0 0 3px ${n.color}22` }} />
+                      <span style={{ fontSize: 13, color: "#5a5647" }}>{n.text}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Upcoming */}
+              <div style={{ padding: 20 }}>
+                <SectionLabel right="View All" onRightClick={() => navigate("/portal/events")}>Upcoming</SectionLabel>
+                {events.length === 0 ? (
+                  <div style={{ padding: 14, borderRadius: 10, background: "linear-gradient(135deg, #faf6ee, #f5efe3)", border: "1px dashed #e0dbd1", textAlign: "center" }}>
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>📅</div>
+                    <div style={{ fontSize: 12, color: "#b0a998", marginBottom: 8 }}>No upcoming events</div>
+                    <button onClick={() => navigate("/portal/events")} style={{ fontSize: 12, color: "#8b6914", background: "none", border: "none", cursor: "pointer", fontWeight: 600, textDecoration: "underline", fontFamily: "inherit" }}>+ Create Event</button>
+                  </div>
+                ) : (
+                  events.slice(0, 2).map((e, i) => (
+                    <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                      <div style={{ width: 4, borderRadius: 2, background: "#3d6b44" }} />
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{e.title}</div>
+                        <div style={{ fontSize: 11, color: "#9e9888" }}>
+                          {e.event_date ? new Date(e.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}
+                          {e.time ? ` at ${e.time}` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-          ))
-        )}
-      </div>
 
-      {/* ─── Pastoral Insight ─── */}
-      <div style={{
-        background: `linear-gradient(135deg, ${C.accent}08 0%, ${C.goldBg} 100%)`,
-        border: `1px solid ${C.accent}20`, borderRadius: 16, padding: "20px 24px", marginBottom: 28,
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ display: "flex", gap: 12, flex: 1 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>✨</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>Pastoral Insight</div>
-              <div style={{ fontSize: 12, color: C.sec, marginTop: 2 }}>A summary of your congregation's spiritual health this week</div>
-              {pulse?.insight?.text && (
-                <div style={{ marginTop: 12, fontSize: 13, color: C.body, lineHeight: 1.7, padding: "14px 16px", borderRadius: 12, background: `${C.card}cc` }}>
-                  {pulse.insight.text}
+            {/* Milestones */}
+            <div style={{ padding: 20 }}>
+              <SectionLabel>Milestones This Month</SectionLabel>
+              {milestones.length === 0 ? (
+                <div style={{ fontSize: 13, color: "#9e9888" }}>No member milestones this month</div>
+              ) : (
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                  {milestones.slice(0, 4).map((m, i) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "10px 14px", borderRadius: 10,
+                      background: "#faf6ee", border: "1px solid #ece7dd",
+                      flex: "1 1 180px",
+                    }}>
+                      <span style={{ fontSize: 20 }}>🏅</span>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600 }}>{m.display_name || "Member"}</div>
+                        <div style={{ fontSize: 11, color: "#9e9888" }}>{m.milestone_type}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+          </Card>
+
+          {/* Spiritual Pulse + Recent Prayers */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <SpiritualPulse themes={themes} totalMessages={pulse?.total_messages_this_week || 0} />
+
+            <Card>
+              <SectionLabel right="View All" onRightClick={() => navigate("/portal/prayers")}>Recent Prayers</SectionLabel>
+              {prayers.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "20px 0", color: "#9e9888", fontSize: 13 }}>No prayer requests yet</div>
+              ) : (
+                prayers.slice(0, 3).map((p, i) => (
+                  <div key={i} style={{ padding: "10px 0", borderBottom: i < 2 ? "1px solid #f0ebe3" : "none" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{p.is_anonymous ? "Anonymous" : (p.display_name || "Member")}</span>
+                      <Badge
+                        color={p.type === "praise" ? "#8b6914" : "#5a5647"}
+                        bg={p.type === "praise" ? "#faf3e0" : "#f0ebe3"}
+                      >
+                        {p.type === "praise" ? "Praise" : "Prayer"}
+                      </Badge>
+                    </div>
+                    <div style={{ fontSize: 12, color: "#5a5647", lineHeight: 1.4, marginBottom: 4 }}>
+                      {(p.text || p.content || "").slice(0, 100)}{(p.text || p.content || "").length > 100 ? "..." : ""}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 11, color: "#b0a998" }}>
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString() : ""}
+                      </span>
+                      <span style={{ fontSize: 11, color: "#8b6914" }}>🙏 {p.prayer_count || 0}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </Card>
           </div>
-          <button onClick={handleGenerateInsight} style={{ padding: "5px 12px", borderRadius: 8, border: "none", background: C.accent, color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25`, flexShrink: 0, marginLeft: 12 }}>
-            {generatingInsight ? "Generating..." : pulse?.insight?.text ? "Regenerate" : "Generate Insight"}
-          </button>
         </div>
-      </div>
 
-      {/* ─── Weekly Summary ─── */}
-      <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 28 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>THIS WEEK AT {(church?.name || "CHURCH").toUpperCase()}</div>
-        </div>
-        <div style={{ fontSize: 14, color: C.body, lineHeight: 1.7 }}>
-          <strong style={{ color: C.green }}>{activeCount} members</strong> were active this week.{" "}
-          {hasCurrentSermon && <><strong style={{ color: C.accent }}>{engagement?.sermon_finished_count || 0} members</strong> completed the sermon study on <em>{engagement?.current_sermon?.title}</em>. </>}
-          <strong style={{ color: C.purple }}>{stats?.new_members_this_month ?? 0} new members</strong> joined.{" "}
-          <strong style={{ color: C.amber }}>{prayers.length} prayer requests</strong> were shared by the congregation.
-          {attentionItems.length > 0 && <span style={{ color: C.sec }}> {attentionItems[0].name}'s engagement dropped this week. Consider reaching out.</span>}
-        </div>
-      </div>
+        {/* Right column (360px) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Member Health */}
+          <MemberHealth
+            counts={healthCounts}
+            total={totalMembers}
+            attention={attention}
+            onViewAll={() => navigate("/portal/members")}
+          />
 
-      {/* ─── Three-Column: Sermon + Attention + Events ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginBottom: 28 }}>
-        {/* Sermon Progress */}
-        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>THIS WEEK'S SERMON</div>
-            <span onClick={() => navigate("/portal/sermons")} style={{ fontSize: 12, color: C.accent, fontWeight: 600, cursor: "pointer" }}>Manage →</span>
-          </div>
-          {hasCurrentSermon ? (
-            <>
-              <div style={{ borderLeft: `3px solid ${C.accent}`, paddingLeft: 14, marginBottom: 14 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{engagement.current_sermon.title}</div>
-                {engagement.current_sermon.scripture_refs && <div style={{ fontSize: 11, color: C.sec, marginTop: 4 }}>{engagement.current_sermon.scripture_refs}</div>}
+          {/* Content This Week */}
+          <Card>
+            <SectionLabel>Content This Week</SectionLabel>
+            {[
+              hasCurrentSermon && { type: "Sermon", title: engagement.current_sermon.title, status: "Published", color: "#3d6b44", bg: "#e8f0e9" },
+            ].filter(Boolean).map((ct, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid #f0ebe3" }}>
+                <div style={{ width: 4, height: 36, borderRadius: 2, background: ct.color }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "#9e9888", textTransform: "uppercase", letterSpacing: "0.04em" }}>{ct.type}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ct.title}</div>
+                </div>
+                <Badge color={ct.color} bg={ct.bg}>{ct.status}</Badge>
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <div style={{ flex: 1, padding: 8, borderRadius: 8, background: C.accentLight, textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: C.accent }}>{completionRate}</div><div style={{ fontSize: 9, color: C.sec }}>Complete</div>
-                </div>
-                <div style={{ flex: 1, padding: 8, borderRadius: 8, background: C.greenBg, textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: C.green }}>{engagement?.sermon_finished_count || 0}</div><div style={{ fontSize: 9, color: C.sec }}>Finished</div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>No sermon this week</div>
-          )}
-        </div>
+            ))}
+            {!hasCurrentSermon && (
+              <div style={{ fontSize: 13, color: "#9e9888", padding: "12px 0" }}>No content published this week</div>
+            )}
+          </Card>
 
-        {/* Needs Attention */}
-        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>NEEDS ATTENTION</div>
-          {attentionItems.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>Everyone is active</div>
-          ) : (
-            attentionItems.slice(0, 3).map((m, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: statusBg(m.status), borderRadius: 10, marginBottom: 8, border: `1px solid ${statusColor(m.status)}20` }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: statusColor(m.status) + "20", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: statusColor(m.status) }}>{m.name.split(" ").map(n => n[0]).join("")}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{m.name}</div>
-                  <div style={{ fontSize: 10, color: C.sec }}>{m.issue}</div>
-                </div>
-                <button onClick={() => setShowMessageModal(m.name)} style={{ padding: "4px 8px", borderRadius: 6, border: `1px solid ${statusColor(m.status)}30`, background: "transparent", color: statusColor(m.status), fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>✉️ Note</button>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Upcoming Events */}
-        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>UPCOMING</div>
-            <span onClick={() => navigate("/portal/events")} style={{ fontSize: 12, color: C.accent, fontWeight: 600, cursor: "pointer" }}>View All →</span>
-          </div>
-          {events.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>No upcoming events</div>
-          ) : (
-            events.slice(0, 3).map((e, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < Math.min(events.length, 3) - 1 ? `1px solid ${C.borderLight}` : "none" }}>
-                <div style={{ width: 34, height: 34, borderRadius: 8, background: C.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>📅</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{e.title}</div>
-                  <div style={{ fontSize: 10, color: C.muted }}>{e.event_date ? new Date(e.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}{e.location ? ` · ${e.location}` : ""}</div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* ─── Two-Column: Spiritual Pulse + Recent Prayers ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
-        {/* Spiritual Pulse */}
-        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          <div style={{ marginBottom: 4 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>SPIRITUAL PULSE</div>
-            <div style={{ fontSize: 12, color: C.sec, marginTop: 2 }}>Themes from congregation conversations</div>
-          </div>
-          {themes.length === 0 ? (
-            <p style={{ fontSize: 13, color: C.muted, fontStyle: "italic", lineHeight: 1.6, marginTop: 16 }}>
-              Not enough conversation data yet. Themes will appear as your members use Devotion.
-            </p>
-          ) : (
-            <div style={{ marginTop: 16 }}>
-              {themes.slice(0, 5).map((t, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                  <div style={{ width: 100, fontSize: 12, color: C.body, fontWeight: 500 }}>{t.theme}</div>
-                  <div style={{ flex: 1, height: 8, borderRadius: 4, background: C.bgDeep }}><div style={{ width: `${Math.min(t.percentage, 100)}%`, height: "100%", borderRadius: 4, background: i === 0 ? C.accent : C.sec, transition: "width 1s ease" }} /></div>
-                  <div style={{ width: 35, fontSize: 12, fontWeight: 700, color: C.sec, textAlign: "right" }}>{t.percentage}%</div>
-                </div>
-              ))}
+          {/* Church Invite Code */}
+          <div style={{ background: "linear-gradient(135deg, #faf6ee, #f5efe3)", borderRadius: 14, border: "1px solid #e0dbd1", padding: 20 }}>
+            <SectionLabel>Church Invite Code</SectionLabel>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "10px 14px", borderRadius: 8,
+              background: "#2c2a25", color: "#e2c87a",
+              fontFamily: "'DM Sans', monospace", fontSize: 15,
+              fontWeight: 600, letterSpacing: "0.06em",
+            }}>
+              {church?.invite_code || "---"}
+              <button
+                onClick={() => { if (church?.invite_code) navigator.clipboard.writeText(church.invite_code); }}
+                style={{
+                  padding: "4px 10px", borderRadius: 5,
+                  background: "rgba(200,168,85,0.15)",
+                  border: "1px solid rgba(200,168,85,0.3)",
+                  color: "#e2c87a", fontSize: 11, fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                }}
+              >
+                Copy
+              </button>
             </div>
-          )}
-        </div>
-
-        {/* Recent Prayers */}
-        <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>RECENT PRAYERS</div>
-            <span onClick={() => navigate("/portal/prayers")} style={{ fontSize: 12, color: C.accent, fontWeight: 600, cursor: "pointer" }}>View All →</span>
+            <div style={{ fontSize: 12, color: "#9e9888", marginTop: 8 }}>Share with members to join in the app</div>
           </div>
-          {prayers.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>No prayer requests yet</div>
-          ) : (
-            prayers.slice(0, 3).map((p, i) => (
-              <div key={i} style={{ padding: "10px 0", borderBottom: i < Math.min(prayers.length, 3) - 1 ? `1px solid ${C.borderLight}` : "none" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{p.is_anonymous ? "Anonymous" : (p.display_name || "Member")}</span>
-                  <span style={{ fontSize: 11, color: C.muted }}>{p.created_at ? new Date(p.created_at).toLocaleDateString() : ""}</span>
-                </div>
-                <div style={{ fontSize: 12, color: C.sec, lineHeight: 1.5 }}>{(p.text || p.content || "").slice(0, 120)}{(p.text || p.content || "").length > 120 ? "..." : ""}</div>
-                <div style={{ fontSize: 11, color: C.accent, marginTop: 4 }}>🙏 {p.prayer_count || 0} praying</div>
-              </div>
-            ))
-          )}
         </div>
       </div>
-
-      {/* ─── Activity Log ─── */}
-      <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>RECENT ACTIVITY</div>
-        {(() => {
-          const log = [];
-          prayers.slice(0, 2).forEach(p => log.push({ action: "Prayer request submitted", detail: p.is_anonymous ? "Anonymous" : (p.display_name || "Member"), time: p.created_at, icon: "🙏", color: C.accent }));
-          if (hasCurrentSermon) log.push({ action: "Sermon published", detail: engagement.current_sermon.title, time: "", icon: "📖", color: C.accent });
-          if (log.length === 0) return <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>No recent activity</div>;
-          return log.slice(0, 6).map((a, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < log.length - 1 ? `1px solid ${C.borderLight}` : "none" }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: a.color + "12", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>{a.icon}</div>
-              <div style={{ flex: 1 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{a.action}</span>
-                <span style={{ fontSize: 12, color: C.sec, marginLeft: 6 }}>{a.detail}</span>
-              </div>
-              <span style={{ fontSize: 11, color: C.muted }}>{a.time ? new Date(a.time).toLocaleDateString() : ""}</span>
-            </div>
-          ));
-        })()}
-      </div>
-
-      {/* ─── Invite Code Banner ─── */}
-      {church.invite_code && (
-        <div style={{ background: `linear-gradient(135deg, ${C.accent}08 0%, ${C.goldBg} 100%)`, border: `1px solid ${C.accent}15`, borderRadius: 16, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1 }}>INVITE CODE</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: "var(--heading)", letterSpacing: 3, marginTop: 4 }}>{church.invite_code}</div>
-          </div>
-          <button onClick={() => navigator.clipboard.writeText(church.invite_code)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: C.accent, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)", boxShadow: `0 4px 12px ${C.accent}25` }}>Copy Code</button>
-        </div>
-      )}
-
-      {showEmailPreview && (
-        <EmailDigestModal
-          onClose={() => setShowEmailPreview(false)}
-          stats={{
-            active: activeCount,
-            completed: engagement?.sermon_finished_count || 0,
-            newMembers: stats?.new_members_this_month ?? 0,
-            prayers: prayers.length,
-          }}
-        />
-      )}
-
-      {showPhonePreview && (
-        <PhonePreviewModal
-          onClose={() => setShowPhonePreview(false)}
-          currentSermon={hasCurrentSermon ? engagement.current_sermon.title : null}
-          recentPrayer={prayers.length > 0 ? (prayers[0].text || prayers[0].content || "") : null}
-        />
-      )}
     </div>
   );
 }
