@@ -60,7 +60,7 @@ export default function Sidebar({ open, onClose, badges = {} }) {
             )}
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{church?.name || "Church Portal"}</div>
-              <div style={{ fontSize: 11, color: C.muted }}>Shepherd Plan</div>
+              <div style={{ fontSize: 11, color: C.muted }}>{({ church: "Church", church_plus: "Church Plus", church_pro: "Church Pro" })[church?.plan] || "Church"}</div>
             </div>
           </div>
         </div>

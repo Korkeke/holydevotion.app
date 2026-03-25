@@ -110,6 +110,7 @@ export default function MembersPage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{name}</span>
                     <span style={{ padding: "1px 8px", borderRadius: 6, background: statusBg(status), fontSize: 10, fontWeight: 700, color: statusColor(status), textTransform: "capitalize" }}>{status}</span>
+                    {m.visible_in_directory && <span style={{ padding: "1px 8px", borderRadius: 6, background: "#e6f4ea", fontSize: 10, fontWeight: 700, color: "#1e7e34" }}>Directory</span>}
                     {m.role === "owner" && <span style={{ padding: "1px 8px", borderRadius: 6, background: C.goldDim, fontSize: 10, fontWeight: 700, color: C.amber }}>Owner</span>}
                     {m.role === "admin" && <span style={{ padding: "1px 8px", borderRadius: 6, background: C.blueBg, fontSize: 10, fontWeight: 700, color: C.blue }}>Admin</span>}
                   </div>
@@ -137,6 +138,11 @@ export default function MembersPage() {
                       </div>
                     ))}
                   </div>
+                  {m.prayer_focus && (
+                    <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, borderLeft: `3px solid ${C.accent}`, background: `${C.accent}08`, fontStyle: "italic", fontSize: 13, color: C.sec, lineHeight: 1.5 }}>
+                      {m.prayer_focus}
+                    </div>
+                  )}
                   {!isMe && m.role !== "owner" && (
                     <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
                       {isOwner && m.role === "member" && (

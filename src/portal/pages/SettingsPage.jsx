@@ -56,6 +56,9 @@ export default function SettingsPage() {
         FIELDS.forEach((f) => { vals[f.key] = c[f.key] || ""; });
         vals.logo_url = c.logo_url || "";
         vals.banner_url = c.banner_url || "";
+        vals.verse_of_week = c.verse_of_week || "";
+        vals.verse_of_week_ref = c.verse_of_week_ref || "";
+        vals.giving_url = c.giving_url || "";
         setForm(vals);
         const th = c.theme || "sage_green";
         setSelectedTheme(th);
@@ -105,6 +108,9 @@ export default function SettingsPage() {
       const data = await post(`/api/churches/${church.id}/pastor-code`);
       setPastorCode(data?.pastor_code || data?.code || null);
       setPastorCodeUsed(false);
+    } catch (err) {
+      console.error("Failed to generate pastor code:", err);
+      alert("Failed to generate pastor code: " + (err.message || "Unknown error"));
     } finally { setGeneratingPastorCode(false); }
   }
 
@@ -219,6 +225,48 @@ export default function SettingsPage() {
                 aspect="banner"
                 label="Header Image"
                 accentColor={COLORS.accent}
+              />
+            </div>
+          </div>
+
+          {/* Verse of the Week */}
+          <div style={{ marginTop: 8, marginBottom: 16, padding: "16px 18px", borderRadius: 12, border: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
+            <h3 style={{ fontFamily: "var(--heading)", fontSize: 15, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>Verse of the Week</h3>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: COLORS.textMuted, marginBottom: 14 }}>
+              This verse will be displayed on every member's church home screen.
+            </p>
+            <div style={s.field}>
+              <label style={s.label}>Verse Text</label>
+              <textarea
+                style={{ ...s.input, minHeight: 80, resize: "vertical" }}
+                value={form.verse_of_week || ""}
+                onChange={(e) => setForm({ ...form, verse_of_week: e.target.value })}
+              />
+            </div>
+            <div style={{ ...s.field, marginBottom: 0 }}>
+              <label style={s.label}>Scripture Reference</label>
+              <input
+                style={s.input}
+                value={form.verse_of_week_ref || ""}
+                onChange={(e) => setForm({ ...form, verse_of_week_ref: e.target.value })}
+                placeholder="e.g. Philippians 4:13"
+              />
+            </div>
+          </div>
+
+          {/* Giving / Donation */}
+          <div style={{ marginBottom: 16, padding: "16px 18px", borderRadius: 12, border: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
+            <h3 style={{ fontFamily: "var(--heading)", fontSize: 15, fontWeight: 700, color: COLORS.text, marginBottom: 4 }}>Giving / Donation</h3>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: COLORS.textMuted, marginBottom: 14 }}>
+              Members will see a "Give" button that opens this link.
+            </p>
+            <div style={{ ...s.field, marginBottom: 0 }}>
+              <label style={s.label}>Giving URL</label>
+              <input
+                style={s.input}
+                value={form.giving_url || ""}
+                onChange={(e) => setForm({ ...form, giving_url: e.target.value })}
+                placeholder="https://your-church.com/give"
               />
             </div>
           </div>

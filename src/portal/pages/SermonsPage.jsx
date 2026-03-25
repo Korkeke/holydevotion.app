@@ -25,6 +25,7 @@ export default function SermonsPage() {
   const [selected, setSelected] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Create form state
   const [form, setForm] = useState({
@@ -49,7 +50,7 @@ export default function SermonsPage() {
 
   // Editing reflection state (for published sermons)
   const [editingRef, setEditingRef] = useState(null);
-  const [refForm, setRefForm] = useState({ title: "", prompt: "", scripture_focus: "" });
+  const [refForm, setRefForm] = useState({ title: "", prompt: "", scripture_focus: "", discussion_prompt: "" });
 
   async function loadSermons() {
     if (!church?.id) return;
@@ -298,6 +299,8 @@ export default function SermonsPage() {
                         <input value={ref.title} onChange={e => updatePreviewReflection(i, "title", e.target.value)} placeholder="Reflection title" style={{ ...inputStyle, marginBottom: 6 }} />
                         <textarea value={ref.prompt} onChange={e => updatePreviewReflection(i, "prompt", e.target.value)} placeholder="Reflection prompt" style={{ ...inputStyle, resize: "vertical", minHeight: 60, marginBottom: 6 }} />
                         <input value={ref.scripture_focus || ""} onChange={e => updatePreviewReflection(i, "scripture_focus", e.target.value)} placeholder="Scripture focus" style={{ ...inputStyle, marginBottom: 6 }} />
+                        <textarea value={ref.discussion_prompt || ""} onChange={e => updatePreviewReflection(i, "discussion_prompt", e.target.value)} placeholder="e.g. What does this passage say about how we treat others?" style={{ ...inputStyle, resize: "vertical", minHeight: 50, marginBottom: 6 }} />
+                        <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Discussion Question (optional)</div>
                         <button type="button" onClick={() => setEditingPreviewIdx(null)} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: C.accentLight, color: C.accent, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Done</button>
                       </div>
                     ) : (
@@ -326,145 +329,182 @@ export default function SermonsPage() {
       )}
 
       {/* Sermon List + Detail Split */}
-      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 24 }}>
-        <div>
-          {sermons.length === 0 && !creating && (
-            <div style={{ textAlign: "center", padding: "40px 20px" }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>📖</div>
-              <div style={{ color: C.muted, fontSize: 14, lineHeight: 1.6 }}>
-                No sermons yet. Create your first sermon to generate daily reflections for your congregation.
+      {(() => {
+        const activeSermons = sermons.filter(s => s.status !== "archived");
+        const archivedSermons = sermons.filter(s => s.status === "archived");
+        const showDetail = selected && !creating;
+
+        const sermonCard = (sermon) => {
+          const sc = STATUS_COLORS[sermon.status] || STATUS_COLORS.draft;
+          return (
+            <div
+              key={sermon.id}
+              onClick={() => { loadSermonDetail(sermon.id); setCreating(false); }}
+              style={{
+                padding: 16, borderRadius: 14, marginBottom: 10, cursor: "pointer",
+                background: selected?.sermon?.id === sermon.id ? C.accentLight : C.card,
+                border: `1px solid ${selected?.sermon?.id === sermon.id ? C.accent + "30" : C.border}`,
+                transition: "all 0.2s ease",
+              }}
+            >
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{sermon.title}</div>
+              <div style={{ fontSize: 12, color: C.sec, marginTop: 4 }}>Week of {sermon.week_start_date}</div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+                <span style={{ padding: "2px 8px", borderRadius: 6, background: C[sc.bg], fontSize: 10, fontWeight: 700, color: C[sc.color] }}>{sermon.status}</span>
+                {sermon.status === "scheduled" && sermon.scheduled_date && (
+                  <span style={{ fontSize: 10, color: C.muted }}>Publishes {sermon.scheduled_date}</span>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                {sermon.status === "published" && (
+                  <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); handleArchive(sermon); }}>Archive</button>
+                )}
+                <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.red}30`, background: "transparent", color: C.red, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); setDeleting(sermon); }}>Delete</button>
               </div>
             </div>
-          )}
-          {sermons.map((sermon) => {
-            const sc = STATUS_COLORS[sermon.status] || STATUS_COLORS.draft;
-            return (
-              <div
-                key={sermon.id}
-                onClick={() => { loadSermonDetail(sermon.id); setCreating(false); }}
-                style={{
-                  padding: 16, borderRadius: 14, marginBottom: 10, cursor: "pointer",
-                  background: selected?.sermon?.id === sermon.id ? C.accentLight : C.card,
-                  border: `1px solid ${selected?.sermon?.id === sermon.id ? C.accent + "30" : C.border}`,
-                  transition: "all 0.2s ease",
-                }}
-              >
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{sermon.title}</div>
-                <div style={{ fontSize: 12, color: C.sec, marginTop: 4 }}>Week of {sermon.week_start_date}</div>
-                <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
-                  <span style={{ padding: "2px 8px", borderRadius: 6, background: C[sc.bg], fontSize: 10, fontWeight: 700, color: C[sc.color] }}>{sermon.status}</span>
-                  {sermon.status === "scheduled" && sermon.scheduled_date && (
-                    <span style={{ fontSize: 10, color: C.muted }}>Publishes {sermon.scheduled_date}</span>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                  {sermon.status === "published" && (
-                    <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); handleArchive(sermon); }}>Archive</button>
-                  )}
-                  <button style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.red}30`, background: "transparent", color: C.red, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); setDeleting(sermon); }}>Delete</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          );
+        };
 
-        {/* Detail Panel */}
-        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          {selected && !creating ? (
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: showDetail ? "340px 1fr" : "1fr", gap: 24 }}>
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                <div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{selected.sermon.title}</div>
-                  <div style={{ fontSize: 13, color: C.sec, marginTop: 4 }}>{selected.sermon.scripture_refs || ""}</div>
-                  {selected.sermon.status === "scheduled" && selected.sermon.scheduled_date && (
-                    <div style={{ fontSize: 12, color: C.amber, marginTop: 4 }}>Scheduled to publish: {selected.sermon.scheduled_date}</div>
-                  )}
+              {sermons.length === 0 && !creating && (
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>📖</div>
+                  <div style={{ color: C.muted, fontSize: 14, lineHeight: 1.6 }}>
+                    No sermons yet. Create your first sermon to generate daily reflections for your congregation.
+                  </div>
                 </div>
-                <button style={{ padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>Edit</button>
-              </div>
+              )}
+              {activeSermons.map(sermonCard)}
 
-              {/* Stats */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
-                {[
-                  { label: "Started", value: selected.sermon.started_count || 0, color: C.amber, bg: C.amberBg },
-                  { label: "Completed", value: selected.sermon.finished_count || 0, color: C.green, bg: C.greenBg },
-                  { label: "Rate", value: (selected.sermon.completion_rate || 0) + "%", color: C.accent, bg: C.accentLight },
-                ].map((s, i) => (
-                  <div key={i} style={{ padding: 16, borderRadius: 12, background: s.bg, textAlign: "center" }}>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: s.color, fontFamily: "var(--heading)" }}>{s.value}</div>
-                    <div style={{ fontSize: 11, color: C.sec, marginTop: 4 }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Daily Engagement Bar Chart */}
-              {selected.sermon.day_breakdown && (
+              {/* Archived section */}
+              {archivedSermons.length > 0 && (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>DAILY ENGAGEMENT</div>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-                    {DAY_SHORT.map((d, i) => {
-                      const val = selected.sermon.day_breakdown?.[i] || 0;
-                      const max = Math.max(...(selected.sermon.day_breakdown || [1]));
-                      return (
-                        <div key={i} style={{ flex: 1, textAlign: "center" }}>
-                          <div style={{ height: 80, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
-                            <div style={{ width: "70%", borderRadius: "6px 6px 0 0", background: `linear-gradient(180deg, ${C.accent} 0%, ${C.accentMid} 100%)`, height: `${max > 0 ? (val / max) * 100 : 0}%`, transition: "height 0.6s ease", minHeight: val > 0 ? 4 : 0 }} />
-                          </div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: C.accent }}>{val}</div>
-                          <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{d}</div>
-                        </div>
-                      );
-                    })}
+                  <div
+                    onClick={() => setShowArchived(!showArchived)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8, padding: "12px 16px",
+                      borderRadius: 10, cursor: "pointer", marginTop: 8, marginBottom: 6,
+                      background: C.bg, border: `1px solid ${C.border}`,
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <span style={{ fontSize: 12, color: C.muted, transition: "transform 0.2s ease", transform: showArchived ? "rotate(90deg)" : "rotate(0deg)", display: "inline-block" }}>▶</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, letterSpacing: 0.5 }}>Archived ({archivedSermons.length})</span>
                   </div>
+                  {showArchived && archivedSermons.map(sermonCard)}
                 </>
               )}
+            </div>
 
-              {/* Reflections */}
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>DAILY REFLECTIONS</div>
-              {(selected.reflections || []).map((ref) => (
-                <div key={ref.id} style={{ padding: "18px 20px", borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 10, background: C.bg }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            {/* Detail Panel */}
+            {showDetail && (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: 0.5, textTransform: "uppercase" }}>Day {ref.day_number} · {DAYS[ref.day_number - 1]}</div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 4 }}>{ref.title}</div>
-                    </div>
-                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                      {selected.completion_stats && (
-                        <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: C.greenBg, color: C.green }}>{selected.completion_stats[ref.day_number] || 0} completed</span>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: C.text, fontFamily: "var(--heading)" }}>{selected.sermon.title}</div>
+                      <div style={{ fontSize: 13, color: C.sec, marginTop: 4 }}>{selected.sermon.scripture_refs || ""}</div>
+                      {selected.sermon.status === "scheduled" && selected.sermon.scheduled_date && (
+                        <div style={{ fontSize: 12, color: C.amber, marginTop: 4 }}>Scheduled to publish: {selected.sermon.scheduled_date}</div>
                       )}
                     </div>
+                    <button style={{ padding: "5px 12px", borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.card, color: C.body, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "var(--body)" }}>Edit</button>
                   </div>
-                  {editingRef?.id === ref.id ? (
-                    <div style={{ marginTop: 12 }}>
-                      <input style={{ display: "block", width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text, fontFamily: "var(--body)", fontSize: 14, outline: "none", marginBottom: 8 }} value={refForm.title} onChange={(e) => setRefForm({ ...refForm, title: e.target.value })} placeholder="Reflection title" />
-                      <textarea style={{ display: "block", width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text, fontFamily: "var(--body)", fontSize: 14, outline: "none", resize: "vertical", minHeight: 80, marginBottom: 8 }} value={refForm.prompt} onChange={(e) => setRefForm({ ...refForm, prompt: e.target.value })} placeholder="Reflection prompt" />
-                      <input style={{ display: "block", width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text, fontFamily: "var(--body)", fontSize: 14, outline: "none", marginBottom: 8 }} value={refForm.scripture_focus} onChange={(e) => setRefForm({ ...refForm, scripture_focus: e.target.value })} placeholder="Scripture focus" />
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button onClick={saveReflection} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: C.accentLight, color: C.accent, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Save</button>
-                        <button onClick={() => setEditingRef(null)} style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+
+                  {/* Stats */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
+                    {[
+                      { label: "Started", value: selected.sermon.started_count || 0, color: C.amber, bg: C.amberBg },
+                      { label: "Completed", value: selected.sermon.finished_count || 0, color: C.green, bg: C.greenBg },
+                      { label: "Rate", value: (selected.sermon.completion_rate || 0) + "%", color: C.accent, bg: C.accentLight },
+                    ].map((s, i) => (
+                      <div key={i} style={{ padding: 16, borderRadius: 12, background: s.bg, textAlign: "center" }}>
+                        <div style={{ fontSize: 28, fontWeight: 700, color: s.color, fontFamily: "var(--heading)" }}>{s.value}</div>
+                        <div style={{ fontSize: 11, color: C.sec, marginTop: 4 }}>{s.label}</div>
                       </div>
-                    </div>
-                  ) : (
+                    ))}
+                  </div>
+
+                  {/* Daily Engagement Bar Chart */}
+                  {selected.sermon.day_breakdown && (
                     <>
-                      <p style={{ fontSize: 13, color: C.sec, lineHeight: 1.7, marginTop: 8 }}>{ref.prompt}</p>
-                      {ref.scripture_focus && <div style={{ fontSize: 12, color: C.accent, marginTop: 6 }}>📖 {ref.scripture_focus}</div>}
-                      <button onClick={() => { setEditingRef(ref); setRefForm({ title: ref.title, prompt: ref.prompt, scripture_focus: ref.scripture_focus || "" }); }} style={{ marginTop: 8, padding: "4px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.accent, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>DAILY ENGAGEMENT</div>
+                      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+                        {DAY_SHORT.map((d, i) => {
+                          const val = selected.sermon.day_breakdown?.[i] || 0;
+                          const max = Math.max(...(selected.sermon.day_breakdown || [1]));
+                          return (
+                            <div key={i} style={{ flex: 1, textAlign: "center" }}>
+                              <div style={{ height: 80, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 6 }}>
+                                <div style={{ width: "70%", borderRadius: "6px 6px 0 0", background: `linear-gradient(180deg, ${C.accent} 0%, ${C.accentMid} 100%)`, height: `${max > 0 ? (val / max) * 100 : 0}%`, transition: "height 0.6s ease", minHeight: val > 0 ? 4 : 0 }} />
+                              </div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: C.accent }}>{val}</div>
+                              <div style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{d}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </>
                   )}
+
+                  {/* Reflections */}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>DAILY REFLECTIONS</div>
+                  {(selected.reflections || []).map((ref) => (
+                    <div key={ref.id} style={{ padding: "18px 20px", borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 10, background: C.bg }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: 0.5, textTransform: "uppercase" }}>Day {ref.day_number} · {DAYS[ref.day_number - 1]}</div>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 4 }}>{ref.title}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                          {selected.completion_stats && (
+                            <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: C.greenBg, color: C.green }}>{selected.completion_stats[ref.day_number] || 0} completed</span>
+                          )}
+                        </div>
+                      </div>
+                      {editingRef?.id === ref.id ? (
+                        <div style={{ marginTop: 12 }}>
+                          <input style={{ display: "block", width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text, fontFamily: "var(--body)", fontSize: 14, outline: "none", marginBottom: 8 }} value={refForm.title} onChange={(e) => setRefForm({ ...refForm, title: e.target.value })} placeholder="Reflection title" />
+                          <textarea style={{ display: "block", width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text, fontFamily: "var(--body)", fontSize: 14, outline: "none", resize: "vertical", minHeight: 80, marginBottom: 8 }} value={refForm.prompt} onChange={(e) => setRefForm({ ...refForm, prompt: e.target.value })} placeholder="Reflection prompt" />
+                          <input style={{ display: "block", width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text, fontFamily: "var(--body)", fontSize: 14, outline: "none", marginBottom: 8 }} value={refForm.scripture_focus} onChange={(e) => setRefForm({ ...refForm, scripture_focus: e.target.value })} placeholder="Scripture focus" />
+                          <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: "block", marginBottom: 4 }}>Discussion Question (optional)</label>
+                          <textarea style={{ display: "block", width: "100%", padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: "transparent", color: C.text, fontFamily: "var(--body)", fontSize: 14, outline: "none", resize: "vertical", minHeight: 60, marginBottom: 8 }} value={refForm.discussion_prompt} onChange={(e) => setRefForm({ ...refForm, discussion_prompt: e.target.value })} placeholder="e.g. What does this passage say about how we treat others?" />
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={saveReflection} style={{ padding: "4px 12px", borderRadius: 6, border: "none", background: C.accentLight, color: C.accent, fontFamily: "var(--body)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Save</button>
+                            <button onClick={() => setEditingRef(null)} style={{ padding: "4px 12px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p style={{ fontSize: 13, color: C.sec, lineHeight: 1.7, marginTop: 8 }}>{ref.prompt}</p>
+                          {ref.scripture_focus && <div style={{ fontSize: 12, color: C.accent, marginTop: 6 }}>📖 {ref.scripture_focus}</div>}
+                          {ref.discussion_prompt && <div style={{ fontSize: 12, color: C.sec, marginTop: 6 }}>💬 {ref.discussion_prompt}</div>}
+                          <button onClick={() => { setEditingRef(ref); setRefForm({ title: ref.title, prompt: ref.prompt, scripture_focus: ref.scripture_focus || "", discussion_prompt: ref.discussion_prompt || "" }); }} style={{ marginTop: 8, padding: "4px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: "transparent", color: C.accent, fontFamily: "var(--body)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Edit</button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                  {(!selected.reflections || selected.reflections.length === 0) && (
+                    <div style={{ color: C.muted, fontSize: 13, fontStyle: "italic" }}>No reflections generated yet.</div>
+                  )}
                 </div>
-              ))}
-              {(!selected.reflections || selected.reflections.length === 0) && (
-                <div style={{ color: C.muted, fontSize: 13, fontStyle: "italic" }}>No reflections generated yet.</div>
-              )}
-            </div>
-          ) : !creating ? (
-            <div style={{ textAlign: "center", padding: "60px 20px" }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📖</div>
-              <div style={{ fontSize: 15, color: C.sec }}>Select a sermon to view reflections and progress</div>
-            </div>
-          ) : null}
-        </div>
-      </div>
+              </div>
+            )}
+
+            {/* Placeholder when no sermon selected and not creating */}
+            {!showDetail && !creating && sermons.length > 0 && (
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>📖</div>
+                  <div style={{ fontSize: 15, color: C.sec }}>Select a sermon to view reflections and progress</div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {deleting && (
         <ConfirmDialog

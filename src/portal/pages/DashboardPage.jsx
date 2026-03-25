@@ -28,10 +28,12 @@ export default function DashboardPage() {
   const [showPhonePreview, setShowPhonePreview] = useState(false);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(null);
+  const [milestones, setMilestones] = useState([]);
 
   useEffect(() => {
     if (!church?.id) return;
     get(`/api/churches/${church.id}/members/count`).then(d => setMemberCount(d?.count || 0)).catch(() => {});
+    get(`/api/churches/${church.id}/milestones`).then(d => setMilestones(d?.milestones || [])).catch(() => {});
   }, [church?.id]);
 
   useEffect(() => {
@@ -253,6 +255,24 @@ export default function DashboardPage() {
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{stat.sub}</div>
           </div>
         ))}
+      </div>
+
+      {/* ─── Milestones This Month ─── */}
+      <div style={{ background: `linear-gradient(135deg, ${C.card} 0%, ${C.cardWarm} 100%)`, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: 28 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 16 }}>MILESTONES THIS MONTH</div>
+        {milestones.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "20px 0", color: C.sec, fontSize: 13 }}>No member milestones this month</div>
+        ) : (
+          milestones.map((m, i) => (
+            <div key={m.member_id || i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < milestones.length - 1 ? `1px solid ${C.borderLight}` : "none" }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: C.accentLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🏅</div>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{m.display_name || "Member"}</span>
+                <span style={{ marginLeft: 8, padding: "2px 10px", borderRadius: 6, background: C.accentLight, fontSize: 11, fontWeight: 700, color: C.accent }}>{m.milestone_type}</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* ─── Pastoral Insight ─── */}

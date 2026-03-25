@@ -219,6 +219,8 @@ export default function OnboardingWizard() {
   const [denomination, setDenomination] = useState("");
   const [denomOther, setDenomOther] = useState("");
   const [city, setCity] = useState("");
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const cityDebounceRef = useRef(null);
 
   // Step 3: Website
   const [website, setWebsite] = useState("");
@@ -244,6 +246,33 @@ export default function OnboardingWizard() {
   // General
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Location autocomplete via Nominatim (OpenStreetMap)
+  function handleCityChange(value) {
+    setCity(value);
+    setCitySuggestions([]);
+    clearTimeout(cityDebounceRef.current);
+    if (value.length < 3) return;
+    cityDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&addressdetails=1&limit=5&featuretype=city`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        const data = await res.json();
+        const suggestions = data
+          .filter(r => r.address && (r.address.city || r.address.town || r.address.village))
+          .map(r => {
+            const place = r.address.city || r.address.town || r.address.village;
+            const state = r.address.state || "";
+            const country = r.address.country_code?.toUpperCase() || "";
+            return state ? `${place}, ${state}, ${country}` : `${place}, ${country}`;
+          })
+          .filter((v, i, a) => a.indexOf(v) === i); // deduplicate
+        setCitySuggestions(suggestions);
+      } catch {}
+    }, 400);
+  }
 
   // Active colors
   const activePrimary = currentStep != null && currentStep >= 4 ? accentColor : SAGE;
@@ -753,7 +782,7 @@ export default function OnboardingWizard() {
             />
 
             <label style={{ ...s.label, marginTop: 24 }}>
-              Denomination <span style={{ opacity: 0.5 }}>(optional)</span>
+              Denomination
             </label>
             <p style={{ fontSize: 13, color: "#7A7672", margin: "0 0 8px", lineHeight: 1.5 }}>
               Helps us tailor sermon reflections and guidance to your tradition.
@@ -792,18 +821,44 @@ export default function OnboardingWizard() {
             )}
 
             <label style={{ ...s.label, marginTop: 20 }}>
-              Location <span style={{ opacity: 0.5 }}>(optional)</span>
+              Location
             </label>
             <p style={{ fontSize: 13, color: "#7A7672", margin: "0 0 8px", lineHeight: 1.5 }}>
               Helps new members in your area find and join your church.
             </p>
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              style={s.input}
-              placeholder="e.g. Dallas, TX"
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => handleCityChange(e.target.value)}
+                onBlur={() => setTimeout(() => setCitySuggestions([]), 200)}
+                style={s.input}
+                placeholder="e.g. Dallas, TX"
+              />
+              {citySuggestions.length > 0 && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10,
+                  background: "#fff", border: "1px solid #E0DCD7", borderRadius: 10,
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.1)", marginTop: 4,
+                  maxHeight: 200, overflowY: "auto",
+                }}>
+                  {citySuggestions.map((suggestion, i) => (
+                    <div
+                      key={i}
+                      onMouseDown={() => { setCity(suggestion); setCitySuggestions([]); }}
+                      style={{
+                        padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#4A4A4A",
+                        borderBottom: i < citySuggestions.length - 1 ? "1px solid #f0ede8" : "none",
+                      }}
+                      onMouseEnter={(e) => e.target.style.background = "#f5f3ef"}
+                      onMouseLeave={(e) => e.target.style.background = "transparent"}
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {error && <p style={s.error}>{error}</p>}
 
@@ -811,6 +866,9 @@ export default function OnboardingWizard() {
               style={{ ...s.btn, background: accent }}
               onClick={() => {
                 if (!churchName.trim()) { setError("Church name is required."); return; }
+                if (!denomination && !denomOther.trim()) { setError("Please select a denomination."); return; }
+                if (denomination === "Other" && !denomOther.trim()) { setError("Please enter your denomination."); return; }
+                if (!city.trim()) { setError("Please enter your church's location."); return; }
                 goTo(3);
               }}
             >
