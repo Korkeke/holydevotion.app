@@ -1894,6 +1894,7 @@ const s = {
   },
   logo: {
     display: "flex", alignItems: "center", gap: 10, cursor: "pointer",
+    textDecoration: "none",
   },
   logoText: {
     fontFamily: "'Nunito Sans', sans-serif",
