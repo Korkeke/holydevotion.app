@@ -12,7 +12,7 @@ export default function SectionLabel({ children, right, onRightClick }) {
       marginBottom: 14,
     }}>
       <div style={{
-        fontSize: 11, fontWeight: 600, color: "#9e9888",
+        fontSize: 12, fontWeight: 600, color: "#5a5647",
         textTransform: "uppercase", letterSpacing: "0.04em",
       }}>
         {children}

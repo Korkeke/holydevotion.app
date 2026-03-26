@@ -34,7 +34,7 @@ const PAGE_TITLES = {
 
 export default function Header({ pathname }) {
   const { user } = useAuth();
-  const userName = user?.email?.split("@")[0] || "Pastor";
+  const userName = user?.displayName || user?.email?.split("@")[0] || "Pastor";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const title = PAGE_TITLES[pathname] || "Church Overview";
