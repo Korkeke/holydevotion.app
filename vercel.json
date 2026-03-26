@@ -1,6 +1,7 @@
 {
   "buildCommand": "npm run build:no-prerender",
   "rewrites": [
+    { "source": "/portal", "destination": "/" },
     { "source": "/portal/(.*)", "destination": "/" }
   ],
   "headers": [
