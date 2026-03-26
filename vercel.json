@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run build:no-prerender",
   "rewrites": [
     { "source": "/portal/(.*)", "destination": "/" }
   ],
