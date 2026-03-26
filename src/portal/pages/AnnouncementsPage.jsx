@@ -37,6 +37,7 @@ export default function AnnouncementsPage() {
   const [filter, setFilter] = useState("all");
   const [sortKey, setSortKey] = useState("created_at");
   const [sortDir, setSortDir] = useState("desc");
+  const [memberCount, setMemberCount] = useState(0);
 
   function showError(msg) {
     setError(msg);
@@ -48,6 +49,7 @@ export default function AnnouncementsPage() {
     try {
       const data = await get(`/api/churches/${church.id}/announcements`);
       setItems(data?.announcements || []);
+      setMemberCount(data?.member_count || 0);
     } catch (e) { showError(e.message || "Failed to load announcements"); } finally { setLoading(false); }
   }
 
@@ -123,6 +125,7 @@ export default function AnnouncementsPage() {
       if (sortKey === "title") { va = (a.title || "").toLowerCase(); vb = (b.title || "").toLowerCase(); }
       else if (sortKey === "created_at") { va = a.created_at || ""; vb = b.created_at || ""; }
       else if (sortKey === "pinned") { va = a.pinned ? 1 : 0; vb = b.pinned ? 1 : 0; }
+      else if (sortKey === "views") { va = a.views || 0; vb = b.views || 0; }
       else { va = a[sortKey] || ""; vb = b[sortKey] || ""; }
       if (va < vb) return sortDir === "asc" ? -1 : 1;
       if (va > vb) return sortDir === "asc" ? 1 : -1;
@@ -226,7 +229,7 @@ export default function AnnouncementsPage() {
       {sorted.length === 0 ? (
         <Card>
           <EmptyState
-            emoji="\uD83D\uDCE2"
+            emoji="📢"
             title="No announcements yet"
             desc="Post an announcement or send a broadcast to your church community."
             action="+ Post Announcement"
@@ -242,13 +245,16 @@ export default function AnnouncementsPage() {
                   <Checkbox checked={allSelected} onChange={toggleAll} />
                 </th>
                 <th style={{ ...thStyle, width: 44 }}>
-                  <span onClick={() => handleSort("pinned")} style={sortHeader}>\uD83D\uDCCC<SortIcon col="pinned" /></span>
+                  <span onClick={() => handleSort("pinned")} style={sortHeader}>📌<SortIcon col="pinned" /></span>
                 </th>
                 <th style={thStyle}>
                   <span onClick={() => handleSort("title")} style={sortHeader}>Title<SortIcon col="title" /></span>
                 </th>
                 <th style={thStyle}>
                   <span style={{ ...sortHeader, cursor: "default" }}>Preview</span>
+                </th>
+                <th style={{ ...thStyle, width: 100 }}>
+                  <span onClick={() => handleSort("views")} style={sortHeader}>Viewed<SortIcon col="views" /></span>
                 </th>
                 <th style={{ ...thStyle, width: 110 }}>
                   <span onClick={() => handleSort("created_at")} style={sortHeader}>Created<SortIcon col="created_at" /></span>
@@ -268,7 +274,7 @@ export default function AnnouncementsPage() {
                       <button onClick={() => togglePin(row)} style={{
                         background: "none", border: "none", cursor: "pointer", fontSize: 14,
                         opacity: row.pinned ? 1 : 0.25,
-                      }}>\uD83D\uDCCC</button>
+                      }}>📌</button>
                     </td>
                     <td style={tdStyle}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -280,6 +286,20 @@ export default function AnnouncementsPage() {
                       <span style={{ color: C.muted, fontSize: 13 }}>
                         {row.body?.slice(0, 80)}{row.body?.length > 80 ? "..." : ""}
                       </span>
+                    </td>
+                    <td style={{ ...tdStyle, width: 100 }}>
+                      {memberCount > 0 ? (
+                        <span style={{
+                          fontSize: 12, fontWeight: 500,
+                          color: (row.views || 0) / memberCount >= 0.7 ? "#3d6b44"
+                               : (row.views || 0) / memberCount < 0.3 ? "#9e9888"
+                               : "#5a5647",
+                        }}>
+                          {row.views || 0} of {memberCount}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: 12, color: "#9e9888" }}>{row.views || 0}</span>
+                      )}
                     </td>
                     <td style={{ ...tdStyle, width: 110 }}>
                       <span style={{ fontSize: 12, color: C.sec }}>{formatDate(row.created_at)}</span>

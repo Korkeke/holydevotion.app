@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { updateProfile } from "firebase/auth";
 import { useChurchColors } from "../useChurchColors";
 import { useAuth } from "../AuthContext";
 import { get, post, put, del } from "../api";
@@ -39,7 +40,7 @@ const NAV_ITEMS = [
 
 export default function SettingsPage() {
   const COLORS = useChurchColors();
-  const { church, role, signOutUser, reloadChurch } = useAuth();
+  const { church, role, signOutUser, reloadChurch, user } = useAuth();
   const { paletteKey, setPaletteKey } = usePortalTheme();
   const [activeSection, setActiveSection] = useState("appearance");
   const [form, setForm] = useState({});
@@ -58,6 +59,7 @@ export default function SettingsPage() {
   const [pastorCodeUsed, setPastorCodeUsed] = useState(false);
   const [generatingPastorCode, setGeneratingPastorCode] = useState(false);
   const [pastorCopied, setPastorCopied] = useState(false);
+  const [pastorName, setPastorName] = useState(user?.displayName || "");
 
   // Refs for scroll-into-view
   const sectionRefs = {
@@ -98,6 +100,10 @@ export default function SettingsPage() {
     setSaving(true);
     setSaved(false);
     try {
+      // Update pastor display name in Firebase
+      if (user && pastorName.trim() && pastorName !== user.displayName) {
+        await updateProfile(user, { displayName: pastorName.trim() });
+      }
       await put(`/api/churches/${church.id}`, {
         ...form,
         theme: isCustom ? "custom" : selectedTheme,
@@ -487,6 +493,33 @@ export default function SettingsPage() {
             <SectionLabel>Church Profile</SectionLabel>
 
             <Card>
+              {/* Pastor name */}
+              <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid #f0ebe3" }}>
+                <label style={{
+                  display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 12,
+                  fontWeight: 600, color: "#9e9888", marginBottom: 6,
+                  textTransform: "uppercase", letterSpacing: "0.04em",
+                }}>
+                  Your Name
+                </label>
+                <input
+                  style={{
+                    width: "100%", padding: "10px 14px", borderRadius: 8, boxSizing: "border-box",
+                    border: "1px solid #ece7dd", background: "#f7f4ef",
+                    color: "#2c2a25", fontFamily: "'DM Sans', sans-serif", fontSize: 14,
+                    outline: "none",
+                  }}
+                  value={pastorName}
+                  onChange={(e) => setPastorName(e.target.value)}
+                  placeholder="Pastor John"
+                />
+                <div style={{ fontSize: 11, color: "#b0a998", marginTop: 4 }}>
+                  Shown in the sidebar and greeting. Updates on save.
+                </div>
+              </div>
+            </Card>
+
+            <Card style={{ marginTop: 16 }}>
               {FIELDS.map((f) => (
                 <div key={f.key} style={{ marginBottom: 16 }}>
                   <label style={{

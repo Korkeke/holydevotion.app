@@ -12,6 +12,8 @@ import Progress from "../components/ui/Progress";
 import HealthBar from "../components/ui/HealthBar";
 import EmptyState from "../components/ui/EmptyState";
 
+const RANK_NAMES = ["Seeker", "Learner", "Steadfast", "Faithful", "Guardian", "Devoted"];
+
 const STATUS_STYLES = {
   thriving:  { color: "#3d6b44", bg: "#e8f0e9" },
   active:    { color: "#3d6b44", bg: "#edf5ee" },
@@ -253,12 +255,12 @@ export default function MembersPage() {
 
                       {/* Rank */}
                       <td style={{ padding: "12px 16px", color: "#5a5647", fontSize: 13 }}>
-                        {m.rank || m.light_rank || "---"}
+                        {RANK_NAMES[m.rank_index] || "Seeker"}
                       </td>
 
                       {/* Streak */}
                       <td style={{ padding: "12px 16px", color: "#5a5647", fontSize: 13 }}>
-                        {m.streak != null ? `${m.streak}d` : "---"}
+                        {m.current_streak ? `${m.current_streak}d` : "---"}
                       </td>
 
                       {/* Last Active */}
@@ -335,9 +337,9 @@ export default function MembersPage() {
                 gap: 10, marginBottom: 20,
               }}>
                 {[
-                  { label: "Rank", value: m.rank || m.light_rank || "---" },
-                  { label: "Streak", value: m.streak != null ? `${m.streak}d` : "---" },
-                  { label: "Conversations", value: m.conversation_count ?? m.sessions_count ?? "---" },
+                  { label: "Rank", value: RANK_NAMES[m.rank_index] || "Seeker" },
+                  { label: "Streak", value: m.current_streak ? `${m.current_streak}d` : "---" },
+                  { label: "Conversations", value: m.total_messages || 0 },
                 ].map((s, j) => (
                   <div key={j} style={{
                     padding: "10px 8px", borderRadius: 10,
