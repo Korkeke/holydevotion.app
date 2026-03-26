@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 
 /**
@@ -93,6 +93,14 @@ export function ThemeProvider({ children }) {
     }
     return "cream";
   });
+
+  // Re-read from localStorage when church loads (storageKey changes from null to real key)
+  useEffect(() => {
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved && palettes[saved]) setPaletteKeyState(saved);
+    }
+  }, [storageKey]);
 
   const setPaletteKey = useCallback((key) => {
     if (!palettes[key]) return;

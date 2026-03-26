@@ -25,11 +25,13 @@ export default function DashboardPage() {
   const [generatingInsight, setGeneratingInsight] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
   const [milestones, setMilestones] = useState([]);
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     if (!church?.id) return;
     get(`/api/churches/${church.id}/members/count`).then(d => setMemberCount(d?.count || 0)).catch(() => {});
     get(`/api/churches/${church.id}/milestones`).then(d => setMilestones(d?.milestones || [])).catch(() => {});
+    get(`/api/churches/${church.id}/members`).then(d => setMembers(d?.members || [])).catch(() => {});
   }, [church?.id]);
 
   useEffect(() => {
@@ -89,10 +91,15 @@ export default function DashboardPage() {
   }
 
   // Computed values
-  const activeCount = stats?.active_this_week ?? engagement?.active_this_week ?? 0;
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const activeCount = members.filter(m => m.last_active_at && new Date(m.last_active_at) > weekAgo).length;
   const completionRate = engagement?.sermon_completion_rate != null ? `${engagement.sermon_completion_rate}%` : "0%";
   const totalMembers = stats?.member_count ?? memberCount;
-  const avgStreak = engagement?.avg_session_length || "0";
+  const membersWithStreak = members.filter(m => (m.current_streak || 0) > 0);
+  const avgStreak = membersWithStreak.length > 0
+    ? (membersWithStreak.reduce((sum, m) => sum + (m.current_streak || 0), 0) / membersWithStreak.length).toFixed(1)
+    : "0";
   const hasCurrentSermon = engagement?.current_sermon?.title && engagement.current_sermon.title !== "Weekly Sermon";
   const themes = pulse?.themes || [];
 
@@ -105,13 +112,15 @@ export default function DashboardPage() {
     attentionDots.push({ color: "#c26a4a", text: `${prayers.filter(p => p.prayer_count === 0).length} unanswered prayer${prayers.filter(p => p.prayer_count === 0).length > 1 ? "s" : ""}` });
   }
 
-  // Member health counts
-  const healthCounts = {
-    thriving: attention?.milestones?.length || 0,
-    active: Math.max(0, activeCount - (attention?.milestones?.length || 0)),
-    declining: attention?.declining?.length || 0,
-    new: attention?.new_members?.length || 0,
-  };
+  // Member health counts from actual member data
+  const healthCounts = members.reduce((acc, m) => {
+    const status = m.activity_status || "new";
+    if (status === "thriving") acc.thriving++;
+    else if (status === "active") acc.active++;
+    else if (status === "declining" || status === "inactive") acc.declining++;
+    else acc.new++;
+    return acc;
+  }, { thriving: 0, active: 0, declining: 0, new: 0 });
 
   // Week date range
   const now = new Date();
@@ -131,7 +140,7 @@ export default function DashboardPage() {
         </Button>
         <Button onClick={() => navigate("/portal/announcements")}>Post Announcement</Button>
         <Button onClick={() => navigate("/portal/devotionals")}>Write Devotional</Button>
-        <Button style={{ color: "#b05a3a", borderColor: "#e0c4b8" }}>
+        <Button onClick={() => navigate("/portal/announcements")} style={{ color: "#b05a3a", borderColor: "#e0c4b8" }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
           Send Broadcast
         </Button>
@@ -158,11 +167,11 @@ export default function DashboardPage() {
 
           {/* This Week Panel */}
           <Card noPad>
-            <div style={{ padding: "16px 20px", borderBottom: "1px solid #ece7dd", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#9e9888", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #ece7dd", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: "#2c2a25", fontFamily: "'DM Serif Display', serif", margin: 0 }}>
                 This Week at {church?.name || "Church"}
-              </span>
-              <span style={{ fontSize: 12, color: "#b0a998" }}>{weekRange}</span>
+              </h3>
+              <span style={{ fontSize: 13, color: "#9e9888" }}>{weekRange}</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid #ece7dd" }}>
               {/* Sermon */}

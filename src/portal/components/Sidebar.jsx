@@ -62,49 +62,27 @@ export default function Sidebar({ open, onClose, badges = {} }) {
           color: sb.text,
         }}
       >
-        {/* Devotion branding */}
-        <div style={{ ...s.brand, borderBottom: `1px solid ${sb.border}`, padding: collapsed ? "16px 12px 8px" : "20px 20px 8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: collapsed ? 8 : 16 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "linear-gradient(135deg, #c8a855, #a68a3a)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 16, fontWeight: 700, color: "#fff",
-              fontFamily: "'DM Serif Display', serif", flexShrink: 0,
-            }}>
-              D
-            </div>
-            {!collapsed && (
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: sb.brand }}>Devotion</div>
-                <div style={{ fontSize: 11, color: sb.muted }}>Pastor Portal</div>
+        {/* Church branding (hero) */}
+        <div style={{ ...s.brand, borderBottom: `1px solid ${sb.border}`, padding: collapsed ? "16px 12px" : "20px 20px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: collapsed ? 0 : 12, justifyContent: collapsed ? "center" : "flex-start" }}>
+            {church?.logo_url ? (
+              <img src={cloudinaryUrl(church.logo_url, { width: 80, height: 80 })} alt=""
+                style={{ width: collapsed ? 36 : 40, height: collapsed ? 36 : 40, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+            ) : (
+              <div style={{
+                width: collapsed ? 36 : 40, height: collapsed ? 36 : 40, borderRadius: 10,
+                background: "linear-gradient(135deg, #6b8f71, #4a6b4f)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: collapsed ? 14 : 16, fontWeight: 700, color: "#fff", flexShrink: 0,
+              }}>
+                {churchInitial}
               </div>
             )}
-          </div>
-
-          {/* Church switcher */}
-          {!collapsed && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "10px 12px", background: sb.switchBg,
-              borderRadius: 10, cursor: "pointer",
-            }}>
-              {church?.logo_url ? (
-                <img src={cloudinaryUrl(church.logo_url, { width: 64, height: 64 })} alt=""
-                  style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-              ) : (
-                <div style={{
-                  width: 30, height: 30, borderRadius: 8,
-                  background: "linear-gradient(135deg, #6b8f71, #4a6b4f)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0,
-                }}>
-                  {churchInitial}
-                </div>
-              )}
+            {!collapsed && (
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontSize: 13, fontWeight: 500, color: sb.brand,
+                  fontSize: 15, fontWeight: 600, color: sb.brand,
+                  fontFamily: "'DM Serif Display', serif",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
                   {church?.name || "Church Portal"}
@@ -113,10 +91,8 @@ export default function Sidebar({ open, onClose, badges = {} }) {
                   {({ church: "Church", church_plus: "Church Plus", church_pro: "Church Pro" })[church?.plan] || "Church"}
                 </div>
               </div>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                stroke={sb.chevron} strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Nav items */}
@@ -201,25 +177,32 @@ export default function Sidebar({ open, onClose, badges = {} }) {
           </div>
         </div>
 
-        {/* Pastor info */}
+        {/* Devotion branding + user info */}
         <div style={{
-          padding: collapsed ? "14px 12px" : "14px 16px",
+          padding: collapsed ? "12px" : "14px 16px",
           borderTop: `1px solid ${sb.border}`,
-          display: "flex", alignItems: "center", gap: 10,
-          justifyContent: collapsed ? "center" : "flex-start",
         }}>
           <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: "linear-gradient(135deg, #6b8f71, #8aab8f)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 12, fontWeight: 600, color: "#fff", flexShrink: 0,
+            display: "flex", alignItems: "center", gap: 8,
+            justifyContent: collapsed ? "center" : "flex-start",
+            marginBottom: collapsed ? 0 : 8,
           }}>
-            {userInitials}
+            <span style={{ fontSize: 14, color: sb.muted }}>✝</span>
+            {!collapsed && (
+              <span style={{ fontSize: 12, fontWeight: 500, color: sb.muted, letterSpacing: "0.02em" }}>Devotion</span>
+            )}
           </div>
           {!collapsed && (
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: sb.brand }}>{userName}</div>
-              <div style={{ fontSize: 11, color: sb.muted }}>Admin</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <span style={{ fontSize: 12, color: sb.text }}>{userName}</span>
+                <span style={{ fontSize: 11, color: sb.muted, marginLeft: 6 }}>Admin</span>
+              </div>
+              <button onClick={handleSignOut} style={{
+                fontSize: 11, color: sb.muted, background: "none",
+                border: "none", cursor: "pointer", fontFamily: "var(--body)",
+                textDecoration: "underline", opacity: 0.7,
+              }}>Sign Out</button>
             </div>
           )}
         </div>
