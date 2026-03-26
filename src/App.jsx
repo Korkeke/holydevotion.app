@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { AuthProvider } from "./portal/AuthContext";
 import PortalRoute from "./portal/PortalRoute";
 
@@ -15,6 +16,28 @@ const PrayerWallPage = lazy(() => import("./portal/pages/PrayerWallPage"));
 const MembersPage = lazy(() => import("./portal/pages/MembersPage"));
 const SettingsPage = lazy(() => import("./portal/pages/SettingsPage"));
 const SermonsPage = lazy(() => import("./portal/pages/SermonsPage"));
+
+// ─── SEO Helper ─────────────────────────────────────────────────────
+function PageMeta({ title, description, path = "/" }) {
+  const url = `https://holydevotion.app${path}`;
+  return (
+    <Helmet>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      <link rel="canonical" href={url} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={url} />
+      <meta property="og:type" content="website" />
+      <meta property="og:image" content="https://holydevotion.app/og-image.jpg" />
+      <meta property="og:site_name" content="Devotion" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content="https://holydevotion.app/og-image.jpg" />
+    </Helmet>
+  );
+}
 
 // ─── Constants ──────────────────────────────────────────────────────
 const COLORS = {
@@ -35,7 +58,7 @@ const COLORS = {
   borderHover: "rgba(201, 168, 76, 0.25)",
 };
 
-const PAGES = ["Home", "Features", "Churches", "Privacy", "Contact"];
+const PAGES = ["Home", "Features", "Churches", "Privacy", "Terms", "Contact"];
 
 
 
@@ -245,9 +268,17 @@ function Particles() {
 }
 
 // ─── Navigation ─────────────────────────────────────────────────────
-function Navbar({ page, setPage }) {
+const PAGE_ROUTES = { Home: "/", Features: "/features", Churches: "/churches", Privacy: "/privacy", Terms: "/terms", Contact: "/contact" };
+
+function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const currentPage = PAGES.find(p => {
+    const route = PAGE_ROUTES[p];
+    return route === "/" ? location.pathname === "/" : location.pathname.startsWith(route);
+  }) || "Home";
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40);
@@ -263,20 +294,21 @@ function Navbar({ page, setPage }) {
       borderBottom: scrolled ? `1px solid ${COLORS.border}` : "1px solid transparent",
     }}>
       <div style={s.navInner}>
-        <div style={s.logo} onClick={() => { setPage("Home"); window.scrollTo(0,0); }}>
+        <Link to="/" style={s.logo}>
           <CrossIcon size={22} />
           <span style={s.logoText}>DEVOTION</span>
-        </div>
+        </Link>
 
         <div className="nav-links" style={s.navLinks}>
           {PAGES.map((p) => (
-            <button key={p} onClick={() => { setPage(p); window.scrollTo(0,0); setMenuOpen(false); }}
+            <Link key={p} to={PAGE_ROUTES[p]}
               style={{
                 ...s.navLink,
-                color: page === p ? COLORS.gold : COLORS.textMuted,
+                color: currentPage === p ? COLORS.gold : COLORS.textMuted,
+                textDecoration: "none",
               }}>
               {p}
-            </button>
+            </Link>
           ))}
         </div>
 
@@ -294,13 +326,14 @@ function Navbar({ page, setPage }) {
       {menuOpen && (
         <div style={s.mobileMenu}>
           {PAGES.map((p) => (
-            <button key={p} onClick={() => { setPage(p); window.scrollTo(0,0); setMenuOpen(false); }}
+            <Link key={p} to={PAGE_ROUTES[p]} onClick={() => setMenuOpen(false)}
               style={{
                 ...s.mobileLink,
-                color: page === p ? COLORS.gold : COLORS.text,
+                color: currentPage === p ? COLORS.gold : COLORS.text,
+                textDecoration: "none",
               }}>
               {p}
-            </button>
+            </Link>
           ))}
           <GoldButton onClick={() => setMenuOpen(false)}>Download App</GoldButton>
         </div>
@@ -586,7 +619,7 @@ function StoreBadges({ style = {} }) {
 }
 
 // ─── HOME PAGE ──────────────────────────────────────────────────────
-function HomePage({ mouse, setPage }) {
+function HomePage({ mouse }) {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { setTimeout(() => setLoaded(true), 150); }, []);
 
@@ -598,6 +631,11 @@ function HomePage({ mouse, setPage }) {
 
   return (
     <>
+      <PageMeta
+        title="Devotion — Scripture. Guidance. Faith."
+        description="Your personal faith companion. Daily devotionals, guided prayer, AI spiritual guidance, 30-day faith journeys, Bible games, daily wallpapers, verse widget, and a ranking system — all rooted in Scripture."
+        path="/"
+      />
       {/* HERO */}
       <section style={s.hero}>
         <div style={{
@@ -752,7 +790,7 @@ function HomePage({ mouse, setPage }) {
               Create a branded community space for your church inside the app.<br />
               Custom dashboard, member engagement tools, and shared devotionals.
             </p>
-            <GoldButton large onClick={() => { setPage("Churches"); window.scrollTo(0,0); }}>Start Your Free Trial →</GoldButton>
+            <Link to="/churches" style={{ textDecoration: "none" }}><GoldButton large>Start Your Free Trial →</GoldButton></Link>
             <p style={{ ...s.heroSub, fontSize: 13, marginTop: 12, opacity: 0.6 }}>
               7-day free trial. Plans from $49/month.
             </p>
@@ -871,6 +909,11 @@ function FeaturesPage() {
 
   return (
     <>
+      <PageMeta
+        title="Features — Devotion"
+        description="Bible search across multiple translations, Holy Word & Wisdom Challenge games, prayer journal, personalized faith journeys, daily saint stories, seasonal devotionals, saved verses, achievements, and more."
+        path="/features"
+      />
       {/* Hero */}
       <section style={{ ...s.section, paddingTop: 140, paddingBottom: 40 }}>
         <RevealBlock style={{ textAlign: "center", marginBottom: 20 }}>
@@ -1022,7 +1065,13 @@ function PrivacyPage() {
   ];
 
   return (
-    <section style={{ ...s.section, paddingTop: 140, maxWidth: 760 }}>
+    <>
+      <PageMeta
+        title="Privacy Policy — Devotion"
+        description="How Devotion protects your data and respects your privacy. Your faith is personal — we keep it that way."
+        path="/privacy"
+      />
+      <section style={{ ...s.section, paddingTop: 140, maxWidth: 760 }}>
       <RevealBlock style={{ textAlign: "center", marginBottom: 64 }}>
         <SectionTag>PRIVACY POLICY</SectionTag>
         <SectionTitle>Your faith is personal.{"\n"}We keep it that way.</SectionTitle>
@@ -1051,6 +1100,99 @@ function PrivacyPage() {
         </RevealBlock>
       ))}
     </section>
+    </>
+  );
+}
+
+// ─── TERMS PAGE ────────────────────────────────────────────────────
+function TermsPage() {
+  const sections = [
+    { title: "1. Acceptance of Terms",
+      content: "By downloading, installing, or using the Devotion application (\"the App\"), you agree to be bound by these Terms and Conditions. If you do not agree, do not use the App."
+    },
+    { title: "2. Description of Service",
+      content: "Devotion is a Christian faith companion app that provides Scripture-grounded spiritual guidance, daily devotionals, prayer journaling, Bible search, faith journeys, games, and church community features. The App uses artificial intelligence to generate personalised responses, devotionals, and reflections."
+    },
+    { title: "3. AI-Generated Content",
+      content: "Devotion uses AI (powered by Anthropic's Claude) to generate spiritual guidance, devotionals, prayer prompts, and reflections. While we strive for theological accuracy through a two-agent validation system, AI-generated content should not be considered a substitute for professional pastoral counselling, therapy, or medical advice. All AI responses are validated for theological accuracy and safety before being shown to you. In crisis situations, the App will direct you to professional crisis resources. We do not guarantee the accuracy, completeness, or suitability of AI-generated content for any particular purpose."
+    },
+    { title: "4. User Accounts and Authentication",
+      content: "You may use the App anonymously or create an account via email, Google, or Apple Sign-In. You are responsible for maintaining the confidentiality of your account credentials. You must be at least 13 years old to use the App. If you are under 18, you should use the App with parental or guardian consent."
+    },
+    { title: "5. Subscriptions and Payments",
+      content: "Devotion offers a free tier and a Pro subscription. Free tier includes limited daily guided prayers, scripture quizzes, wallpapers, and core features. Pro subscription unlocks unlimited access to all features including additional prayers, quizzes, wallpapers, cloud sync, and premium content. Subscriptions are managed through Apple App Store or Google Play Store. Billing, renewals, and cancellations follow the respective store's policies. Prices may change with reasonable notice. No refunds are provided except as required by applicable law or store policies."
+    },
+    { title: "6. Church Community Features",
+      content: "Churches can create branded community spaces within the App. Church administrators are responsible for content posted through their church portal, including sermons, announcements, events, and devotionals. Members who join a church community agree to abide by that church's community guidelines in addition to these terms. Church administrators may approve or deny membership requests and manage member access."
+    },
+    { title: "7. User-Generated Content",
+      content: "You may submit content through prayer wall posts, prayer journal entries, chat messages, and sermon reflections. You retain ownership of your content but grant Devotion a limited licence to process, store, and display it within the App as necessary to provide the service. You agree not to post content that is hateful, harassing, threatening, or illegal. We reserve the right to remove content that violates these terms. Anonymous prayer wall posts are visible to other members of your church community."
+    },
+    { title: "8. Acceptable Use",
+      content: "You agree not to: attempt to manipulate or abuse the AI system through prompt injection or adversarial inputs; use the App to generate content that contradicts its intended purpose as a faith companion; share your account credentials with others; use automated tools to access the App; interfere with the App's operation or other users' experience; attempt to reverse-engineer the App or its AI systems."
+    },
+    { title: "9. Intellectual Property",
+      content: "The App, its design, branding, code, and original content are owned by Devotion. Bible translations used (KJV, WEB) are in the public domain. AI-generated content created for you through the App is provided for your personal use. The Devotion name, logo, and associated branding are our intellectual property."
+    },
+    { title: "10. Privacy",
+      content: "Your use of the App is also governed by our Privacy Policy, available at holydevotion.app/privacy. By using the App, you consent to the collection and use of your data as described in the Privacy Policy."
+    },
+    { title: "11. Disclaimers",
+      content: "The App is provided \"as is\" without warranties of any kind, express or implied. Devotion is not a church, religious organisation, or licensed counselling service. Content provided through the App, including AI-generated guidance, does not constitute professional advice. We do not guarantee uninterrupted or error-free service. We are not responsible for decisions you make based on content provided through the App."
+    },
+    { title: "12. Limitation of Liability",
+      content: "To the maximum extent permitted by law, Devotion and its creators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the App, including but not limited to emotional distress, loss of data, or reliance on AI-generated content."
+    },
+    { title: "13. Termination",
+      content: "We may suspend or terminate your access to the App at any time for violation of these terms or for any other reason at our discretion. You may stop using the App at any time. Upon termination, your right to use the App ceases. Data stored locally on your device remains yours. Server-side data will be deleted upon request."
+    },
+    { title: "14. Changes to Terms",
+      content: "We may update these Terms from time to time. When we make significant changes, we will notify you through the App or by updating the \"Last updated\" date. Continued use of the App after changes constitutes acceptance of the revised terms."
+    },
+    { title: "15. Governing Law",
+      content: "These Terms are governed by the laws of the Province of Ontario, Canada. Any disputes shall be resolved in the courts of Ontario, Canada."
+    },
+    { title: "16. Contact Us",
+      content: "If you have questions about these Terms, contact us at support@holydevotion.app"
+    },
+  ];
+
+  return (
+    <>
+      <PageMeta
+        title="Terms & Conditions — Devotion"
+        description="Terms of service for Devotion including app usage, AI content, subscriptions, and church community guidelines."
+        path="/terms"
+      />
+      <section style={{ ...s.section, paddingTop: 140, maxWidth: 760 }}>
+      <RevealBlock style={{ textAlign: "center", marginBottom: 64 }}>
+        <SectionTag>TERMS & CONDITIONS</SectionTag>
+        <SectionTitle>The fine print,{"\n"}written with care.</SectionTitle>
+        <p style={{ ...s.heroSub, fontSize: 15, marginTop: 16 }}>Last updated: March 2026</p>
+      </RevealBlock>
+
+      <RevealBlock delay={0.06} style={{ marginBottom: 40 }}>
+        <p style={s.privacyText}>
+          These Terms and Conditions govern your use of the Devotion application and its associated services. Please read them carefully before using the App.
+        </p>
+      </RevealBlock>
+
+      {sections.map((sec, i) => (
+        <RevealBlock key={i} delay={(i + 1) * 0.04} style={{ marginBottom: 40 }}>
+          <div style={s.privacySection}>
+            <h3 style={s.privacyTitle}>{sec.title}</h3>
+            {sec.content && <p style={s.privacyText}>{sec.content}</p>}
+            {sec.subsections && sec.subsections.map((sub, j) => (
+              <div key={j} style={{ marginTop: j > 0 ? 20 : 12 }}>
+                <h4 style={s.privacySubtitle}>{sub.subtitle}</h4>
+                <p style={s.privacyText}>{sub.content}</p>
+              </div>
+            ))}
+          </div>
+        </RevealBlock>
+      ))}
+    </section>
+    </>
   );
 }
 
@@ -1064,7 +1206,13 @@ function ContactPage() {
   };
 
   return (
-    <section style={{ ...s.section, paddingTop: 140, maxWidth: 640 }}>
+    <>
+      <PageMeta
+        title="Contact Us — Devotion"
+        description="Get in touch with the Devotion team. Questions, feedback, or church partnership inquiries."
+        path="/contact"
+      />
+      <section style={{ ...s.section, paddingTop: 140, maxWidth: 640 }}>
       <RevealBlock style={{ textAlign: "center", marginBottom: 56 }}>
         <SectionTag>GET IN TOUCH</SectionTag>
         <SectionTitle>We'd love to{"\n"}hear from you.</SectionTitle>
@@ -1138,11 +1286,12 @@ function ContactPage() {
         </p>
       </RevealBlock>
     </section>
+    </>
   );
 }
 
 // ─── CHURCHES PAGE ──────────────────────────────────────────────────
-function ChurchesPage({ setPage }) {
+function ChurchesPage() {
   const plans = [
     {
       name: "Church",
@@ -1200,6 +1349,11 @@ function ChurchesPage({ setPage }) {
 
   return (
     <>
+      <PageMeta
+        title="Devotion for Churches — Manage Your Congregation"
+        description="A church community platform inside Devotion. Sermon uploads with transcription, prayer wall, announcements, events, member engagement analytics, and pastoral dashboard."
+        path="/churches"
+      />
       {/* Hero */}
       <section style={{ ...s.section, paddingTop: 140, paddingBottom: 40 }}>
         <RevealBlock style={{ textAlign: "center", marginBottom: 24 }}>
@@ -1394,7 +1548,7 @@ function ChurchesPage({ setPage }) {
                 }).then(r => r.json()).then(d => { if (d.url) window.location.href = d.url; })
                   .catch(() => { window.location.href = "/portal/signup"; });
               }}>Start Free Trial</GoldButton>
-              <GoldButton outline large onClick={() => { setPage("Contact"); window.scrollTo(0,0); }}>Talk to Us First</GoldButton>
+              <Link to="/contact" style={{ textDecoration: "none" }}><GoldButton outline large>Talk to Us First</GoldButton></Link>
             </div>
           </RevealBlock>
         </div>
@@ -1547,15 +1701,15 @@ function FAQItem({ q, a }) {
 }
 
 // ─── FOOTER ─────────────────────────────────────────────────────────
-function Footer({ setPage }) {
+function Footer() {
   return (
     <footer style={s.footer}>
       <div style={s.footerInner}>
         <div>
-          <div style={{ ...s.logo, marginBottom: 12 }}>
+          <Link to="/" style={{ ...s.logo, marginBottom: 12, textDecoration: "none" }}>
             <CrossIcon size={18} />
             <span style={{ ...s.logoText, fontSize: 16 }}>DEVOTION</span>
-          </div>
+          </Link>
           <p style={{ color: COLORS.textDim, fontSize: 13, lineHeight: 1.6 }}>
             Your personal faith companion.
           </p>
@@ -1565,13 +1719,13 @@ function Footer({ setPage }) {
           <div>
             <p style={s.footerHead}>Product</p>
             {["Home", "Features", "Churches"].map(p => (
-              <button key={p} onClick={() => { setPage(p); window.scrollTo(0,0); }} style={s.footerLink}>{p}</button>
+              <Link key={p} to={PAGE_ROUTES[p]} style={{ ...s.footerLink, textDecoration: "none" }}>{p}</Link>
             ))}
           </div>
           <div>
             <p style={s.footerHead}>Company</p>
-            {["Privacy", "Contact"].map(p => (
-              <button key={p} onClick={() => { setPage(p); window.scrollTo(0,0); }} style={s.footerLink}>{p}</button>
+            {["Privacy", "Terms", "Contact"].map(p => (
+              <Link key={p} to={PAGE_ROUTES[p]} style={{ ...s.footerLink, textDecoration: "none" }}>{p}</Link>
             ))}
           </div>
         </div>
@@ -1586,25 +1740,32 @@ function Footer({ setPage }) {
   );
 }
 
+// ─── SCROLL TO TOP ON ROUTE CHANGE ─────────────────────────────────
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 // ─── MARKETING SITE ─────────────────────────────────────────────────
 function MarketingSite() {
-  const [page, setPage] = useState(() => {
-    const path = window.location.pathname.replace(/^\/|\/$/g, "").toLowerCase();
-    const match = PAGES.find((p) => p.toLowerCase() === path);
-    return match || "Home";
-  });
   const mouse = useMouseGlow();
 
   return (
     <div style={{ background: COLORS.bg, minHeight: "100vh", color: COLORS.text }}>
       <style>{globalCSS}</style>
-      <Navbar page={page} setPage={setPage} />
-      {page === "Home" && <HomePage mouse={mouse} setPage={setPage} />}
-      {page === "Features" && <FeaturesPage />}
-      {page === "Churches" && <ChurchesPage setPage={setPage} />}
-      {page === "Privacy" && <PrivacyPage />}
-      {page === "Contact" && <ContactPage />}
-      <Footer setPage={setPage} />
+      <ScrollToTop />
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage mouse={mouse} />} />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/churches" element={<ChurchesPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Footer />
     </div>
   );
 }
@@ -1633,36 +1794,34 @@ function PortalLoading() {
 
 // ─── MAIN APP ───────────────────────────────────────────────────────
 export default function DevotionSite() {
-  // If path starts with /portal, render the router-based portal
-  // Otherwise render the existing marketing site unchanged
-  const isPortal = window.location.pathname.startsWith("/portal");
-
-  if (!isPortal) {
-    return <MarketingSite />;
-  }
-
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Suspense fallback={<PortalLoading />}>
-          <Routes>
-            <Route path="/portal/login" element={<LoginPage />} />
-            <Route path="/portal/signup" element={<OnboardingWizard />} />
-            <Route path="/portal" element={<PortalRoute><PortalLayout /></PortalRoute>}>
-              <Route index element={<DashboardPage />} />
-              <Route path="events" element={<EventsPage />} />
-              <Route path="announcements" element={<AnnouncementsPage />} />
-              <Route path="sermons" element={<SermonsPage />} />
-              <Route path="devotionals" element={<DevotionalsPage />} />
-              <Route path="prayers" element={<PrayerWallPage />} />
-              <Route path="members" element={<MembersPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/portal" replace />} />
-            </Route>
-            <Route path="*" element={<MarketingSite />} />
-          </Routes>
-        </Suspense>
-      </AuthProvider>
+      <Routes>
+        {/* Portal routes — auth-protected, lazy-loaded */}
+        <Route path="/portal/*" element={
+          <AuthProvider>
+            <Suspense fallback={<PortalLoading />}>
+              <Routes>
+                <Route path="login" element={<LoginPage />} />
+                <Route path="signup" element={<OnboardingWizard />} />
+                <Route path="/*" element={<PortalRoute><PortalLayout /></PortalRoute>}>
+                  <Route index element={<DashboardPage />} />
+                  <Route path="events" element={<EventsPage />} />
+                  <Route path="announcements" element={<AnnouncementsPage />} />
+                  <Route path="sermons" element={<SermonsPage />} />
+                  <Route path="devotionals" element={<DevotionalsPage />} />
+                  <Route path="prayers" element={<PrayerWallPage />} />
+                  <Route path="members" element={<MembersPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="*" element={<Navigate to="/portal" replace />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </AuthProvider>
+        } />
+        {/* Marketing routes */}
+        <Route path="/*" element={<MarketingSite />} />
+      </Routes>
     </BrowserRouter>
   );
 }

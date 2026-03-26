@@ -1,0 +1,75 @@
+# Devotion — holydevotion.app
+
+> A Christian faith companion app with Scripture-grounded spiritual guidance, available on iOS and Android.
+
+## What is Devotion?
+
+Devotion is a personal faith companion app that helps Christians grow in their walk with God through daily devotionals, AI-powered spiritual guidance, prayer journaling, Bible search, faith journeys, games, and community features. It is designed for individuals seeking daily spiritual growth and for churches looking to engage their congregations.
+
+## Core Features
+
+### Daily Path
+- **Guided Prayer** — AI-generated personalized prayers across 12+ topics including anxiety, grief, gratitude, relationships, forgiveness, healing, and more.
+- **Daily Devotional** — Scripture-based daily readings personalized by Bible translation and denomination.
+- **Wisdom Challenge** — Two faith-based games: Holy Word (daily 6-letter biblical word puzzle) and Scripture Quiz (daily Bible knowledge questions).
+- **Daily Saint** — Historical saint biography with reflection questions and AI-generated stories.
+- **Seasonal Stories** — Liturgical calendar content for Lent, Holy Week, Easter, Pentecost, and other church seasons.
+
+### Spiritual Guidance
+- **AI Chat Guide** — Multi-turn conversation with a Scripture-grounded AI companion that remembers your story, powered by a two-agent validation system for theological accuracy and safety.
+- **Crisis Protocol** — Automatic detection of crisis situations with redirection to professional resources.
+
+### Bible & Scripture
+- **Bible Search** — Semantic verse search across 31,102+ verses in KJV and WEB translations.
+- **Chapter Reader** — Full chapter reading with verse highlighting and notes.
+- **Verse of the Day** — Rotating daily verse with save, share, and AI explanation.
+- **Saved Verses** — Personal library of highlighted verses.
+- **Verse of the Day Widget** — Home screen widget for Android and iOS.
+
+### Prayer
+- **Prayer Journal** — Active and answered prayer tracking with reflections and follow-up notes.
+- **Guided Prayer Topics** — 12 personalized prayer templates for common life situations.
+
+### Faith Journeys
+- **30-Day Programs** — Structured spiritual growth plans for anxiety, grief, forgiveness, new to faith, marriage, purpose, doubt, anger, and custom topics.
+- **Three Phases** — Awareness, Rebuilding, and Identity phases with daily Scripture, reflections, journal prompts, and prayers.
+- **Custom Journeys** — AI-generated 30-day plans based on any topic.
+
+### Progress & Gamification
+- **Light System** — Earn points for completing daily spiritual activities, progress through 10+ rank levels.
+- **Achievements** — 50+ unlockable badges across Journey, Wisdom, Light, Prayer, and Community categories.
+- **Streaks** — Consecutive day tracking with milestone badges.
+
+### Personalization
+- **Daily Wallpapers** — Sacred-themed phone wallpapers updated regularly.
+- **User Memory** — AI remembers context from past conversations for personalized guidance.
+- **Translation Choice** — KJV and WEB Bible translations.
+- **Denomination Preferences** — Content personalized to your faith tradition.
+
+## For Churches
+
+Devotion offers a church management portal where pastors and church leaders can:
+- Upload sermons with automatic AI transcription
+- Create 7-day sermon study reflections for congregations
+- Manage announcements, events, and broadcast notifications
+- Run a community prayer wall with anonymous prayer support
+- Share church-specific devotionals
+- Track member engagement with analytics and pastoral insights
+- Customize church branding (logo, accent colors, hero images)
+- Manage member approvals and directory
+
+Church members can join communities via invite code, participate in prayer walls, follow sermon studies, attend events, and share in community faith journeys.
+
+## Pricing
+- **Free tier** — Daily devotionals, limited guided prayers, scripture quizzes, prayer journal, saved verses, faith journeys, Holy Word game, church community access.
+- **Pro subscription** — Unlimited guided prayers, unlimited quiz questions, all wallpapers, cloud sync, premium content, and advanced journey topics.
+- **Church plans** — Starting at $49/month with a 7-day free trial.
+
+## Links
+- Website: https://holydevotion.app
+- Features: https://holydevotion.app/features
+- For Churches: https://holydevotion.app/churches
+- Privacy Policy: https://holydevotion.app/privacy
+- Terms & Conditions: https://holydevotion.app/terms
+- Contact: https://holydevotion.app/contact
+- Support: support@holydevotion.app

@@ -4,14 +4,141 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Devotion | Scripture. Guidance. Faith.</title>
-    <meta name="description" content="A guide who listens, remembers, and walks with you through Scripture. Spiritual guidance, prayer journal, and daily devotionals.">
+    <meta name="description" content="Your personal faith companion. Daily devotionals, guided prayer, AI spiritual guidance, 30-day faith journeys, Bible games, daily wallpapers, verse widget, and a ranking system — all rooted in Scripture.">
+    <meta name="theme-color" content="#0a0e1a">
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph (defaults — react-helmet-async overrides per page) -->
     <meta property="og:title" content="Devotion | Scripture. Guidance. Faith.">
-    <meta property="og:description" content="A guide who listens, remembers, and walks with you. Wisdom, guidance, and the Word. Whenever you need it.">
+    <meta property="og:description" content="Your personal faith companion. Daily devotionals, guided prayer, AI spiritual guidance, faith journeys, Bible games, and more.">
     <meta property="og:url" content="https://holydevotion.app">
     <meta property="og:type" content="website">
+    <meta property="og:image" content="https://holydevotion.app/og-image.jpg">
+    <meta property="og:site_name" content="Devotion">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Devotion | Scripture. Guidance. Faith.">
-    <meta name="twitter:description" content="A guide who listens, remembers, and walks with you through Scripture.">
+    <meta name="twitter:description" content="Your personal faith companion. Scripture-grounded spiritual guidance, daily devotionals, prayer journal, and more.">
+    <meta name="twitter:image" content="https://holydevotion.app/og-image.jpg">
+
+    <!-- Apple Smart App Banner (uncomment when App Store ID is available) -->
+    <!-- <meta name="apple-itunes-app" content="app-id=XXXXXXXXXX"> -->
+
+    <!-- Structured Data: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Devotion",
+      "url": "https://holydevotion.app",
+      "logo": "https://holydevotion.app/favicon-512.png",
+      "description": "A Christian faith companion app with Scripture-grounded spiritual guidance.",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "support@holydevotion.app",
+        "contactType": "customer support"
+      }
+    }
+    </script>
+
+    <!-- Structured Data: WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Devotion",
+      "url": "https://holydevotion.app"
+    }
+    </script>
+
+    <!-- Structured Data: MobileApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      "name": "Devotion",
+      "operatingSystem": "iOS, Android",
+      "applicationCategory": "LifestyleApplication",
+      "description": "Your personal faith companion. AI spiritual guidance, daily devotionals, guided prayer, 30-day faith journeys, Bible search (KJV & WEB), Holy Word game, Wisdom Challenge quiz, prayer journal, daily saint stories, seasonal devotionals, saved verses, ranking system, 50+ achievements, daily wallpapers, verse of the day widget, and church community with sermon studies, prayer wall, events, and pastoral dashboard.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": "AI Spiritual Guidance, Daily Devotionals, Guided Prayer, 30-Day Faith Journeys, Bible Search, Holy Word Game, Scripture Quiz, Prayer Journal, Daily Saint, Seasonal Stories, Saved Verses, Ranking System, Achievements, Daily Wallpapers, Verse of the Day Widget, Church Community, Sermon Studies, Prayer Wall, Church Events, Pastoral Dashboard"
+    }
+    </script>
+
+    <!-- Structured Data: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the Daily Path in Devotion?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The Daily Path is your daily spiritual to-do list featuring Guided Prayer, Daily Devotional, Wisdom Challenge (Holy Word puzzle and Scripture Quiz), and Daily Saint biography. Complete them each day to grow in faith and earn Light points."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Devotion have Bible games?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Devotion includes Holy Word, a daily 6-letter biblical word puzzle similar to Wordle, and Scripture Quiz, a daily Bible knowledge challenge with 10 questions. Both are part of the Wisdom Challenge on your Daily Path."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I join my church on Devotion?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Churches can create branded communities inside Devotion. Members join via invite code and get access to a shared prayer wall, weekly sermon studies, church announcements, events, and community faith journeys."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a Bible verse widget for my phone?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Devotion offers a Verse of the Day home screen widget for both Android and iOS. It displays a new Bible verse daily and updates automatically."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What faith journeys are available?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Devotion offers 30-day guided faith journeys covering anxiety, grief, forgiveness, new to faith, marriage, purpose, doubt, and anger. Each journey has three phases: Awareness, Rebuilding, and Identity, with daily Scripture, reflections, and prayers. You can also create custom AI-generated journeys on any topic."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Devotion have a ranking system?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Devotion features a Light ranking system where you earn points for completing daily spiritual activities. Progress through 10+ rank levels with animated badges, unlock 50+ achievements across Journey, Wisdom, Light, Prayer, and Community categories."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Devotion free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Devotion offers a free tier with daily devotionals, limited guided prayers, scripture quizzes, prayer journal, saved verses, faith journeys, the Holy Word game, and church community access. Pro subscription unlocks unlimited prayers, quizzes, all wallpapers, cloud sync, and premium content."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">

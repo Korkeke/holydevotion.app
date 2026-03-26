@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/layout/Header";
 import { useAuth } from "./AuthContext";
@@ -37,6 +38,10 @@ export default function PortalLayout() {
 
   return (
     <ThemeProvider>
+      <Helmet>
+        <title>Church Portal — Devotion</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div style={s.wrapper}>
         <style>{portalCSS}</style>
         <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} badges={badges} />
