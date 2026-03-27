@@ -31,5 +31,9 @@ export default function PortalRoute({ children }) {
     return <Navigate to="/portal/login" replace />;
   }
 
+  if (!user.emailVerified) {
+    return <Navigate to="/portal/verify-email" replace />;
+  }
+
   return children;
 }

@@ -5,6 +5,7 @@ import { AuthProvider } from "./portal/AuthContext";
 import PortalRoute from "./portal/PortalRoute";
 
 const LoginPage = lazy(() => import("./portal/pages/LoginPage"));
+const VerifyEmailPage = lazy(() => import("./portal/pages/VerifyEmailPage"));
 const SignupPage = lazy(() => import("./portal/pages/SignupPage"));
 const OnboardingWizard = lazy(() => import("./portal/pages/OnboardingWizard"));
 const PortalLayout = lazy(() => import("./portal/PortalLayout"));
@@ -1803,6 +1804,7 @@ export default function DevotionSite() {
             <Suspense fallback={<PortalLoading />}>
               <Routes>
                 <Route path="login" element={<LoginPage />} />
+                <Route path="verify-email" element={<VerifyEmailPage />} />
                 <Route path="signup" element={<OnboardingWizard />} />
                 <Route path="/*" element={<PortalRoute><PortalLayout /></PortalRoute>}>
                   <Route index element={<DashboardPage />} />

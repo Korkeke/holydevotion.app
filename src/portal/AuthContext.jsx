@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
+  sendEmailVerification,
   deleteUser,
 } from "firebase/auth";
 import { auth } from "../firebase";
@@ -86,6 +87,11 @@ export function AuthProvider({ children }) {
         }
       }
 
+      // Step 1b: Send verification email (fire-and-forget)
+      try {
+        await sendEmailVerification(firebaseUser);
+      } catch { /* non-critical — user can resend later */ }
+
       // Step 2: Create church via API with timeout + auto-retry.
       // Uses raw fetch (not api.js) to avoid automatic 401 → /portal/login redirect.
       // If the first attempt fails with a network error, retry once — the backend
@@ -155,6 +161,12 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function resendVerification() {
+    if (user && !user.emailVerified) {
+      await sendEmailVerification(user);
+    }
+  }
+
   async function signOutUser() {
     await firebaseSignOut(auth);
     setUser(null);
@@ -173,6 +185,7 @@ export function AuthProvider({ children }) {
         signIn,
         signUp,
         signOut: signOutUser,
+        resendVerification,
         reloadChurch: loadChurch,
       }}
     >

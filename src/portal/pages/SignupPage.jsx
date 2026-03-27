@@ -92,7 +92,7 @@ export default function SignupPage() {
         theme,
         registration_code: regCode.trim(),
       });
-      navigate("/portal");
+      navigate("/portal/verify-email");
     } catch (err) {
       const msg = err?.code || err?.message || "";
       if (msg.includes("email-already-in-use")) {

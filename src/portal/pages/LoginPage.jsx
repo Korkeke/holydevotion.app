@@ -20,7 +20,14 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await signIn(email, password);
+      const cred = await signIn(email, password);
+      // Firebase signIn returns void from our wrapper, so grab user from auth
+      const { auth } = await import("../../firebase");
+      const signedInUser = auth.currentUser;
+      if (signedInUser && !signedInUser.emailVerified) {
+        navigate("/portal/verify-email");
+        return;
+      }
       // Check if user has a church — if not, send to onboarding
       try {
         const data = await get("/api/churches/me");
