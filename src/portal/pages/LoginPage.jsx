@@ -23,8 +23,9 @@ export default function LoginPage() {
       const cred = await signIn(email, password);
       // Firebase signIn returns void from our wrapper, so grab user from auth
       const { auth } = await import("../../firebase");
+      const DEMO_EMAILS = ["laryl@hotmail.com"];
       const signedInUser = auth.currentUser;
-      if (signedInUser && !signedInUser.emailVerified) {
+      if (signedInUser && !signedInUser.emailVerified && !DEMO_EMAILS.includes(signedInUser.email)) {
         navigate("/portal/verify-email");
         return;
       }
