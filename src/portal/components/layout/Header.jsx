@@ -1,9 +1,9 @@
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../AuthContext";
+import { get } from "../../api";
 import Button from "../ui/Button";
-
-/**
- * Sticky header with greeting, page title, and action buttons.
- */
+import PhonePreviewModal from "../PhonePreviewModal";
+import PastoralMessageModal from "../PastoralMessageModal";
 
 const BELL_ICON = (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -33,26 +33,242 @@ const PAGE_TITLES = {
 };
 
 export default function Header({ pathname }) {
-  const { user } = useAuth();
+  const { user, church } = useAuth();
   const userName = user?.displayName || user?.email?.split("@")[0] || "Pastor";
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
   const title = PAGE_TITLES[pathname] || "Church Overview";
 
+  // Phone preview
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Pastoral message
+  const [messageTo, setMessageTo] = useState(null);
+
+  // Notifications
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const notifRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Fetch notification data
+  useEffect(() => {
+    if (!church?.id) return;
+    async function load() {
+      const lastRead = localStorage.getItem(`notif_read_${church.id}`) || "1970-01-01";
+      const items = [];
+
+      try {
+        const [members, prayers, attention, milestones, pending] = await Promise.all([
+          get(`/api/churches/${church.id}/members`).catch(() => null),
+          get(`/api/churches/${church.id}/prayer-wall`).catch(() => null),
+          get(`/api/churches/${church.id}/analytics/attention`).catch(() => null),
+          get(`/api/churches/${church.id}/milestones`).catch(() => null),
+          get(`/api/churches/${church.id}/members/pending`).catch(() => null),
+        ]);
+
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+        // New members (joined in last 7 days)
+        (members?.members || []).forEach((m) => {
+          if (m.joined_at && new Date(m.joined_at) > weekAgo) {
+            items.push({
+              icon: "👋",
+              text: `${m.display_name || "New member"} joined`,
+              time: m.joined_at,
+              type: "member",
+            });
+          }
+        });
+
+        // Recent prayers (last 3 days)
+        (prayers?.prayers || []).filter(p => !p.hidden).forEach((p) => {
+          if (p.created_at && new Date(p.created_at) > threeDaysAgo) {
+            items.push({
+              icon: p.type === "praise" ? "🙌" : "🙏",
+              text: `${p.is_anonymous ? "Anonymous" : (p.display_name || "Member")} shared a ${p.type || "prayer"}`,
+              time: p.created_at,
+              type: "prayer",
+            });
+          }
+        });
+
+        // Answered prayers (last 7 days)
+        (prayers?.prayers || []).filter(p => p.status === "answered" && p.answered_at).forEach((p) => {
+          if (new Date(p.answered_at) > weekAgo) {
+            items.push({
+              icon: "✨",
+              text: `${p.is_anonymous ? "Anonymous" : (p.display_name || "Member")} marked a prayer as answered`,
+              time: p.answered_at,
+              type: "answered",
+            });
+          }
+        });
+
+        // Declining members (with Send Note action)
+        (attention?.declining || []).forEach((m) => {
+          items.push({
+            icon: "⚠️",
+            text: `${m.display_name || "Member"} hasn't been active in ${m.days_inactive || "?"} days`,
+            time: null,
+            type: "attention",
+            actionLabel: "Send Note",
+            actionName: m.display_name || "Member",
+          });
+        });
+
+        // Inactive members
+        (attention?.inactive || []).slice(0, 2).forEach((m) => {
+          items.push({
+            icon: "💤",
+            text: `${m.display_name || "Member"} is inactive (${m.days_inactive || "?"}d)`,
+            time: null,
+            type: "attention",
+            actionLabel: "Send Note",
+            actionName: m.display_name || "Member",
+          });
+        });
+
+        // Milestones this month
+        (milestones?.milestones || []).forEach((m) => {
+          items.push({
+            icon: "🏅",
+            text: `${m.display_name || "Member"} hit ${m.milestone_type}`,
+            time: m.joined_at,
+            type: "milestone",
+          });
+        });
+
+        // Streak milestones from attention
+        (attention?.milestones || []).forEach((m) => {
+          items.push({
+            icon: "🔥",
+            text: `${m.display_name || "Member"} reached a ${m.milestone}-day streak`,
+            time: null,
+            type: "milestone",
+          });
+        });
+
+        // Pending member approvals
+        const pendingList = pending?.members || pending || [];
+        if (Array.isArray(pendingList) && pendingList.length > 0) {
+          items.push({
+            icon: "📋",
+            text: `${pendingList.length} member${pendingList.length > 1 ? "s" : ""} waiting for approval`,
+            time: null,
+            type: "pending",
+          });
+        }
+
+        // Sort: attention items first (no time = pinned to top), then by time newest first
+        items.sort((a, b) => {
+          if (a.type === "attention" && b.type !== "attention") return -1;
+          if (b.type === "attention" && a.type !== "attention") return 1;
+          if (a.type === "pending" && b.type !== "pending") return -1;
+          if (b.type === "pending" && a.type !== "pending") return 1;
+          const ta = a.time ? new Date(a.time).getTime() : 0;
+          const tb = b.time ? new Date(b.time).getTime() : 0;
+          return tb - ta;
+        });
+
+        setNotifications(items.slice(0, 15));
+        setUnreadCount(items.filter((n) => n.time && n.time > lastRead).length
+          + (attention?.declining?.length || 0)
+          + (Array.isArray(pendingList) ? pendingList.length : 0));
+      } catch {}
+    }
+    load();
+  }, [church?.id]);
+
+  function handleOpenNotifs() {
+    setShowNotifs(!showNotifs);
+    if (!showNotifs && church?.id) {
+      localStorage.setItem(`notif_read_${church.id}`, new Date().toISOString());
+      setUnreadCount(0);
+    }
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return "";
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  }
+
   return (
-    <header style={s.header}>
-      <div>
-        <div style={s.greeting}>{greeting}, {userName}</div>
-        <h1 style={s.title}>{title}</h1>
-      </div>
-      <div style={s.actions}>
-        <Button>{EYE_ICON} Preview as Member</Button>
-        <button style={s.bellBtn}>
-          {BELL_ICON}
-          <span style={s.bellDot} />
-        </button>
-      </div>
-    </header>
+    <>
+      <header style={s.header}>
+        <div>
+          <div style={s.greeting}>{greeting}, {userName}</div>
+          <h1 style={s.title}>{title}</h1>
+        </div>
+        <div style={s.actions}>
+          <Button onClick={() => setShowPreview(true)}>{EYE_ICON} Preview as Member</Button>
+
+          {/* Notification bell */}
+          <div ref={notifRef} style={{ position: "relative" }}>
+            <button style={s.bellBtn} onClick={handleOpenNotifs}>
+              {BELL_ICON}
+              {unreadCount > 0 && <span style={s.bellDot} />}
+            </button>
+
+            {showNotifs && (
+              <div style={s.notifDropdown}>
+                <div style={s.notifHeader}>Notifications</div>
+                {notifications.length === 0 ? (
+                  <div style={s.notifEmpty}>No recent activity</div>
+                ) : (
+                  notifications.map((n, i) => (
+                    <div key={i} style={{
+                      ...s.notifItem,
+                      background: n.type === "attention" ? "#fdf8f6" : n.type === "pending" ? "#faf6ee" : "transparent",
+                    }}>
+                      <span style={{ fontSize: 16, flexShrink: 0 }}>{n.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, color: "#2c2a25", lineHeight: 1.4 }}>{n.text}</div>
+                        {n.time && <div style={{ fontSize: 10, color: "#b0a998", marginTop: 2 }}>{timeAgo(n.time)}</div>}
+                        {n.actionLabel && (
+                          <button
+                            onClick={() => { setMessageTo(n.actionName); setShowNotifs(false); }}
+                            style={{
+                              marginTop: 6, padding: "4px 10px", borderRadius: 6,
+                              border: "1px solid #e0dbd1", background: "#fff",
+                              color: "#3d6b44", fontSize: 11, fontWeight: 600,
+                              cursor: "pointer", fontFamily: "inherit",
+                            }}
+                          >
+                            {n.actionLabel}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {showPreview && <PhonePreviewModal onClose={() => setShowPreview(false)} />}
+      {messageTo && <PastoralMessageModal recipientName={messageTo} onClose={() => setMessageTo(null)} />}
+    </>
   );
 }
 
@@ -109,5 +325,39 @@ const s = {
     borderRadius: "50%",
     background: "#c26a4a",
     border: "2px solid #fff",
+  },
+  notifDropdown: {
+    position: "absolute",
+    top: "calc(100% + 8px)",
+    right: 0,
+    width: 320,
+    background: "#fff",
+    borderRadius: 12,
+    border: "1px solid #ece7dd",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+    zIndex: 50,
+    maxHeight: 400,
+    overflowY: "auto",
+  },
+  notifHeader: {
+    padding: "14px 16px 10px",
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#2c2a25",
+    borderBottom: "1px solid #f0ebe3",
+    fontFamily: "'DM Serif Display', serif",
+  },
+  notifEmpty: {
+    padding: "24px 16px",
+    textAlign: "center",
+    fontSize: 13,
+    color: "#9e9888",
+  },
+  notifItem: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    padding: "12px 16px",
+    borderBottom: "1px solid #f0ebe3",
   },
 };

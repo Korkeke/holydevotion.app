@@ -11,6 +11,7 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import SectionLabel from "../components/ui/SectionLabel";
 import Avatar from "../components/ui/Avatar";
+import EmailDigestModal from "../components/EmailDigestModal";
 
 export default function DashboardPage() {
   const { church, churchLoading, user } = useAuth();
@@ -21,6 +22,7 @@ export default function DashboardPage() {
   const [attention, setAttention] = useState(null);
   const [events, setEvents] = useState([]);
   const [prayers, setPrayers] = useState([]);
+  const [showEmailDigest, setShowEmailDigest] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generatingInsight, setGeneratingInsight] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
@@ -131,6 +133,7 @@ export default function DashboardPage() {
   const weekRange = `${weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 
   return (
+    <>
     <div style={{ padding: "24px 32px 48px" }}>
       {/* Quick Actions */}
       <div style={{ display: "flex", gap: 10, marginBottom: 28, flexWrap: "wrap" }}>
@@ -143,6 +146,10 @@ export default function DashboardPage() {
         <Button onClick={() => navigate("/portal/announcements")} style={{ color: "#b05a3a", borderColor: "#e0c4b8" }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
           Send Broadcast
+        </Button>
+        <Button onClick={() => setShowEmailDigest(true)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+          Email Digest
         </Button>
       </div>
 
@@ -352,5 +359,18 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+
+    {showEmailDigest && (
+      <EmailDigestModal
+        onClose={() => setShowEmailDigest(false)}
+        stats={{
+          active: activeCount,
+          completed: completionRate,
+          newMembers: totalMembers,
+          prayers: prayers.length,
+        }}
+      />
+    )}
+    </>
   );
 }
