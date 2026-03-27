@@ -31,7 +31,7 @@ export default function PortalRoute({ children }) {
     return <Navigate to="/portal/login" replace />;
   }
 
-  const DEMO_EMAILS = ["laryl@hotmail.com"];
+  const DEMO_EMAILS = ["demo@holydevotion.app"];
   if (!user.emailVerified && !DEMO_EMAILS.includes(user.email)) {
     return <Navigate to="/portal/verify-email" replace />;
   }
