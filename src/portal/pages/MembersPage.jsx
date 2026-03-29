@@ -420,8 +420,8 @@ export default function MembersPage() {
               )}
 
               {/* Action buttons */}
-              <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                {!isMe && (
+              {!isMe && (
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <Button
                     primary
                     small
@@ -430,15 +430,8 @@ export default function MembersPage() {
                   >
                     Message
                   </Button>
-                )}
-                <Button
-                  small
-                  style={{ flex: 1 }}
-                  onClick={() => {/* View profile placeholder */}}
-                >
-                  View Profile
-                </Button>
-              </div>
+                </div>
+              )}
 
               {/* Admin actions */}
               {!isMe && m.role !== "owner" && (

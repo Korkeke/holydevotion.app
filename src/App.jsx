@@ -17,6 +17,7 @@ const PrayerWallPage = lazy(() => import("./portal/pages/PrayerWallPage"));
 const MembersPage = lazy(() => import("./portal/pages/MembersPage"));
 const SettingsPage = lazy(() => import("./portal/pages/SettingsPage"));
 const SermonsPage = lazy(() => import("./portal/pages/SermonsPage"));
+const GroupsPage = lazy(() => import("./portal/pages/GroupsPage"));
 
 // ─── SEO Helper ─────────────────────────────────────────────────────
 function PageMeta({ title, description, path = "/" }) {
@@ -1812,6 +1813,7 @@ export default function DevotionSite() {
                   <Route path="announcements" element={<AnnouncementsPage />} />
                   <Route path="sermons" element={<SermonsPage />} />
                   <Route path="devotionals" element={<DevotionalsPage />} />
+                  <Route path="groups" element={<GroupsPage />} />
                   <Route path="prayers" element={<PrayerWallPage />} />
                   <Route path="members" element={<MembersPage />} />
                   <Route path="settings" element={<SettingsPage />} />

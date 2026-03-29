@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { id: "announcements", iconKey: "announcements", label: "Announcements", path: "/portal/announcements" },
   { id: "devotionals", iconKey: "devotionals", label: "Devotionals", path: "/portal/devotionals" },
   { type: "divider", label: "COMMUNITY" },
+  { id: "groups", iconKey: "groups", label: "Groups", path: "/portal/groups" },
   { id: "prayer", iconKey: "prayer", label: "Prayer Wall", path: "/portal/prayers", badgeKey: "prayerCount" },
   { id: "members", iconKey: "members", label: "Members", path: "/portal/members", badgeKey: "memberCount" },
   { type: "divider", label: "ADMIN" },

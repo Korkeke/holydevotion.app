@@ -34,7 +34,6 @@ const NAV_ITEMS = [
   { key: "appearance", label: "Appearance" },
   { key: "invites", label: "Invite Codes" },
   { key: "profile", label: "Church Profile" },
-  { key: "verse", label: "Verse of the Week" },
   { key: "danger", label: "Danger Zone" },
 ];
 
@@ -66,7 +65,6 @@ export default function SettingsPage() {
     appearance: useRef(null),
     invites: useRef(null),
     profile: useRef(null),
-    verse: useRef(null),
     danger: useRef(null),
   };
 
@@ -80,8 +78,6 @@ export default function SettingsPage() {
         FIELDS.forEach((f) => { vals[f.key] = c[f.key] || ""; });
         vals.logo_url = c.logo_url || "";
         vals.banner_url = c.banner_url || "";
-        vals.verse_of_week = c.verse_of_week || "";
-        vals.verse_of_week_ref = c.verse_of_week_ref || "";
         vals.giving_url = c.giving_url || "";
         setForm(vals);
         const th = c.theme || "sage_green";
@@ -602,51 +598,6 @@ export default function SettingsPage() {
                     placeholder="https://your-church.com/give"
                   />
                 </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* ── Verse of the Week ── */}
-          <div ref={sectionRefs.verse} style={{ marginBottom: 32 }}>
-            <SectionLabel>Verse of the Week</SectionLabel>
-            <Card>
-              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#9e9888", marginBottom: 16 }}>
-                This verse will be displayed on every member's church home screen.
-              </p>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{
-                  display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 12,
-                  fontWeight: 600, color: "#9e9888", marginBottom: 6,
-                  textTransform: "uppercase", letterSpacing: "0.04em",
-                }}>Verse Text</label>
-                <textarea
-                  style={{
-                    width: "100%", padding: "10px 14px", borderRadius: 8, boxSizing: "border-box",
-                    border: "1px solid #ece7dd", background: "#f7f4ef",
-                    color: "#2c2a25", fontFamily: "'DM Sans', sans-serif", fontSize: 14,
-                    outline: "none", minHeight: 80, resize: "vertical",
-                  }}
-                  value={form.verse_of_week || ""}
-                  onChange={(e) => setForm({ ...form, verse_of_week: e.target.value })}
-                />
-              </div>
-              <div style={{ marginBottom: 0 }}>
-                <label style={{
-                  display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 12,
-                  fontWeight: 600, color: "#9e9888", marginBottom: 6,
-                  textTransform: "uppercase", letterSpacing: "0.04em",
-                }}>Scripture Reference</label>
-                <input
-                  style={{
-                    width: "100%", padding: "10px 14px", borderRadius: 8, boxSizing: "border-box",
-                    border: "1px solid #ece7dd", background: "#f7f4ef",
-                    color: "#2c2a25", fontFamily: "'DM Sans', sans-serif", fontSize: 14,
-                    outline: "none",
-                  }}
-                  value={form.verse_of_week_ref || ""}
-                  onChange={(e) => setForm({ ...form, verse_of_week_ref: e.target.value })}
-                  placeholder="e.g. Philippians 4:13"
-                />
               </div>
             </Card>
           </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthContext";
-import { get, post } from "../api";
+import { get, post, put } from "../api";
 import StatCard from "../components/dashboard/StatCard";
 import PastoralInsight from "../components/dashboard/PastoralInsight";
 import SpiritualPulse from "../components/dashboard/SpiritualPulse";
@@ -12,6 +12,110 @@ import Button from "../components/ui/Button";
 import SectionLabel from "../components/ui/SectionLabel";
 import Avatar from "../components/ui/Avatar";
 import EmailDigestModal from "../components/EmailDigestModal";
+
+function VerseOfTheWeekCard() {
+  const { church, reloadChurch } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [verse, setVerse] = useState(church?.verse_of_week || "");
+  const [ref, setRef] = useState(church?.verse_of_week_ref || "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setVerse(church?.verse_of_week || "");
+    setRef(church?.verse_of_week_ref || "");
+  }, [church?.verse_of_week, church?.verse_of_week_ref]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await put(`/api/churches/${church.id}`, { verse_of_week: verse.trim(), verse_of_week_ref: ref.trim() });
+      reloadChurch();
+      setEditing(false);
+    } catch {} finally { setSaving(false); }
+  };
+
+  const hasVerse = church?.verse_of_week?.trim();
+
+  return (
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <SectionLabel style={{ margin: 0 }}>Verse of the Week</SectionLabel>
+        <button
+          onClick={() => setEditing(!editing)}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "#9e9888", fontSize: 14, padding: "2px 6px", borderRadius: 4,
+            transition: "color 0.15s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = "#3d6b44"}
+          onMouseLeave={e => e.currentTarget.style.color = "#9e9888"}
+          title={editing ? "Cancel" : "Edit verse"}
+        >
+          {editing ? "✕" : "✎"}
+        </button>
+      </div>
+
+      {editing ? (
+        <div>
+          <textarea
+            value={verse}
+            onChange={e => setVerse(e.target.value)}
+            placeholder="Enter verse text..."
+            style={{
+              width: "100%", padding: "10px 12px", borderRadius: 8, boxSizing: "border-box",
+              border: "1px solid #ece7dd", background: "#f7f4ef",
+              color: "#2c2a25", fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+              outline: "none", minHeight: 70, resize: "vertical", marginBottom: 8,
+            }}
+          />
+          <input
+            value={ref}
+            onChange={e => setRef(e.target.value)}
+            placeholder="e.g. Philippians 4:13"
+            style={{
+              width: "100%", padding: "8px 12px", borderRadius: 8, boxSizing: "border-box",
+              border: "1px solid #ece7dd", background: "#f7f4ef",
+              color: "#2c2a25", fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+              outline: "none", marginBottom: 10,
+            }}
+          />
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Button small onClick={() => setEditing(false)}>Cancel</Button>
+            <Button primary small onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </div>
+      ) : hasVerse ? (
+        <div style={{
+          padding: "12px 14px", borderRadius: 10,
+          borderLeft: "3px solid #8b6914", background: "#faf6ee",
+        }}>
+          <div style={{ fontSize: 13, color: "#5a5647", fontStyle: "italic", lineHeight: 1.6 }}>
+            "{church.verse_of_week}"
+          </div>
+          {church.verse_of_week_ref && (
+            <div style={{ fontSize: 12, color: "#8b6914", marginTop: 6, fontWeight: 600 }}>
+              - {church.verse_of_week_ref}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div
+          onClick={() => setEditing(true)}
+          style={{
+            padding: "16px 14px", borderRadius: 10,
+            background: "linear-gradient(135deg, #faf6ee, #f5efe3)",
+            border: "1px dashed #e0dbd1", textAlign: "center", cursor: "pointer",
+          }}
+        >
+          <div style={{ fontSize: 18, marginBottom: 4 }}>📖</div>
+          <div style={{ fontSize: 12, color: "#9e9888" }}>Tap to set a verse for your church</div>
+        </div>
+      )}
+    </Card>
+  );
+}
 
 export default function DashboardPage() {
   const { church, churchLoading, user } = useAuth();
@@ -310,6 +414,9 @@ export default function DashboardPage() {
             onViewAll={() => navigate("/portal/members")}
           />
 
+          {/* Verse of the Week */}
+          <VerseOfTheWeekCard />
+
           {/* Content This Week */}
           <Card>
             <SectionLabel>Content This Week</SectionLabel>
@@ -361,15 +468,7 @@ export default function DashboardPage() {
     </div>
 
     {showEmailDigest && (
-      <EmailDigestModal
-        onClose={() => setShowEmailDigest(false)}
-        stats={{
-          active: activeCount,
-          completed: completionRate,
-          newMembers: totalMembers,
-          prayers: prayers.length,
-        }}
-      />
+      <EmailDigestModal onClose={() => setShowEmailDigest(false)} />
     )}
     </>
   );
