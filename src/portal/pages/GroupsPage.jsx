@@ -160,12 +160,6 @@ export default function GroupsPage() {
 
   return (
     <div style={{ padding: "24px 32px 48px" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-        <div style={{ fontSize: 26, fontWeight: 700, color: "#2c2a25", fontFamily: "'DM Serif Display', serif" }}>
-          Groups
-        </div>
-      </div>
 
       {/* Groups Section */}
       <div style={{ marginBottom: 40 }}>

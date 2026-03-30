@@ -116,15 +116,6 @@ export default function MembersPage() {
 
   return (
     <div style={{ padding: "24px 32px 48px" }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{
-          fontSize: 26, fontWeight: 700, color: "#2c2a25",
-          fontFamily: "'DM Serif Display', serif", margin: 0,
-        }}>
-          Members
-        </h1>
-      </div>
 
       {/* Search bar + member count */}
       <div style={{

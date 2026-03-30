@@ -159,10 +159,6 @@ export default function SettingsPage() {
 
   return (
     <div style={{ padding: "24px 32px 48px" }}>
-      <h1 style={{
-        fontFamily: "var(--heading)", fontSize: 26, fontWeight: 700,
-        color: "#2c2a25", marginBottom: 24,
-      }}>Settings</h1>
 
       <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 32 }}>
         {/* Left sidebar nav */}

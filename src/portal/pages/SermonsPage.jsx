@@ -207,10 +207,7 @@ export default function SermonsPage() {
   return (
     <div style={{ padding: "24px 32px 48px" }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: "#2C2C2C", fontFamily: "'DM Serif Display', serif", margin: 0 }}>
-          Sermons
-        </h1>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
         <Button primary onClick={() => { setCreating(true); setSelected(null); }}>
           + New Sermon
         </Button>

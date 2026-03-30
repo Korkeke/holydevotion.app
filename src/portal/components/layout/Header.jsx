@@ -48,6 +48,10 @@ export default function Header({ pathname }) {
   // Notifications
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [dismissed, setDismissed] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`notif_dismissed_${church?.id}`) || "[]"); }
+    catch { return []; }
+  });
   const [unreadCount, setUnreadCount] = useState(0);
   const notifRef = useRef(null);
 
@@ -211,6 +215,24 @@ export default function Header({ pathname }) {
     return `${days}d ago`;
   }
 
+  // Build a unique key for each notification so we can track dismissals
+  function notifKey(n) { return `${n.type}:${n.text}`; }
+
+  function dismissOne(n) {
+    const key = notifKey(n);
+    const next = [...dismissed, key];
+    setDismissed(next);
+    if (church?.id) localStorage.setItem(`notif_dismissed_${church.id}`, JSON.stringify(next));
+  }
+
+  function clearAll() {
+    const next = notifications.map(notifKey);
+    setDismissed(next);
+    if (church?.id) localStorage.setItem(`notif_dismissed_${church.id}`, JSON.stringify(next));
+  }
+
+  const visibleNotifs = notifications.filter(n => !dismissed.includes(notifKey(n)));
+
   return (
     <>
       <header style={s.header}>
@@ -225,16 +247,21 @@ export default function Header({ pathname }) {
           <div ref={notifRef} style={{ position: "relative" }}>
             <button style={s.bellBtn} onClick={handleOpenNotifs}>
               {BELL_ICON}
-              {unreadCount > 0 && <span style={s.bellDot} />}
+              {unreadCount > 0 && visibleNotifs.length > 0 && <span style={s.bellDot} />}
             </button>
 
             {showNotifs && (
               <div style={s.notifDropdown}>
-                <div style={s.notifHeader}>Notifications</div>
-                {notifications.length === 0 ? (
+                <div style={s.notifHeader}>
+                  <span>Notifications</span>
+                  {visibleNotifs.length > 0 && (
+                    <button onClick={clearAll} style={s.clearAllBtn}>Clear all</button>
+                  )}
+                </div>
+                {visibleNotifs.length === 0 ? (
                   <div style={s.notifEmpty}>No recent activity</div>
                 ) : (
-                  notifications.map((n, i) => (
+                  visibleNotifs.map((n, i) => (
                     <div key={i} style={{
                       ...s.notifItem,
                       background: n.type === "attention" ? "#fdf8f6" : n.type === "pending" ? "#faf6ee" : "transparent",
@@ -257,6 +284,9 @@ export default function Header({ pathname }) {
                           </button>
                         )}
                       </div>
+                      <button onClick={() => dismissOne(n)} style={s.dismissBtn} title="Dismiss">
+                        &times;
+                      </button>
                     </div>
                   ))
                 )}
@@ -340,12 +370,36 @@ const s = {
     overflowY: "auto",
   },
   notifHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: "14px 16px 10px",
     fontSize: 14,
     fontWeight: 600,
     color: "#2c2a25",
     borderBottom: "1px solid #f0ebe3",
     fontFamily: "'DM Serif Display', serif",
+  },
+  clearAllBtn: {
+    background: "none",
+    border: "none",
+    color: "#9e9888",
+    fontSize: 11,
+    fontWeight: 500,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    padding: 0,
+  },
+  dismissBtn: {
+    background: "none",
+    border: "none",
+    color: "#b0a998",
+    fontSize: 16,
+    cursor: "pointer",
+    padding: "0 0 0 4px",
+    lineHeight: 1,
+    flexShrink: 0,
+    alignSelf: "flex-start",
   },
   notifEmpty: {
     padding: "24px 16px",

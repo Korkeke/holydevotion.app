@@ -102,9 +102,8 @@ export default function EventsPage() {
 
   return (
     <div style={{ padding: "24px 32px 48px" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-        <div style={{ fontSize: 26, fontWeight: 700, color: "#2c2a25", fontFamily: "'DM Serif Display', serif" }}>Events</div>
+      {/* Action bar */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 28 }}>
         <Button primary onClick={() => setShowForm(true)}>+ New Event</Button>
       </div>
 
@@ -173,7 +172,7 @@ export default function EventsPage() {
                       key={d}
                       onClick={() => isValid && hasEvent && setCalendarDate(selected ? null : dayNum)}
                       style={{
-                        textAlign: "center", padding: "8px 0", borderRadius: 10,
+                        textAlign: "center", padding: "12px 0", minHeight: 64, borderRadius: 10,
                         background: selected ? C.accent : "transparent",
                         cursor: hasEvent ? "pointer" : "default",
                         transition: "all 0.2s ease",

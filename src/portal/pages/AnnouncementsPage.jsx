@@ -185,15 +185,10 @@ export default function AnnouncementsPage() {
   return (
     <div style={{ padding: "24px 32px 48px" }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontFamily: "var(--heading)", fontSize: 26, fontWeight: 700, color: C.text, margin: 0 }}>Announcements</h1>
-          <div style={{ fontSize: 13, color: C.sec, marginTop: 4 }}>{items.length} total</div>
-        </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <Button onClick={() => setShowBroadcast(true)}>Send Broadcast</Button>
-          <Button primary onClick={() => setShowForm(true)}>+ Post Announcement</Button>
-        </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 10, marginBottom: 20 }}>
+        <div style={{ fontSize: 13, color: C.sec, marginRight: "auto" }}>{items.length} total</div>
+        <Button onClick={() => setShowBroadcast(true)}>Send Broadcast</Button>
+        <Button primary onClick={() => setShowForm(true)}>+ Post Announcement</Button>
       </div>
 
       {/* Error banner */}
